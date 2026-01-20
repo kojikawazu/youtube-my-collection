@@ -23,11 +23,14 @@ import { Modal } from "@/components/Modal";
 import { CATEGORIES } from "@/lib/constants";
 import { getYoutubeThumbnail } from "@/lib/youtube";
 import { ValidationErrors, validateVideoInput } from "@/lib/validation";
+import { isAdminEmail, signInWithGoogle, signOut } from "@/lib/auth";
+import { supabase } from "@/lib/supabase/client";
 
 export default function Page() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.List);
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>("newest");
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,6 +75,32 @@ export default function Page() {
 
   useEffect(() => {
     void loadVideos();
+  }, []);
+
+  useEffect(() => {
+    const initSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (session?.access_token) {
+        setAccessToken(session.access_token);
+        setIsAdmin(isAdminEmail(session.user.email));
+      }
+    };
+    void initSession();
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.access_token) {
+        setAccessToken(session.access_token);
+        setIsAdmin(isAdminEmail(session.user.email));
+      } else {
+        setAccessToken(null);
+        setIsAdmin(false);
+      }
+    });
+
+    return () => {
+      subscription.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -132,7 +161,10 @@ export default function Page() {
       onConfirm: () => {
         fetch(`/api/videos/${id}`, {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
           body: JSON.stringify({ id }),
         })
           .then((response) => {
@@ -163,7 +195,10 @@ export default function Page() {
         try {
           const response = await fetch("/api/videos", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            },
             body: JSON.stringify({
               youtubeUrl: formData.youtubeUrl,
               title: formData.title,
@@ -198,7 +233,10 @@ export default function Page() {
 
           const response = await fetch(`/api/videos/${targetId}`, {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            },
             body: JSON.stringify({
               id: targetId,
               youtubeUrl: formData.youtubeUrl,
@@ -280,8 +318,10 @@ export default function Page() {
                 </span>
               </div>
               <button
-                onClick={() => {
+                onClick={async () => {
+                  await signOut();
                   setIsAdmin(false);
+                  setAccessToken(null);
                   navigateToList();
                 }}
                 className="text-sm font-bold text-red-400 hover:text-red-600 p-2"
@@ -764,8 +804,7 @@ export default function Page() {
 
                 <button
                   onClick={() => {
-                    setIsAdmin(true);
-                    navigateToList();
+                    signInWithGoogle();
                   }}
                   className="w-full flex items-center justify-center gap-4 bg-white border border-gray-100 hover:border-red-200 hover:bg-red-50 text-gray-700 font-bold py-5 px-8 rounded-[2rem] transition-all shadow-sm mb-8 group"
                 >

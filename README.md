@@ -7,7 +7,8 @@ YouTubeで良かった動画を後から見返せる公開コレクションの�
 - データはインメモリ（`INITIAL_VIDEOS`）
 - 画面はリスト/詳細/ログイン/追加/編集を実装
 - デザインは `base/` のUIを再現（日本語UI）
- - Supabase + Prisma のAPI土台実装済み（認証は未実装）
+- Supabase + Prisma のAPI土台実装済み（認証は未実装）
+ - Supabase Authの導入中（Google OAuth + allowlist）
 
 ## 起動
 ```bash

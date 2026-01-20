@@ -6,7 +6,8 @@ YouTubeで良かった動画を後から見返せる公開コレクションを�
 ## 直近の状態
 - UIは `base/` の見た目を再現し、`front/` に実装済み
 - 画面: リスト/詳細/ログイン/追加/編集
-- データ: Supabase + PrismaのAPI土台実装済み（認証は未実装）
+- データ: Supabase + PrismaのAPI土台実装済み
+- 認証: Supabase Auth導入中（Google OAuth + allowlist）
 - 文言: 日本語化済み
 
 ## 重要な決定事項
