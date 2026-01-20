@@ -28,6 +28,4 @@ Google OAuth2とallowlistで管理者のみ操作可能にする。
 - allowlist不一致時はログアウト+通知
 
 ## 残り
-- Supabase Auth(Google OAuth)設定
-- allowlist判定のフロント反映(ENV設定)
-- API保護の実装
+- 完了

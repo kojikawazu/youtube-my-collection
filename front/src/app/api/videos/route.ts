@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/lib/validation";
 import { createClient } from "@supabase/supabase-js";
+import { Prisma } from "@prisma/client";
 
 const toVideoItem = (video: {
   id: string;
@@ -44,12 +45,13 @@ export async function GET(request: NextRequest) {
   const limit = parseNumber(searchParams.get("limit"), 50);
   const offset = parseNumber(searchParams.get("offset"), 0);
 
+  const sortOrder: Prisma.SortOrder = order === "asc" ? "asc" : "desc";
   const orderBy =
     sort === "rating"
-      ? { rating: order }
+      ? { rating: sortOrder }
       : sort === "published"
-      ? { publishDate: order }
-      : { createdAt: order };
+      ? { publishDate: sortOrder }
+      : { createdAt: sortOrder };
 
   const videos = await prisma.videoEntry.findMany({
     where: {

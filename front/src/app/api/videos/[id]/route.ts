@@ -4,9 +4,9 @@ import { validateVideoInput } from "@/lib/validation";
 import { createClient } from "@supabase/supabase-js";
 
 type RouteParams = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 const toVideoItem = (video: {
@@ -36,8 +36,9 @@ const toVideoItem = (video: {
 });
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
   const video = await prisma.videoEntry.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!video) {
@@ -49,6 +50,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id: routeId } = await params;
     const authHeader = request.headers.get("authorization");
     if (!authHeader) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -72,7 +74,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json();
-    const targetId = params.id ?? body.id;
+    const targetId = routeId ?? body.id;
     if (!targetId) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
@@ -112,6 +114,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id: routeId } = await params;
     const authHeader = request.headers.get("authorization");
     if (!authHeader) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -135,7 +138,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const targetId = params.id ?? body.id;
+    const targetId = routeId ?? body.id;
     if (!targetId) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
