@@ -19,6 +19,11 @@ npx prisma migrate dev --name init
 npx prisma generate
 ```
 
+## Pooler接続メモ
+- Direct接続が通らない場合はSession poolerを利用
+- `DATABASE_URL` は poolerのURIを利用
+- 例: `postgresql://postgres.<PROJECT_REF>:<PASSWORD>@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres?pgbouncer=true&connection_limit=1`
+
 ## API
 - `GET /api/videos`
 - `GET /api/videos/:id`

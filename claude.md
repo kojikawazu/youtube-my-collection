@@ -6,7 +6,7 @@ YouTubeで良かった動画を後から見返せる公開コレクションを�
 ## 直近の状態
 - UIは `base/` の見た目を再現し、`front/` に実装済み
 - 画面: リスト/詳細/ログイン/追加/編集
-- データ: インメモリ（Supabase移行前提）
+- データ: Supabase + PrismaのAPI土台実装済み（認証は未実装）
 - 文言: 日本語化済み
 
 ## 重要な決定事項
@@ -17,9 +17,9 @@ YouTubeで良かった動画を後から見返せる公開コレクションを�
 - デザイン: 薄赤テーマ、`base` UIを完全再現
 
 ## 次にやること候補
-- Supabase接続のリポジトリ層を追加
-- Prismaスキーマを `front/` に反映
-- API Route Handlers でCRUDを実装
+- UI入力バリデーション強化
+- サムネ/タイトル自動取得の正式化
+- 認証（Supabase Auth + allowlist）
 
 ## 主要参照
 - `docs/01-requirements.md`
