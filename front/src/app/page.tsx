@@ -222,7 +222,7 @@ export default function Page() {
             body: JSON.stringify({
               youtubeUrl: formData.youtubeUrl,
               title: formData.title,
-              thumbnailUrl: getYoutubeThumbnail(formData.youtubeUrl),
+              thumbnailUrl: getYoutubeThumbnail(formData.youtubeUrl ?? ""),
               tags: formData.tags ?? [],
               category: formData.category ?? "未分類",
               rating: formData.rating ?? 3,
