@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/lib/validation";
+import { createClient } from "@supabase/supabase-js";
 
 const toVideoItem = (video: {
   id: string;
@@ -64,6 +65,28 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  const adminEmail = process.env.ADMIN_EMAIL ?? "";
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        authorization: authHeader,
+      },
+    },
+  });
+
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const email = authData?.user?.email ?? "";
+  if (authError || !adminEmail || email.toLowerCase() !== adminEmail.toLowerCase()) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const body = await request.json();
   const { data, errors } = validateVideoInput(body);
 

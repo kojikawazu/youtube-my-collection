@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/lib/validation";
+import { createClient } from "@supabase/supabase-js";
 
 type RouteParams = {
   params: {
@@ -48,6 +49,28 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+    const adminEmail = process.env.ADMIN_EMAIL ?? "";
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          authorization: authHeader,
+        },
+      },
+    });
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const email = authData?.user?.email ?? "";
+    if (authError || !adminEmail || email.toLowerCase() !== adminEmail.toLowerCase()) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const body = await request.json();
     const targetId = params.id ?? body.id;
     if (!targetId) {
@@ -89,6 +112,28 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+    const adminEmail = process.env.ADMIN_EMAIL ?? "";
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          authorization: authHeader,
+        },
+      },
+    });
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const email = authData?.user?.email ?? "";
+    if (authError || !adminEmail || email.toLowerCase() !== adminEmail.toLowerCase()) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const body = await request.json().catch(() => ({}));
     const targetId = params.id ?? body.id;
     if (!targetId) {
