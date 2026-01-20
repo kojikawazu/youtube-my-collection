@@ -1,21 +1,21 @@
-# Task 02: Migrate in-memory data to Supabase
+# タスク02: インメモリからSupabaseへ移行
 
-## Goal
-Replace in-memory `INITIAL_VIDEOS` with Supabase-backed storage.
+## 目的
+インメモリの`INITIAL_VIDEOS`をSupabase永続化へ置き換える。
 
-## Scope
-- Define schema in Supabase or via Prisma migrations
-- Create repository/data-access layer
-- Implement CRUD via Next.js Route Handlers
-- Update UI to fetch from API
+## 範囲
+- Supabaseスキーマ定義（Prismaまたは直接）
+- リポジトリ/データアクセス層の作成
+- Next.js Route HandlersでCRUD実装
+- UI側のデータ取得をAPI経由に変更
 
-## Steps
-- Add Prisma schema under `front/` and connect to Supabase
-- Create migrations for `video_entries`
-- Implement `GET /api/videos` and `GET /api/videos/:id`
-- Implement `POST /api/videos`, `PATCH /api/videos/:id`, `DELETE /api/videos/:id`
-- Replace `useState(INITIAL_VIDEOS)` with API fetch + state
+## 手順
+- `front/` にPrismaスキーマを追加しSupabaseへ接続
+- `video_entries` のマイグレーション作成
+- `GET /api/videos` と `GET /api/videos/:id` を実装
+- `POST /api/videos`, `PATCH /api/videos/:id`, `DELETE /api/videos/:id` を実装
+- UIの`useState(INITIAL_VIDEOS)`をAPIフェッチへ置き換え
 
-## Notes
-- Keep UI structure identical
-- Preserve sorting options (added / published / rating)
+## 注意
+- UI構成は現状のまま維持
+- 並び順（追加/公開/評価）を維持

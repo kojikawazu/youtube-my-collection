@@ -1,22 +1,22 @@
-# Task 03: Supabase Auth (Google OAuth + allowlist)
+# タスク03: Supabase Auth（Google OAuth + allowlist）
 
-## Goal
-Enable admin-only create/edit/delete with Google OAuth2 and allowlist.
+## 目的
+Google OAuth2とallowlistで管理者のみ操作可能にする。
 
-## Scope
-- Configure Google provider in Supabase Auth
-- Implement login/logout in UI
-- Allowlist a single admin email
-- Protect API routes
+## 範囲
+- Supabase AuthのGoogleプロバイダ設定
+- ログイン/ログアウト実装
+- 管理者メールallowlistの判定
+- APIルートの保護
 
-## Steps
-- Configure Google OAuth in Supabase
-- Add auth client in `front/`
-- Implement login/logout flow
-- Read user email and compare with allowlist env (ADMIN_EMAIL)
-- Hide admin actions for non-allowlisted users
-- Enforce admin check in API routes
+## 手順
+- SupabaseでGoogle OAuthを設定
+- `front/` にAuthクライアントを追加
+- ログイン/ログアウトの導線を実装
+- ユーザーのメールを取得し `ADMIN_EMAIL` と一致判定
+- 非許可ユーザーは管理操作を非表示
+- API側でも管理者チェックを実施
 
-## Notes
-- Do not rely on UI-only checks
-- Use server-side checks for protected routes
+## 注意
+- UIだけの制御に頼らない
+- サーバー側で必ず権限チェック
