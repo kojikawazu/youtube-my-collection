@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+body {
+  background: #fff4f4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Soften the red palette slightly to reduce visual intensity. */
+.bg-red-500 {
+  background-color: #f87171;
+}
+
+.text-red-500 {
+  color: #f87171;
+}
+
+.border-red-500 {
+  border-color: #f87171;
+}
+
+.bg-red-600 {
+  background-color: #ef4444;
+}
+
+.text-red-600 {
+  color: #ef4444;
+}
+
+.border-red-600 {
+  border-color: #ef4444;
+}

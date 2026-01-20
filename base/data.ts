@@ -1,0 +1,57 @@
+
+import { VideoItem } from './types';
+
+export const INITIAL_VIDEOS: VideoItem[] = [
+  {
+    id: '1',
+    title: 'モダンなUIデザインの原則',
+    youtubeUrl: 'https://youtube.com/watch?v=example1',
+    thumbnailUrl: 'https://picsum.photos/seed/ui/640/360',
+    tags: ['UI', 'UX', 'Design'],
+    category: 'デザイン',
+    rating: 5,
+    addedDate: '2023-11-01T10:00:00Z',
+    publishDate: '2024-01-01T00:00:00Z',
+    goodPoints: '### ポイント\n- 視覚的階層の作り方が分かりやすい\n- 余白の使い方の実例が豊富',
+    memo: 'ポートフォリオ制作の参考にする。'
+  },
+  {
+    id: '2',
+    title: 'React 2024 完全ガイド',
+    youtubeUrl: 'https://youtube.com/watch?v=example2',
+    thumbnailUrl: 'https://picsum.photos/seed/react/640/360',
+    tags: ['React', 'TypeScript', 'Frontend'],
+    category: 'プログラミング',
+    rating: 4,
+    addedDate: '2023-10-25T15:00:00Z',
+    publishDate: '2023-12-15T00:00:00Z',
+    goodPoints: '### 学習内容\n- 新しいHooksの使い道\n- パフォーマンス最適化のコツ',
+    memo: '週末にハンズオンを行う。'
+  },
+  {
+    id: '3',
+    title: '癒しのピアノメドレー',
+    youtubeUrl: 'https://youtube.com/watch?v=example3',
+    thumbnailUrl: 'https://picsum.photos/seed/piano/640/360',
+    tags: ['BGM', 'Piano', 'Relax'],
+    category: '音楽',
+    rating: 5,
+    addedDate: '2023-11-10T08:30:00Z',
+    publishDate: '2024-02-01T00:00:00Z',
+    goodPoints: '### 感想\n- 音質が非常に良い\n- 作業用BGMとして最適',
+    memo: '読書中によく聴いている。'
+  },
+  {
+    id: '4',
+    title: '究極のスパイスカレーの作り方',
+    youtubeUrl: 'https://youtube.com/watch?v=example4',
+    thumbnailUrl: 'https://picsum.photos/seed/curry/640/360',
+    tags: ['Cooking', 'Spicy', 'Health'],
+    category: '料理',
+    rating: 3,
+    addedDate: '2023-09-01T12:00:00Z',
+    publishDate: '2023-10-01T00:00:00Z',
+    goodPoints: '### コツ\n- 玉ねぎを炒める時間\n- スパイスを入れるタイミング',
+    memo: '今度のキャンプで作る。'
+  }
+];
