@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play,
@@ -17,19 +17,23 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Screen, VideoItem, SortOption, Category } from "@/lib/types";
-import { INITIAL_VIDEOS } from "@/lib/sample-videos";
 import { Rating } from "@/components/Rating";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Modal } from "@/components/Modal";
 import { CATEGORIES } from "@/lib/constants";
+import { getYoutubeThumbnail } from "@/lib/youtube";
 
 export default function Page() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.List);
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [videos, setVideos] = useState<VideoItem[]>(INITIAL_VIDEOS);
+  const [videos, setVideos] = useState<VideoItem[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>("newest");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState<{
@@ -45,6 +49,46 @@ export default function Page() {
   });
 
   const [formData, setFormData] = useState<Partial<VideoItem>>({});
+
+  const loadVideos = async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const response = await fetch("/api/videos");
+      if (!response.ok) {
+        throw new Error("Failed to load videos");
+      }
+      const data = (await response.json()) as VideoItem[];
+      setVideos(data);
+    } catch (error) {
+      console.error(error);
+      setLoadError("データの取得に失敗しました。");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadVideos();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 2200);
+  };
 
   const navigateToList = () => {
     setCurrentScreen(Screen.List);
@@ -82,8 +126,23 @@ export default function Page() {
       message: `「${title}」を完全に削除します。`,
       variant: "danger",
       onConfirm: () => {
-        setVideos((prev) => prev.filter((v) => v.id !== id));
-        if (selectedVideo?.id === id) navigateToList();
+        fetch(`/api/videos/${id}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Failed to delete");
+            }
+            setVideos((prev) => prev.filter((v) => v.id !== id));
+            if (selectedVideo?.id === id) navigateToList();
+            showToast("削除しました。");
+          })
+          .catch((error) => {
+            console.error(error);
+            alert("削除に失敗しました。");
+          });
       },
     });
     setIsModalOpen(true);
@@ -91,25 +150,75 @@ export default function Page() {
 
   const handleSave = () => {
     if (!formData.title || !formData.youtubeUrl) return alert("タイトルとURLは必須です");
-    const saveAction = () => {
+    const saveAction = async () => {
       if (currentScreen === Screen.Add) {
-        const newVideo: VideoItem = {
-          ...(formData as VideoItem),
-          id: Date.now().toString(),
-          thumbnailUrl: `https://picsum.photos/seed/${Date.now()}/640/360`,
-          addedDate: new Date().toISOString(),
-          publishDate: new Date().toISOString(),
-        };
-        setVideos([newVideo, ...videos]);
-        navigateToList();
+        try {
+          const response = await fetch("/api/videos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              youtubeUrl: formData.youtubeUrl,
+              title: formData.title,
+              thumbnailUrl: getYoutubeThumbnail(formData.youtubeUrl),
+              tags: formData.tags ?? [],
+              category: formData.category ?? "未分類",
+              rating: formData.rating ?? 3,
+              goodPoints: formData.goodPoints ?? "",
+              memo: formData.memo ?? "",
+              publishDate: null,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to create video");
+          }
+
+          const created = (await response.json()) as VideoItem;
+          setVideos([created, ...videos]);
+          navigateToList();
+          showToast("追加しました。");
+        } catch (error) {
+          console.error(error);
+          alert("保存に失敗しました。");
+        }
       } else {
-        setVideos(
-          videos.map((v) =>
-            v.id === selectedVideo?.id ? ({ ...v, ...formData } as VideoItem) : v
-          )
-        );
-        setSelectedVideo({ ...selectedVideo, ...formData } as VideoItem);
-        setCurrentScreen(Screen.Detail);
+        try {
+          const targetId = formData.id ?? selectedVideo?.id;
+          if (!targetId) {
+            throw new Error("更新対象のIDが見つかりません。");
+          }
+
+          const response = await fetch(`/api/videos/${targetId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: targetId,
+              youtubeUrl: formData.youtubeUrl,
+              title: formData.title,
+              thumbnailUrl: getYoutubeThumbnail(formData.youtubeUrl ?? ""),
+              tags: formData.tags ?? [],
+              category: formData.category ?? "未分類",
+              rating: formData.rating ?? 3,
+              goodPoints: formData.goodPoints ?? "",
+              memo: formData.memo ?? "",
+              publishDate: formData.publishDate ?? null,
+            }),
+          });
+
+          if (!response.ok) {
+            const detail = await response.text();
+            throw new Error(detail || "Failed to update video");
+          }
+
+          const updated = (await response.json()) as VideoItem;
+          setVideos(videos.map((v) => (v.id === updated.id ? updated : v)));
+          setSelectedVideo(updated);
+          setCurrentScreen(Screen.Detail);
+          showToast("更新しました。");
+        } catch (error) {
+          console.error(error);
+          alert(`更新に失敗しました。${error instanceof Error ? error.message : ""}`);
+        }
       }
     };
     setModalConfig({
@@ -134,7 +243,8 @@ export default function Page() {
         );
       case "future":
         return list.sort(
-          (a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
+          (a, b) =>
+            new Date(b.publishDate ?? 0).getTime() - new Date(a.publishDate ?? 0).getTime()
         );
       case "rating":
         return list.sort((a, b) => b.rating - a.rating);
@@ -228,57 +338,68 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {filteredVideos.map((video) => (
-                  <motion.div
-                    layout
-                    key={video.id}
-                    onClick={() => navigateToDetail(video)}
-                    className="group bg-white rounded-[2rem] overflow-hidden border border-red-50/50 hover:border-red-100 shadow-sm hover:shadow-2xl hover:shadow-red-500/10 transition-all cursor-pointer relative flex flex-col"
-                  >
-                    <div className="relative aspect-video overflow-hidden">
-                      <img
-                        src={video.thumbnailUrl}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[10px] font-bold text-red-800 shadow-lg uppercase tracking-widest">
-                        {video.category}
-                      </div>
-                      {isAdmin && (
-                        <button
-                          onClick={(e) => openDeleteModal(video.id, video.title, e)}
-                          className="absolute top-4 left-4 w-9 h-9 flex items-center justify-center bg-red-500 text-white rounded-full transition-all hover:bg-red-600 shadow-lg shadow-red-500/20 z-10"
-                          aria-label="削除"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                    <div className="p-6 flex-1 flex flex-col">
-                      <h3 className="font-bold text-red-950 text-lg mb-3 line-clamp-2 leading-tight group-hover:text-red-500 transition-colors">
-                        {video.title}
-                      </h3>
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {video.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-[10px] px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold"
+              {loadError && (
+                <div className="mb-6 rounded-2xl border border-red-100 bg-red-50/60 px-4 py-3 text-sm text-red-700">
+                  {loadError}
+                </div>
+              )}
+              {isLoading ? (
+                <div className="rounded-[2rem] border border-red-50/50 bg-white/80 p-12 text-center text-sm text-red-400">
+                  読み込み中...
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {filteredVideos.map((video) => (
+                    <motion.div
+                      layout
+                      key={video.id}
+                      onClick={() => navigateToDetail(video)}
+                      className="group bg-white rounded-[2rem] overflow-hidden border border-red-50/50 hover:border-red-100 shadow-sm hover:shadow-2xl hover:shadow-red-500/10 transition-all cursor-pointer relative flex flex-col"
+                    >
+                      <div className="relative aspect-video overflow-hidden">
+                        <img
+                          src={video.thumbnailUrl}
+                          alt=""
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[10px] font-bold text-red-800 shadow-lg uppercase tracking-widest">
+                          {video.category}
+                        </div>
+                        {isAdmin && (
+                          <button
+                            onClick={(e) => openDeleteModal(video.id, video.title, e)}
+                            className="absolute top-4 left-4 w-9 h-9 flex items-center justify-center bg-red-500 text-white rounded-full transition-all hover:bg-red-600 shadow-lg shadow-red-500/20 z-10"
+                            aria-label="削除"
                           >
-                            #{tag}
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="p-6 flex-1 flex flex-col">
+                        <h3 className="font-bold text-red-950 text-lg mb-3 line-clamp-2 leading-tight group-hover:text-red-500 transition-colors">
+                          {video.title}
+                        </h3>
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {video.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="text-[10px] px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-red-50/50">
+                          <Rating value={video.rating} size="sm" />
+                          <span className="text-[10px] font-bold text-red-200 uppercase tracking-tighter">
+                            {new Date(video.addedDate).toLocaleDateString("ja-JP")}
                           </span>
-                        ))}
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-red-50/50">
-                        <Rating value={video.rating} size="sm" />
-                        <span className="text-[10px] font-bold text-red-200 uppercase tracking-tighter">
-                          {new Date(video.addedDate).toLocaleDateString("ja-JP")}
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -343,7 +464,9 @@ export default function Page() {
                     <div className="flex items-center gap-2 text-red-300 text-sm">
                       <Calendar className="w-4 h-4" />
                       <span className="font-medium">
-                        {new Date(selectedVideo.publishDate).toLocaleDateString("ja-JP")} 公開
+                        {selectedVideo.publishDate
+                          ? `${new Date(selectedVideo.publishDate).toLocaleDateString("ja-JP")} 公開`
+                          : "公開日未設定"}
                       </span>
                     </div>
                   </div>
@@ -614,6 +737,20 @@ export default function Page() {
         variant={modalConfig.variant}
         confirmLabel={modalConfig.variant === "danger" ? "削除" : "保存"}
       />
+
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            key="toast"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed right-6 top-6 z-[120] rounded-2xl border border-red-100 bg-white/90 px-4 py-3 text-sm font-bold text-red-600 shadow-lg shadow-red-200/40 backdrop-blur"
+          >
+            {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {isAdmin && currentScreen === Screen.List && (
         <motion.button
