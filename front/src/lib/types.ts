@@ -15,7 +15,7 @@ export type VideoItem = {
   category: Category;
   rating: number;
   addedDate: string;
-  publishDate: string;
+  publishDate: string | null;
   goodPoints: string;
   memo: string;
 };
