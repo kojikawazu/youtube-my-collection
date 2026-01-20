@@ -38,6 +38,7 @@ export default function Page() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const authRejectRef = useRef(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState<{
@@ -78,32 +79,6 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    const initSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      const session = data.session;
-      if (session?.access_token) {
-        setAccessToken(session.access_token);
-        setIsAdmin(isAdminEmail(session.user.email));
-      }
-    };
-    void initSession();
-
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.access_token) {
-        setAccessToken(session.access_token);
-        setIsAdmin(isAdminEmail(session.user.email));
-      } else {
-        setAccessToken(null);
-        setIsAdmin(false);
-      }
-    });
-
-    return () => {
-      subscription.subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
     return () => {
       if (toastTimerRef.current) {
         clearTimeout(toastTimerRef.current);
@@ -120,6 +95,51 @@ export default function Page() {
       setToastMessage(null);
     }, 2200);
   };
+
+  const rejectNonAdmin = async () => {
+    if (authRejectRef.current) return;
+    authRejectRef.current = true;
+    await signOut();
+    setAccessToken(null);
+    setIsAdmin(false);
+    setCurrentScreen(Screen.List);
+    showToast("このアカウントは権限がありません。");
+    authRejectRef.current = false;
+  };
+
+  useEffect(() => {
+    const initSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (session?.access_token) {
+        if (isAdminEmail(session.user.email)) {
+          setAccessToken(session.access_token);
+          setIsAdmin(true);
+        } else {
+          await rejectNonAdmin();
+        }
+      }
+    };
+    void initSession();
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.access_token) {
+        if (isAdminEmail(session.user.email)) {
+          setAccessToken(session.access_token);
+          setIsAdmin(true);
+        } else {
+          void rejectNonAdmin();
+        }
+      } else {
+        setAccessToken(null);
+        setIsAdmin(false);
+      }
+    });
+
+    return () => {
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
 
   const navigateToList = () => {
     setCurrentScreen(Screen.List);
