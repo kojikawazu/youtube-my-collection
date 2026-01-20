@@ -20,3 +20,11 @@ Google OAuth2とallowlistで管理者のみ操作可能にする。
 ## 注意
 - UIだけの制御に頼らない
 - サーバー側で必ず権限チェック
+
+## 進捗
+- 未着手
+
+## 残り
+- Supabase Auth(Google OAuth)設定
+- allowlist判定
+- API保護の実装
