@@ -46,10 +46,10 @@ export async function GET(request: NextRequest) {
 
   const orderBy =
     sort === "rating"
-      ? { rating: order }
+      ? { rating: order === "asc" ? "asc" : "desc" }
       : sort === "published"
-      ? { publishDate: order }
-      : { createdAt: order };
+      ? { publishDate: order === "asc" ? "asc" : "desc" }
+      : { createdAt: order === "asc" ? "asc" : "desc" };
 
   const videos = await prisma.videoEntry.findMany({
     where: {
