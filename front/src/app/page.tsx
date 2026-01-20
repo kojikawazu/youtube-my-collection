@@ -22,6 +22,7 @@ import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Modal } from "@/components/Modal";
 import { CATEGORIES } from "@/lib/constants";
 import { getYoutubeThumbnail } from "@/lib/youtube";
+import { ValidationErrors, validateVideoInput } from "@/lib/validation";
 
 export default function Page() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.List);
@@ -49,6 +50,7 @@ export default function Page() {
   });
 
   const [formData, setFormData] = useState<Partial<VideoItem>>({});
+  const [formErrors, setFormErrors] = useState<ValidationErrors>({});
 
   const loadVideos = async () => {
     setIsLoading(true);
@@ -110,11 +112,13 @@ export default function Page() {
       goodPoints: "",
       memo: "",
     });
+    setFormErrors({});
     setCurrentScreen(Screen.Add);
     window.scrollTo(0, 0);
   };
   const navigateToEdit = (video: VideoItem) => {
     setFormData({ ...video });
+    setFormErrors({});
     setCurrentScreen(Screen.Edit);
     window.scrollTo(0, 0);
   };
@@ -149,7 +153,11 @@ export default function Page() {
   };
 
   const handleSave = () => {
-    if (!formData.title || !formData.youtubeUrl) return alert("タイトルとURLは必須です");
+    const { errors } = validateVideoInput(formData);
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
     const saveAction = async () => {
       if (currentScreen === Screen.Add) {
         try {
@@ -206,8 +214,7 @@ export default function Page() {
           });
 
           if (!response.ok) {
-            const detail = await response.text();
-            throw new Error(detail || "Failed to update video");
+            throw new Error("Failed to update video");
           }
 
           const updated = (await response.json()) as VideoItem;
@@ -546,12 +553,24 @@ export default function Page() {
                     <input
                       type={field.type}
                       value={(formData[field.key as keyof VideoItem] as string) || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, [field.key]: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, [field.key]: e.target.value });
+                        if (formErrors[field.key as keyof ValidationErrors]) {
+                          setFormErrors((prev) => ({ ...prev, [field.key]: undefined }));
+                        }
+                      }}
                       placeholder={field.placeholder}
-                      className="w-full bg-red-50/20 border border-red-100 rounded-2xl px-6 py-4 text-red-950 focus:ring-4 focus:ring-red-50 outline-none transition-all placeholder:text-red-200 font-medium"
+                      className={`w-full rounded-2xl px-6 py-4 text-red-950 outline-none transition-all placeholder:text-red-200 font-medium focus:ring-4 ${
+                        formErrors[field.key as keyof ValidationErrors]
+                          ? "border border-red-300 bg-red-50/70 focus:ring-red-200"
+                          : "bg-red-50/20 border border-red-100 focus:ring-red-50"
+                      }`}
                     />
+                    {formErrors[field.key as keyof ValidationErrors] && (
+                      <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm text-red-900 font-black shadow-md shadow-red-300/30">
+                        {formErrors[field.key as keyof ValidationErrors]}
+                      </p>
+                    )}
                   </div>
                 ))}
 
@@ -562,10 +581,17 @@ export default function Page() {
                     </label>
                     <select
                       value={formData.category}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value as Category })
-                      }
-                      className="w-full bg-red-50/20 border border-red-100 rounded-2xl px-6 py-4 text-red-950 focus:ring-4 focus:ring-red-50 outline-none transition-all font-medium appearance-none"
+                      onChange={(e) => {
+                        setFormData({ ...formData, category: e.target.value as Category });
+                        if (formErrors.category) {
+                          setFormErrors((prev) => ({ ...prev, category: undefined }));
+                        }
+                      }}
+                      className={`w-full rounded-2xl px-6 py-4 text-red-950 outline-none transition-all font-medium appearance-none focus:ring-4 ${
+                        formErrors.category
+                          ? "border border-red-300 bg-red-50/70 focus:ring-red-200"
+                          : "bg-red-50/20 border border-red-100 focus:ring-red-50"
+                      }`}
                     >
                       {CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>
@@ -573,6 +599,11 @@ export default function Page() {
                         </option>
                       ))}
                     </select>
+                    {formErrors.category && (
+                      <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm text-red-900 font-black shadow-md shadow-red-300/30">
+                        {formErrors.category}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2.5">
                     <label className="text-[10px] font-black text-red-800 uppercase tracking-widest ml-1">
@@ -582,7 +613,12 @@ export default function Page() {
                       {[1, 2, 3, 4, 5].map((num) => (
                         <button
                           key={num}
-                          onClick={() => setFormData({ ...formData, rating: num })}
+                          onClick={() => {
+                            setFormData({ ...formData, rating: num });
+                            if (formErrors.rating) {
+                              setFormErrors((prev) => ({ ...prev, rating: undefined }));
+                            }
+                          }}
                           className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold transition-all ${
                             formData.rating === num
                               ? "bg-red-500 text-white shadow-lg shadow-red-200"
@@ -593,6 +629,11 @@ export default function Page() {
                         </button>
                       ))}
                     </div>
+                    {formErrors.rating && (
+                      <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm text-red-900 font-black shadow-md shadow-red-300/30">
+                        {formErrors.rating}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -605,19 +646,31 @@ export default function Page() {
                     <input
                       type="text"
                       value={formData.tags?.join(", ") || ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFormData({
                           ...formData,
                           tags: e.target.value
                             .split(",")
                             .map((t) => t.trim())
                             .filter(Boolean),
-                        })
-                      }
+                        });
+                        if (formErrors.tags) {
+                          setFormErrors((prev) => ({ ...prev, tags: undefined }));
+                        }
+                      }}
                       placeholder="React, デザイン..."
-                      className="w-full bg-red-50/20 border border-red-100 rounded-2xl pl-14 pr-6 py-4 text-red-950 focus:ring-4 focus:ring-red-50 outline-none transition-all placeholder:text-red-200 font-medium"
+                      className={`w-full rounded-2xl pl-14 pr-6 py-4 text-red-950 outline-none transition-all placeholder:text-red-200 font-medium focus:ring-4 ${
+                        formErrors.tags
+                          ? "border border-red-300 bg-red-50/70 focus:ring-red-200"
+                          : "bg-red-50/20 border border-red-100 focus:ring-red-50"
+                      }`}
                     />
                   </div>
+                  {formErrors.tags && (
+                    <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm text-red-900 font-black shadow-md shadow-red-300/30">
+                      {formErrors.tags}
+                    </p>
+                  )}
                 </div>
 
                 {["goodPoints", "memo"].map((key) => (
@@ -628,9 +681,33 @@ export default function Page() {
                     <textarea
                       rows={key === "goodPoints" ? 4 : 3}
                       value={(formData[key as keyof VideoItem] as string) || ""}
-                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                      className="w-full bg-red-50/20 border border-red-100 rounded-[2rem] px-6 py-5 text-red-950 focus:ring-4 focus:ring-red-50 outline-none transition-all resize-none font-medium"
+                      onChange={(e) => {
+                        setFormData({ ...formData, [key]: e.target.value });
+                        if (key === "goodPoints" && formErrors.goodPoints) {
+                          setFormErrors((prev) => ({ ...prev, goodPoints: undefined }));
+                        }
+                        if (key === "memo" && formErrors.memo) {
+                          setFormErrors((prev) => ({ ...prev, memo: undefined }));
+                        }
+                      }}
+                      maxLength={2000}
+                      className={`w-full rounded-[2rem] px-6 py-5 text-red-950 outline-none transition-all resize-none font-medium focus:ring-4 ${
+                        (key === "goodPoints" && formErrors.goodPoints) ||
+                        (key === "memo" && formErrors.memo)
+                          ? "border border-red-300 bg-red-50/70 focus:ring-red-200"
+                          : "bg-red-50/20 border border-red-100 focus:ring-red-50"
+                      }`}
                     />
+                    {key === "goodPoints" && formErrors.goodPoints && (
+                      <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm text-red-900 font-black shadow-md shadow-red-300/30">
+                        {formErrors.goodPoints}
+                      </p>
+                    )}
+                    {key === "memo" && formErrors.memo && (
+                      <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm text-red-900 font-black shadow-md shadow-red-300/30">
+                        {formErrors.memo}
+                      </p>
+                    )}
                   </div>
                 ))}
 
