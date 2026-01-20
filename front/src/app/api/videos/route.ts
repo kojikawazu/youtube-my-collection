@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { validateVideoInput } from "@/lib/validation";
 
 const toVideoItem = (video: {
   id: string;
@@ -64,22 +65,23 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
+  const { data, errors } = validateVideoInput(body);
 
-  if (!body.youtubeUrl) {
-    return NextResponse.json({ error: "youtubeUrl is required" }, { status: 400 });
+  if (Object.keys(errors).length > 0) {
+    return NextResponse.json({ errors }, { status: 400 });
   }
 
   const created = await prisma.videoEntry.create({
     data: {
-      youtubeUrl: body.youtubeUrl,
-      title: body.title ?? "無題の動画",
-      thumbnailUrl: body.thumbnailUrl ?? "",
-      tags: Array.isArray(body.tags) ? body.tags : [],
-      category: body.category ?? "未分類",
-      goodPoints: body.goodPoints ?? "",
-      memo: body.memo ?? "",
-      rating: body.rating ?? 3,
-      publishDate: body.publishDate ? new Date(body.publishDate) : null,
+      youtubeUrl: data.youtubeUrl ?? "",
+      title: data.title ?? "無題の動画",
+      thumbnailUrl: data.thumbnailUrl ?? "",
+      tags: data.tags ?? [],
+      category: data.category ?? "未分類",
+      goodPoints: data.goodPoints ?? "",
+      memo: data.memo ?? "",
+      rating: data.rating ?? 3,
+      publishDate: data.publishDate ?? null,
     },
   });
 
