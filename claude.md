@@ -9,6 +9,8 @@ YouTubeで良かった動画を後から見返せる公開コレクションを�
 - データ: Supabase + PrismaのAPI土台実装済み
 - 認証: Supabase Auth導入中（Google OAuth + allowlist）
 - 文言: 日本語化済み
+- 開発手法: 変更はブランチを切って進め、PRでレビュー/マージする
+- プッシュ前に必ず確認を取り、他にやるべきことがないか相談する
 
 ## 重要な決定事項
 - 技術: Next.js(App Router) + TypeScript + Tailwind
