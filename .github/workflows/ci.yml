@@ -38,4 +38,6 @@ jobs:
       - name: E2E
         env:
           CI: true
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:3000
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
         run: npm run test:e2e
