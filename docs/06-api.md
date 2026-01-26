@@ -4,6 +4,7 @@
 - Next.js Route Handlers (`app/api/*`)
 - 公開はGETのみ
 - 管理操作はSupabase Authで管理者チェック必須
+- 管理操作は `Authorization: Bearer <token>` が必要
 
 ## エンドポイント一覧
 
@@ -25,12 +26,15 @@
 - POST /api/videos
   - 用途: 新規作成
   - body:
-    - youtube_url (required)
+    - youtubeUrl (required)
+    - title
+    - thumbnailUrl
     - tags
     - category
-    - good_points
+    - goodPoints
     - memo
     - rating
+    - publishDate
   - 処理:
     - YouTube URLからタイトル/サムネを取得して保存
 
@@ -38,7 +42,7 @@
   - 用途: 編集
   - body: 更新対象のみ
   - 処理:
-    - youtube_url更新時はタイトル/サムネを再取得
+    - youtubeUrl更新時はタイトル/サムネを再取得
 
 - DELETE /api/videos/:id
   - 用途: 削除
@@ -46,14 +50,13 @@
 ## レスポンス(共通)
 - video:
   - id
-  - youtube_url
+  - youtubeUrl
   - title
-  - thumbnail_url
+  - thumbnailUrl
   - tags
   - category
-  - good_points
+  - goodPoints
   - memo
   - rating
-  - publish_date (nullable)
-  - created_at
-  - updated_at
+  - publishDate (nullable)
+  - addedDate

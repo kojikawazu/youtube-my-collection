@@ -17,12 +17,11 @@
 - Next.js Route Handlers (`app/api/*`) でDBアクセス
 
 ## デプロイ
-- 本番: Google Cloud Run
-- 開発/プレビュー: Vercel
+- 本番: Vercel（`main` ブランチ、`front/` のみ）
 
 ## 実装配置
 - `front/` にフロントアプリを新規実装
 
-## データ方針(初期)
-- インメモリ実装から開始
-- 後でSupabaseに移行できるようにリポジトリ層を分離
+## データ方針
+- Supabase Postgres を前提に実装
+- API経由でUIが取得・更新

@@ -16,16 +16,8 @@
 - `POST /api/videos`, `PATCH /api/videos/:id`, `DELETE /api/videos/:id` を実装
 - UIの`useState(INITIAL_VIDEOS)`をAPIフェッチへ置き換え
 
-## 注意
-- UI構成は現状のまま維持
-- 並び順（追加/公開/評価）を維持
-
 ## 進捗
-- Prismaスキーマ追加
-- API Route HandlersでCRUD実装
-- UIはAPI経由に切替済み
+- 完了
 
-## 残り
-- UI入力バリデーション強化(対応中)
-- サムネ/タイトル自動取得の正式化
-- エラーハンドリング整理
+## メモ
+- 追加/編集/削除は認証が必要（Supabase Auth + allowlist）
