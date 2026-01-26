@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
   if (!authHeader) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const token = authHeader.replace(/^Bearer\\s+/i, "").trim();
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
