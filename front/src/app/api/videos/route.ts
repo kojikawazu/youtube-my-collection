@@ -86,6 +86,21 @@ export async function POST(request: NextRequest) {
   const { data: authData, error: authError } = await supabase.auth.getUser();
   const email = authData?.user?.email ?? "";
   if (authError || !adminEmail || email.toLowerCase() !== adminEmail.toLowerCase()) {
+    const maskEmail = (value: string) => {
+      if (!value) return "";
+      const at = value.indexOf("@");
+      if (at <= 1) return "***";
+      const name = value.slice(0, at);
+      const domain = value.slice(at + 1);
+      return `${name[0]}***@${domain}`;
+    };
+    console.warn("[api/videos] auth check failed", {
+      hasAuthError: Boolean(authError),
+      authErrorMessage: authError?.message ?? "",
+      emailMasked: maskEmail(email),
+      adminEmailPresent: Boolean(adminEmail),
+      emailMatches: adminEmail ? email.toLowerCase() === adminEmail.toLowerCase() : false,
+    });
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
