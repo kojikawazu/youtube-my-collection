@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/lib/validation";
-import { createClient } from "@supabase/supabase-js";
 import { Prisma } from "@prisma/client";
+import { requireAdmin } from "@/lib/auth-server";
 
 const toVideoItem = (video: {
   id: string;
@@ -67,40 +67,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  if (!token) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-  const adminEmail = process.env.ADMIN_EMAIL ?? "";
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-  const { data: authData, error: authError } = await supabase.auth.getUser(token);
-  const email = authData?.user?.email ?? "";
-  if (authError || !adminEmail || email.toLowerCase() !== adminEmail.toLowerCase()) {
-    const maskEmail = (value: string) => {
-      if (!value) return "";
-      const at = value.indexOf("@");
-      if (at <= 1) return "***";
-      const name = value.slice(0, at);
-      const domain = value.slice(at + 1);
-      return `${name[0]}***@${domain}`;
-    };
-    console.warn("[api/videos] auth check failed", {
-      hasAuthError: Boolean(authError),
-      authErrorMessage: authError?.message ?? "",
-      emailMasked: maskEmail(email),
-      adminEmailPresent: Boolean(adminEmail),
-      emailMatches: adminEmail ? email.toLowerCase() === adminEmail.toLowerCase() : false,
-    });
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const auth = await requireAdmin(request, "api/videos");
+  if (!auth.ok) return auth.response;
 
   const body = await request.json();
   const { data, errors } = validateVideoInput(body);
