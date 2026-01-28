@@ -1,10 +1,13 @@
 export type Category =
-  | "音楽"
+  | "AI"
+  | "クラウド"
+  | "バックエンド"
+  | "フロントエンド"
+  | "CI/CD"
+  | "Linux"
+  | "テック企業"
   | "プログラミング"
-  | "デザイン"
-  | "料理"
-  | "ライフハック"
-  | "ゲーム";
+  | "未分類";
 
 export type VideoItem = {
   id: string;
