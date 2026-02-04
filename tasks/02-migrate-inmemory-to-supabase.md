@@ -17,7 +17,7 @@
 - UIの`useState(INITIAL_VIDEOS)`をAPIフェッチへ置き換え
 
 ## 進捗
-- 完了
+- 完了（Issue #2 対応済み）
 
 ## メモ
 - 追加/編集/削除は認証が必要（Supabase Auth + allowlist）
