@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Session } from "@supabase/supabase-js";
 import {
   Play,
   Plus,
@@ -23,7 +24,7 @@ import { Modal } from "@/components/Modal";
 import { CATEGORIES } from "@/lib/constants";
 import { getYoutubeThumbnail } from "@/lib/youtube";
 import { ValidationErrors, validateVideoInput } from "@/lib/validation";
-import { isAdminEmail, signInWithGoogle, signOut } from "@/lib/auth";
+import { signInWithGoogle, signOut } from "@/lib/auth";
 import { supabase } from "@/lib/supabase/client";
 
 export default function Page() {
@@ -96,44 +97,61 @@ export default function Page() {
     }, 2200);
   };
 
-  const rejectNonAdmin = async () => {
-    if (authRejectRef.current) return;
-    authRejectRef.current = true;
-    await signOut();
-    setAccessToken(null);
-    setIsAdmin(false);
-    setCurrentScreen(Screen.List);
-    showToast("このアカウントは権限がありません。");
-    authRejectRef.current = false;
+  const verifyAdminSession = async (token: string) => {
+    try {
+      const response = await fetch("/api/auth/admin", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) return false;
+      const data = (await response.json()) as { isAdmin?: boolean };
+      return Boolean(data.isAdmin);
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   };
 
   useEffect(() => {
+    const rejectNonAdmin = async () => {
+      if (authRejectRef.current) return;
+      authRejectRef.current = true;
+      await signOut();
+      setAccessToken(null);
+      setIsAdmin(false);
+      setCurrentScreen(Screen.List);
+      showToast("このアカウントは権限がありません。");
+      authRejectRef.current = false;
+    };
+
+    const applySession = async (session: Session | null) => {
+      if (!session?.access_token) {
+        setAccessToken(null);
+        setIsAdmin(false);
+        return;
+      }
+
+      const token = session.access_token;
+      const isAllowed = await verifyAdminSession(token);
+      if (isAllowed) {
+        setAccessToken(token);
+        setIsAdmin(true);
+        return;
+      }
+
+      await rejectNonAdmin();
+    };
+
     const initSession = async () => {
       const { data } = await supabase.auth.getSession();
-      const session = data.session;
-      if (session?.access_token) {
-        if (isAdminEmail(session.user.email)) {
-          setAccessToken(session.access_token);
-          setIsAdmin(true);
-        } else {
-          await rejectNonAdmin();
-        }
-      }
+      await applySession(data.session);
     };
     void initSession();
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.access_token) {
-        if (isAdminEmail(session.user.email)) {
-          setAccessToken(session.access_token);
-          setIsAdmin(true);
-        } else {
-          void rejectNonAdmin();
-        }
-      } else {
-        setAccessToken(null);
-        setIsAdmin(false);
-      }
+      void applySession(session);
     });
 
     return () => {
