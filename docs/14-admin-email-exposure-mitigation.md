@@ -26,3 +26,19 @@
 - 管理者複数化。
 - RBAC導入。
 - Supabase設定画面の運用変更。
+
+## 実施結果（2026-02-12）
+- `front/src/lib/auth.ts` から `NEXT_PUBLIC_ADMIN_EMAIL` と `isAdminEmail` を削除。
+- `front/src/app/page.tsx` は `/api/auth/admin` によるサーバー判定へ変更。
+- `docs/04-auth-security.md`, `docs/11-supabase-setup.md` を `ADMIN_EMAIL` のみの記載へ更新。
+- `front/src/` 配下で `NEXT_PUBLIC_ADMIN_EMAIL` 参照ゼロを確認。
+
+## 追加対応（2026-02-12）
+- 変更直後に `/api/auth/admin` が401となる事象を確認。
+- 原因はBearerトークン処理の差分（`Authorization` ヘッダーの扱い）で、書き込み系APIと検証経路が一致していなかったこと。
+- `route.ts` を修正し、`Authorization` からトークンを抽出して `supabase.auth.getUser(token)` で検証する方式に統一。
+- 401解消を確認済み。
+
+## 検証
+- `npm run lint`（エラーなし）
+- `npm run build`（成功）

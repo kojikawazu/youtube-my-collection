@@ -26,3 +26,13 @@
 ## 確認結果
 - `front/src/` から `NEXT_PUBLIC_ADMIN_EMAIL` 参照を削除
 - 管理者判定は `/api/auth/admin` + `ADMIN_EMAIL` に統一
+- `/api/auth/admin` のBearerトークン処理を `supabase.auth.getUser(token)` に統一し、401を解消
+
+## 検証
+- `npm run lint` 実行（エラーなし）
+- `npm run build` 実行（成功）
+- 本番環境でログイン確認し、401が解消したことを確認
+
+## 関連PR
+- https://github.com/kojikawazu/youtube-my-collection/pull/28
+- https://github.com/kojikawazu/youtube-my-collection/pull/29
