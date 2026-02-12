@@ -8,7 +8,6 @@ NEXT_PUBLIC_SUPABASE_URL=https://<PROJECT_REF>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
 ADMIN_EMAIL=...
-NEXT_PUBLIC_ADMIN_EMAIL=...
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
@@ -29,7 +28,7 @@ npx prisma generate
 ## Auth
 - Google OAuth2 (PKCE)
 - `/auth/callback` でコードをセッションへ交換
-- `ADMIN_EMAIL` / `NEXT_PUBLIC_ADMIN_EMAIL` でallowlist判定
+- `ADMIN_EMAIL` でallowlist判定（サーバー側のみ）
 
 ## API
 - `GET /api/videos`
