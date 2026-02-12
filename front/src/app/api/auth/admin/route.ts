@@ -3,23 +3,17 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
-  if (!authHeader) {
+  const token = authHeader ? authHeader.replace(/^Bearer\s+/i, "").trim() : "";
+
+  if (!authHeader || !token) {
     return NextResponse.json({ isAdmin: false }, { status: 401 });
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
   const adminEmail = process.env.ADMIN_EMAIL ?? "";
-
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        authorization: authHeader,
-      },
-    },
-  });
-
-  const { data, error } = await supabase.auth.getUser();
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) {
     return NextResponse.json({ isAdmin: false }, { status: 401 });
   }
