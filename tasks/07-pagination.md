@@ -97,7 +97,9 @@
 - `npm run lint` が通る
 
 ## 進捗
-- 設計完了（実装未着手）
+- 実装完了（`front/src/app/page.tsx`, `front/src/app/api/videos/route.ts`）
+- 検証: `npm run lint` / `npm run build` は成功
+- 補足: `npm run test:e2e -- tests/e2e/public.spec.ts` は実行環境の Next.js ルート解決問題（`tailwindcss` 解決失敗）で完走せず
 
 ## 関連Issue
 - https://github.com/kojikawazu/youtube-my-collection/issues/31

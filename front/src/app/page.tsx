@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Session } from "@supabase/supabase-js";
 import {
@@ -27,19 +27,29 @@ import { ValidationErrors, validateVideoInput } from "@/lib/validation";
 import { signInWithGoogle, signOut } from "@/lib/auth";
 import { supabase } from "@/lib/supabase/client";
 
+const PAGE_SIZE = 10;
+const MAX_VISIBLE_PAGE_BUTTONS = 5;
+
 export default function Page() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.List);
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState<SortOption>("newest");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const authRejectRef = useRef(false);
+  const lastAppliedFiltersRef = useRef({
+    sortOption,
+    debouncedSearchQuery,
+  });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState<{
@@ -57,27 +67,76 @@ export default function Page() {
   const [formData, setFormData] = useState<Partial<VideoItem>>({});
   const [formErrors, setFormErrors] = useState<ValidationErrors>({});
 
-  const loadVideos = async () => {
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const response = await fetch("/api/videos");
-      if (!response.ok) {
-        throw new Error("Failed to load videos");
+  const loadVideos = useCallback(
+    async (page: number) => {
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        const params = new URLSearchParams({
+          limit: String(PAGE_SIZE),
+          offset: String((page - 1) * PAGE_SIZE),
+          order: "desc",
+          sort:
+            sortOption === "future" ? "published" : sortOption === "rating" ? "rating" : "added",
+        });
+        if (debouncedSearchQuery) {
+          params.set("q", debouncedSearchQuery);
+        }
+
+        const response = await fetch(`/api/videos?${params.toString()}`);
+        if (!response.ok) {
+          throw new Error("Failed to load videos");
+        }
+
+        const data = (await response.json()) as VideoItem[];
+        const totalCountHeader = response.headers.get("x-total-count");
+        const parsedTotalCount = totalCountHeader ? Number(totalCountHeader) : NaN;
+        setVideos(data);
+        setTotalCount(
+          Number.isFinite(parsedTotalCount) && parsedTotalCount >= 0 ? parsedTotalCount : data.length
+        );
+      } catch (error) {
+        console.error(error);
+        setLoadError("データの取得に失敗しました。");
+      } finally {
+        setIsLoading(false);
       }
-      const data = (await response.json()) as VideoItem[];
-      setVideos(data);
-    } catch (error) {
-      console.error(error);
-      setLoadError("データの取得に失敗しました。");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [sortOption, debouncedSearchQuery]
+  );
+
+  const refreshListPage = useCallback(
+    async (page: number) => {
+      if (page === currentPage) {
+        await loadVideos(page);
+        return;
+      }
+      setCurrentPage(page);
+    },
+    [currentPage, loadVideos]
+  );
 
   useEffect(() => {
-    void loadVideos();
-  }, []);
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const prev = lastAppliedFiltersRef.current;
+    const filtersChanged =
+      prev.sortOption !== sortOption || prev.debouncedSearchQuery !== debouncedSearchQuery;
+
+    lastAppliedFiltersRef.current = { sortOption, debouncedSearchQuery };
+
+    if (filtersChanged && currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+
+    void loadVideos(currentPage);
+  }, [currentPage, sortOption, debouncedSearchQuery, loadVideos]);
 
   useEffect(() => {
     return () => {
@@ -196,27 +255,33 @@ export default function Page() {
       title: "動画を削除しますか？",
       message: `「${title}」を完全に削除します。`,
       variant: "danger",
-      onConfirm: () => {
-        fetch(`/api/videos/${id}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-          },
-          body: JSON.stringify({ id }),
-        })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error("Failed to delete");
-            }
-            setVideos((prev) => prev.filter((v) => v.id !== id));
-            if (selectedVideo?.id === id) navigateToList();
-            showToast("削除しました。");
-          })
-          .catch((error) => {
-            console.error(error);
-            alert("削除に失敗しました。");
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/videos/${id}`, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            },
+            body: JSON.stringify({ id }),
           });
+          if (!response.ok) {
+            throw new Error("Failed to delete");
+          }
+
+          if (selectedVideo?.id === id) {
+            navigateToList();
+          }
+
+          const nextTotalCount = Math.max(totalCount - 1, 0);
+          const nextTotalPages = Math.max(1, Math.ceil(nextTotalCount / PAGE_SIZE));
+          const nextPage = Math.min(currentPage, nextTotalPages);
+          await refreshListPage(nextPage);
+          showToast("削除しました。");
+        } catch (error) {
+          console.error(error);
+          alert("削除に失敗しました。");
+        }
       },
     });
     setIsModalOpen(true);
@@ -254,9 +319,9 @@ export default function Page() {
             throw new Error("Failed to create video");
           }
 
-          const created = (await response.json()) as VideoItem;
-          setVideos([created, ...videos]);
+          await response.json();
           navigateToList();
+          await refreshListPage(1);
           showToast("追加しました。");
         } catch (error) {
           console.error(error);
@@ -294,8 +359,8 @@ export default function Page() {
           }
 
           const updated = (await response.json()) as VideoItem;
-          setVideos(videos.map((v) => (v.id === updated.id ? updated : v)));
           setSelectedVideo(updated);
+          await refreshListPage(currentPage);
           setCurrentScreen(Screen.Detail);
           showToast("更新しました。");
         } catch (error) {
@@ -313,28 +378,17 @@ export default function Page() {
     setIsModalOpen(true);
   };
 
-  const filteredVideos = useMemo(() => {
-    const list = videos.filter(
-      (v) =>
-        v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        v.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-    switch (sortOption) {
-      case "newest":
-        return list.sort(
-          (a, b) => new Date(b.addedDate).getTime() - new Date(a.addedDate).getTime()
-        );
-      case "future":
-        return list.sort(
-          (a, b) =>
-            new Date(b.publishDate ?? 0).getTime() - new Date(a.publishDate ?? 0).getTime()
-        );
-      case "rating":
-        return list.sort((a, b) => b.rating - a.rating);
-      default:
-        return list;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const visiblePageNumbers = useMemo(() => {
+    const startCentered = Math.max(1, currentPage - Math.floor(MAX_VISIBLE_PAGE_BUTTONS / 2));
+    let end = startCentered + MAX_VISIBLE_PAGE_BUTTONS - 1;
+    if (end > totalPages) {
+      end = totalPages;
     }
-  }, [videos, sortOption, searchQuery]);
+    const start = Math.max(1, end - MAX_VISIBLE_PAGE_BUTTONS + 1);
+
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }, [currentPage, totalPages]);
 
   return (
     <>
@@ -433,57 +487,102 @@ export default function Page() {
                   読み込み中...
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {filteredVideos.map((video) => (
-                    <motion.div
-                      layout
-                      key={video.id}
-                      onClick={() => navigateToDetail(video)}
-                      className="group bg-white rounded-[2rem] overflow-hidden border border-red-50/50 hover:border-red-100 shadow-sm hover:shadow-2xl hover:shadow-red-500/10 transition-all cursor-pointer relative flex flex-col"
-                    >
-                      <div className="relative aspect-video overflow-hidden">
-                        <img
-                          src={video.thumbnailUrl}
-                          alt=""
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        />
-                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[10px] font-bold text-red-800 shadow-lg uppercase tracking-widest">
-                          {video.category}
-                        </div>
-                        {isAdmin && (
-                          <button
-                            onClick={(e) => openDeleteModal(video.id, video.title, e)}
-                            className="absolute top-4 left-4 w-9 h-9 flex items-center justify-center bg-red-500 text-white rounded-full transition-all hover:bg-red-600 shadow-lg shadow-red-500/20 z-10"
-                            aria-label="削除"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                      <div className="p-6 flex-1 flex flex-col">
-                        <h3 className="font-bold text-red-950 text-lg mb-3 line-clamp-2 leading-tight group-hover:text-red-500 transition-colors">
-                          {video.title}
-                        </h3>
-                        <div className="flex flex-wrap gap-1.5 mb-4">
-                          {video.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-[10px] px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold"
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    {videos.map((video) => (
+                      <motion.div
+                        layout
+                        key={video.id}
+                        onClick={() => navigateToDetail(video)}
+                        className="group bg-white rounded-[2rem] overflow-hidden border border-red-50/50 hover:border-red-100 shadow-sm hover:shadow-2xl hover:shadow-red-500/10 transition-all cursor-pointer relative flex flex-col"
+                      >
+                        <div className="relative aspect-video overflow-hidden">
+                          <img
+                            src={video.thumbnailUrl}
+                            alt=""
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          />
+                          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[10px] font-bold text-red-800 shadow-lg uppercase tracking-widest">
+                            {video.category}
+                          </div>
+                          {isAdmin && (
+                            <button
+                              onClick={(e) => openDeleteModal(video.id, video.title, e)}
+                              className="absolute top-4 left-4 w-9 h-9 flex items-center justify-center bg-red-500 text-white rounded-full transition-all hover:bg-red-600 shadow-lg shadow-red-500/20 z-10"
+                              aria-label="削除"
                             >
-                              #{tag}
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="p-6 flex-1 flex flex-col">
+                          <h3 className="font-bold text-red-950 text-lg mb-3 line-clamp-2 leading-tight group-hover:text-red-500 transition-colors">
+                            {video.title}
+                          </h3>
+                          <div className="flex flex-wrap gap-1.5 mb-4">
+                            {video.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="text-[10px] px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex items-center justify-between mt-auto pt-4 border-t border-red-50/50">
+                            <Rating value={video.rating} size="sm" />
+                            <span className="text-[10px] font-bold text-red-200 uppercase tracking-tighter">
+                              {new Date(video.addedDate).toLocaleDateString("ja-JP")}
                             </span>
-                          ))}
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-red-50/50">
-                          <Rating value={video.rating} size="sm" />
-                          <span className="text-[10px] font-bold text-red-200 uppercase tracking-tighter">
-                            {new Date(video.addedDate).toLocaleDateString("ja-JP")}
-                          </span>
-                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {totalCount > 0 && (
+                    <div className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        disabled={currentPage <= 1}
+                        className="rounded-full border border-red-100 bg-white px-4 py-2 text-xs font-bold text-red-700 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        前へ
+                      </button>
+
+                      <div className="flex items-center gap-1">
+                        {visiblePageNumbers.map((page) => (
+                          <button
+                            key={page}
+                            type="button"
+                            onClick={() => setCurrentPage(page)}
+                            className={`h-9 min-w-9 rounded-xl border px-3 text-xs font-bold transition ${
+                              page === currentPage
+                                ? "border-red-500 bg-red-500 text-white shadow-lg shadow-red-200"
+                                : "border-red-100 bg-white text-red-700 hover:border-red-200 hover:bg-red-50"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
+
+                      <span className="rounded-full border border-red-100 bg-white px-4 py-2 text-xs font-bold text-red-700 shadow-sm">
+                        {currentPage} / {totalPages}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage >= totalPages}
+                        className="rounded-full border border-red-100 bg-white px-4 py-2 text-xs font-bold text-red-700 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        次へ
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </motion.div>
           )}

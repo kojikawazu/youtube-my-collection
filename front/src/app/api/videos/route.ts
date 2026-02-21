@@ -30,20 +30,30 @@ const toVideoItem = (video: {
   addedDate: video.createdAt.toISOString(),
 });
 
-const parseNumber = (value: string | null, fallback: number) => {
+const parseNumber = (
+  value: string | null,
+  fallback: number,
+  range: { min?: number; max?: number } = {}
+) => {
   if (value === null) return fallback;
   const parsed = Number(value);
-  return Number.isNaN(parsed) ? fallback : parsed;
+  if (!Number.isFinite(parsed)) return fallback;
+
+  const integer = Math.trunc(parsed);
+  if (typeof range.min === "number" && integer < range.min) return range.min;
+  if (typeof range.max === "number" && integer > range.max) return range.max;
+  return integer;
 };
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const sort = searchParams.get("sort") ?? "added";
   const order = searchParams.get("order") ?? "desc";
+  const q = searchParams.get("q")?.trim() ?? "";
   const tag = searchParams.get("tag");
   const category = searchParams.get("category");
-  const limit = parseNumber(searchParams.get("limit"), 50);
-  const offset = parseNumber(searchParams.get("offset"), 0);
+  const limit = parseNumber(searchParams.get("limit"), 10, { min: 1, max: 100 });
+  const offset = parseNumber(searchParams.get("offset"), 0, { min: 0 });
 
   const sortOrder: Prisma.SortOrder = order === "asc" ? "asc" : "desc";
   const orderBy =
@@ -53,17 +63,33 @@ export async function GET(request: NextRequest) {
       ? { publishDate: sortOrder }
       : { createdAt: sortOrder };
 
-  const videos = await prisma.videoEntry.findMany({
-    where: {
-      ...(tag ? { tags: { has: tag } } : {}),
-      ...(category ? { category } : {}),
-    },
-    orderBy,
-    take: limit,
-    skip: offset,
-  });
+  const where: Prisma.VideoEntryWhereInput = {
+    ...(tag ? { tags: { has: tag } } : {}),
+    ...(category ? { category } : {}),
+    ...(q
+      ? {
+          OR: [{ title: { contains: q, mode: "insensitive" } }, { tags: { has: q } }],
+        }
+      : {}),
+  };
 
-  return NextResponse.json(videos.map(toVideoItem));
+  const [totalCount, videos] = await prisma.$transaction([
+    prisma.videoEntry.count({ where }),
+    prisma.videoEntry.findMany({
+      where,
+      orderBy,
+      take: limit,
+      skip: offset,
+    }),
+  ]);
+
+  return NextResponse.json(videos.map(toVideoItem), {
+    headers: {
+      "x-total-count": String(totalCount),
+      "x-limit": String(limit),
+      "x-offset": String(offset),
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {
