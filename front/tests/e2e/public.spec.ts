@@ -89,7 +89,7 @@ const buildApiResponse = (dataset: MockVideo[], route: Route) => {
   const requestUrl = new URL(route.request().url());
   const sort = requestUrl.searchParams.get("sort") ?? "added";
   const order = requestUrl.searchParams.get("order") === "asc" ? "asc" : "desc";
-  const q = (requestUrl.searchParams.get("q") ?? "").trim().toLowerCase();
+  const q = (requestUrl.searchParams.get("q") ?? "").trim();
   const tag = requestUrl.searchParams.get("tag");
   const category = requestUrl.searchParams.get("category");
   const limit = parseNumber(requestUrl.searchParams.get("limit"), 10, { min: 1, max: 100 });
@@ -101,8 +101,8 @@ const buildApiResponse = (dataset: MockVideo[], route: Route) => {
       if (tag && !video.tags.includes(tag)) return false;
       if (category && video.category !== category) return false;
       if (!q) return true;
-      const inTitle = video.title.toLowerCase().includes(q);
-      const inTags = video.tags.some((item) => item.toLowerCase() === q);
+      const inTitle = video.title.toLowerCase().includes(q.toLowerCase());
+      const inTags = video.tags.some((item) => item === q);
       return inTitle || inTags;
     })
     .sort((a, b) => {
@@ -249,6 +249,34 @@ test("shows at most five page number buttons", async ({ page }) => {
   await expect(page.getByRole("button", { name: "3" })).toBeVisible();
   await expect(page.getByRole("button", { name: "7" })).toBeVisible();
   await expect(page.getByRole("button", { name: "2" })).toHaveCount(0);
+});
+
+test("resets to first page when sort option changes", async ({ page }) => {
+  const paginationVideos: MockVideo[] = Array.from({ length: 11 }, (_, index) => ({
+    id: `sort-reset-${index + 1}`,
+    title: `ソート戻り検証 ${index + 1}`,
+    youtubeUrl: `https://youtube.com/watch?v=sortreset${index + 1}`,
+    thumbnailUrl: `https://picsum.photos/seed/sort-reset-${index + 1}/640/360`,
+    tags: [`Sort${index + 1}`],
+    category: "プログラミング",
+    rating: ((index + 1) % 5) + 1,
+    addedDate: new Date(Date.UTC(2025, 5, 30 - index)).toISOString(),
+    publishDate: new Date(Date.UTC(2025, 0, 1 + index)).toISOString(),
+    goodPoints: "good",
+    memo: "memo",
+  }));
+
+  await mockVideosApi(page, paginationVideos);
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "2" }).click();
+  await expect(page.getByText("2 / 2")).toBeVisible();
+  await expect(page.locator("h3")).toHaveCount(1);
+
+  await page.getByRole("combobox").selectOption({ label: "高評価順" });
+
+  await expect(page.getByText("1 / 2")).toBeVisible();
+  await expect(page.locator("h3")).toHaveCount(10);
 });
 
 test("gracefully handles empty list", async ({ page }) => {

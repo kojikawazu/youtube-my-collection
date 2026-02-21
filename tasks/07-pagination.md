@@ -100,6 +100,7 @@
 - 実装完了（`front/src/app/page.tsx`, `front/src/app/api/videos/route.ts`）
 - 検証: `npm run lint` / `npm run build` は成功
 - 補足: `npm run test:e2e -- tests/e2e/public.spec.ts` は実行環境の Next.js ルート解決問題（`tailwindcss` 解決失敗）で完走せず
+- 追加対応: レビュー指摘の E2E 2点（タグ一致ロジックのAPI準拠化、並び替え時の1ページ目リセットケース追加）を反映
 
 ## 関連Issue
 - https://github.com/kojikawazu/youtube-my-collection/issues/31
