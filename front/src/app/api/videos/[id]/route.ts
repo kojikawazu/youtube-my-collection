@@ -65,18 +65,21 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ errors }, { status: 400 });
     }
 
+    const hasDataField = <T extends object, K extends keyof T>(target: T, key: K) =>
+      Object.prototype.hasOwnProperty.call(target, key);
+
     const updated = await prisma.videoEntry.update({
       where: { id: targetId },
       data: {
-        ...(data.youtubeUrl ? { youtubeUrl: data.youtubeUrl } : {}),
-        ...(data.title ? { title: data.title } : {}),
-        ...(data.thumbnailUrl ? { thumbnailUrl: data.thumbnailUrl } : {}),
-        ...(data.tags ? { tags: data.tags } : {}),
-        ...(data.category ? { category: data.category } : {}),
-        ...(typeof data.goodPoints === "string" ? { goodPoints: data.goodPoints } : {}),
-        ...(typeof data.memo === "string" ? { memo: data.memo } : {}),
-        ...(typeof data.rating === "number" ? { rating: data.rating } : {}),
-        ...(Object.prototype.hasOwnProperty.call(data, "publishDate")
+        ...(hasDataField(data, "youtubeUrl") ? { youtubeUrl: data.youtubeUrl } : {}),
+        ...(hasDataField(data, "title") ? { title: data.title } : {}),
+        ...(hasDataField(data, "thumbnailUrl") ? { thumbnailUrl: data.thumbnailUrl } : {}),
+        ...(hasDataField(data, "tags") ? { tags: data.tags } : {}),
+        ...(hasDataField(data, "category") ? { category: data.category } : {}),
+        ...(hasDataField(data, "goodPoints") ? { goodPoints: data.goodPoints } : {}),
+        ...(hasDataField(data, "memo") ? { memo: data.memo } : {}),
+        ...(hasDataField(data, "rating") ? { rating: data.rating } : {}),
+        ...(hasDataField(data, "publishDate")
           ? { publishDate: data.publishDate ?? null }
           : {}),
       },

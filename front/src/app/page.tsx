@@ -55,7 +55,7 @@ export default function Page() {
   const [modalConfig, setModalConfig] = useState<{
     title: string;
     message: string;
-    onConfirm: () => void;
+    onConfirm: () => void | Promise<void>;
     variant: "danger" | "info";
   }>({
     title: "",
@@ -260,10 +260,8 @@ export default function Page() {
           const response = await fetch(`/api/videos/${id}`, {
             method: "DELETE",
             headers: {
-              "Content-Type": "application/json",
               ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
             },
-            body: JSON.stringify({ id }),
           });
           if (!response.ok) {
             throw new Error("Failed to delete");
@@ -281,6 +279,7 @@ export default function Page() {
         } catch (error) {
           console.error(error);
           alert("削除に失敗しました。");
+          throw error;
         }
       },
     });
@@ -326,6 +325,7 @@ export default function Page() {
         } catch (error) {
           console.error(error);
           alert("保存に失敗しました。");
+          throw error;
         }
       } else {
         try {
@@ -366,6 +366,7 @@ export default function Page() {
         } catch (error) {
           console.error(error);
           alert(`更新に失敗しました。${error instanceof Error ? error.message : ""}`);
+          throw error;
         }
       }
     };
