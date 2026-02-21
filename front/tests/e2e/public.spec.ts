@@ -1,6 +1,20 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page, type Route } from "@playwright/test";
 
-const mockVideos = [
+type MockVideo = {
+  id: string;
+  title: string;
+  youtubeUrl: string;
+  thumbnailUrl: string;
+  tags: string[];
+  category: string;
+  rating: number;
+  addedDate: string;
+  publishDate: string | null;
+  goodPoints: string;
+  memo: string;
+};
+
+const baseVideos: MockVideo[] = [
   {
     id: "1",
     title: "モダンなUIデザインの原則",
@@ -55,15 +69,80 @@ const mockVideos = [
   },
 ];
 
+const parseNumber = (
+  value: string | null,
+  fallback: number,
+  range: { min?: number; max?: number } = {}
+) => {
+  if (value === null) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  const integer = Math.trunc(parsed);
+  if (typeof range.min === "number" && integer < range.min) return range.min;
+  if (typeof range.max === "number" && integer > range.max) return range.max;
+  return integer;
+};
+
+const toTimestamp = (value: string | null) => (value ? new Date(value).getTime() : 0);
+
+const buildApiResponse = (dataset: MockVideo[], route: Route) => {
+  const requestUrl = new URL(route.request().url());
+  const sort = requestUrl.searchParams.get("sort") ?? "added";
+  const order = requestUrl.searchParams.get("order") === "asc" ? "asc" : "desc";
+  const q = (requestUrl.searchParams.get("q") ?? "").trim();
+  const tag = requestUrl.searchParams.get("tag");
+  const category = requestUrl.searchParams.get("category");
+  const limit = parseNumber(requestUrl.searchParams.get("limit"), 10, { min: 1, max: 100 });
+  const offset = parseNumber(requestUrl.searchParams.get("offset"), 0, { min: 0 });
+
+  const direction = order === "asc" ? 1 : -1;
+  const filtered = dataset
+    .filter((video) => {
+      if (tag && !video.tags.includes(tag)) return false;
+      if (category && video.category !== category) return false;
+      if (!q) return true;
+      const inTitle = video.title.toLowerCase().includes(q.toLowerCase());
+      const inTags = video.tags.some((item) => item === q);
+      return inTitle || inTags;
+    })
+    .sort((a, b) => {
+      const compare =
+        sort === "rating"
+          ? a.rating - b.rating
+          : sort === "published"
+          ? toTimestamp(a.publishDate) - toTimestamp(b.publishDate)
+          : toTimestamp(a.addedDate) - toTimestamp(b.addedDate);
+      return compare * direction;
+    });
+
+  const paged = filtered.slice(offset, offset + limit);
+  return {
+    body: JSON.stringify(paged),
+    totalCount: filtered.length,
+    limit,
+    offset,
+  };
+};
+
+const mockVideosApi = async (page: Page, dataset: MockVideo[]) => {
+  await page.route("**/api/videos**", async (route) => {
+    const payload = buildApiResponse(dataset, route);
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: {
+        "x-total-count": String(payload.totalCount),
+        "x-limit": String(payload.limit),
+        "x-offset": String(payload.offset),
+      },
+      body: payload.body,
+    });
+  });
+};
+
 test.describe("normal flows", () => {
   test.beforeEach(async ({ page }) => {
-    await page.route("**/api/videos**", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockVideos),
-      });
-    });
+    await mockVideosApi(page, baseVideos);
   });
 
   test("list renders and navigates to detail", async ({ page }) => {
@@ -114,11 +193,102 @@ test.describe("normal flows", () => {
   });
 });
 
+test("supports pagination with 10 items per page", async ({ page }) => {
+  const paginationVideos: MockVideo[] = Array.from({ length: 11 }, (_, index) => ({
+    id: `pg-${index + 1}`,
+    title: `ページング動画 ${index + 1}`,
+    youtubeUrl: `https://youtube.com/watch?v=page${index + 1}`,
+    thumbnailUrl: `https://picsum.photos/seed/page-${index + 1}/640/360`,
+    tags: [`Tag${index + 1}`],
+    category: "プログラミング",
+    rating: ((index + 2) % 5) + 1,
+    addedDate: new Date(Date.UTC(2025, 0, 31 - index)).toISOString(),
+    publishDate: new Date(Date.UTC(2025, 0, 1 + index)).toISOString(),
+    goodPoints: "good",
+    memo: "memo",
+  }));
+
+  await mockVideosApi(page, paginationVideos);
+  await page.goto("/");
+
+  await expect(page.locator("h3")).toHaveCount(10);
+  await expect(page.getByRole("button", { name: "2" })).toBeVisible();
+
+  await page.getByRole("button", { name: "2" }).click();
+
+  await expect(page.getByText("2 / 2")).toBeVisible();
+  await expect(page.locator("h3")).toHaveCount(1);
+});
+
+test("shows at most five page number buttons", async ({ page }) => {
+  const paginationVideos: MockVideo[] = Array.from({ length: 61 }, (_, index) => ({
+    id: `window-${index + 1}`,
+    title: `ページ番号検証 ${index + 1}`,
+    youtubeUrl: `https://youtube.com/watch?v=window${index + 1}`,
+    thumbnailUrl: `https://picsum.photos/seed/window-${index + 1}/640/360`,
+    tags: [`Window${index + 1}`],
+    category: "プログラミング",
+    rating: ((index + 3) % 5) + 1,
+    addedDate: new Date(Date.UTC(2025, 11, 31 - index)).toISOString(),
+    publishDate: new Date(Date.UTC(2025, 0, 1 + index)).toISOString(),
+    goodPoints: "good",
+    memo: "memo",
+  }));
+
+  await mockVideosApi(page, paginationVideos);
+  await page.goto("/");
+
+  await expect(page.getByText("1 / 7")).toBeVisible();
+  await expect(page.getByRole("button", { name: "1" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "5" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "6" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "5" }).click();
+
+  await expect(page.getByText("5 / 7")).toBeVisible();
+  await expect(page.getByRole("button", { name: "3" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "7" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "2" })).toHaveCount(0);
+});
+
+test("resets to first page when sort option changes", async ({ page }) => {
+  const paginationVideos: MockVideo[] = Array.from({ length: 11 }, (_, index) => ({
+    id: `sort-reset-${index + 1}`,
+    title: `ソート戻り検証 ${index + 1}`,
+    youtubeUrl: `https://youtube.com/watch?v=sortreset${index + 1}`,
+    thumbnailUrl: `https://picsum.photos/seed/sort-reset-${index + 1}/640/360`,
+    tags: [`Sort${index + 1}`],
+    category: "プログラミング",
+    rating: ((index + 1) % 5) + 1,
+    addedDate: new Date(Date.UTC(2025, 5, 30 - index)).toISOString(),
+    publishDate: new Date(Date.UTC(2025, 0, 1 + index)).toISOString(),
+    goodPoints: "good",
+    memo: "memo",
+  }));
+
+  await mockVideosApi(page, paginationVideos);
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "2" }).click();
+  await expect(page.getByText("2 / 2")).toBeVisible();
+  await expect(page.locator("h3")).toHaveCount(1);
+
+  await page.getByRole("combobox").selectOption({ label: "高評価順" });
+
+  await expect(page.getByText("1 / 2")).toBeVisible();
+  await expect(page.locator("h3")).toHaveCount(10);
+});
+
 test("gracefully handles empty list", async ({ page }) => {
   await page.route("**/api/videos**", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
+      headers: {
+        "x-total-count": "0",
+        "x-limit": "10",
+        "x-offset": "0",
+      },
       body: JSON.stringify([]),
     });
   });
@@ -127,25 +297,20 @@ test("gracefully handles empty list", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "コレクション" })).toBeVisible();
   await expect(page.locator("h3")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "次へ" })).toHaveCount(0);
 });
 
 test("shows unpublished label when publishDate is null", async ({ page }) => {
   const withUnpublished = [
     {
-      ...mockVideos[0],
+      ...baseVideos[0],
       id: "unpublished-1",
       title: "公開日未設定の動画",
       publishDate: null,
     },
   ];
 
-  await page.route("**/api/videos**", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(withUnpublished),
-    });
-  });
+  await mockVideosApi(page, withUnpublished);
 
   await page.goto("/");
   await page.getByRole("heading", { name: "公開日未設定の動画" }).click();

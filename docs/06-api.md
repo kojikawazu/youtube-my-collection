@@ -14,10 +14,20 @@
   - クエリ:
     - sort: `added` | `published` | `rating`
     - order: `desc` (default) | `asc`
+    - q: 任意（検索文字列）
+      - title: 部分一致（大文字小文字を区別しない）
+      - tags: 一致（`has`）
     - tag: 任意(一致)
     - category: 任意(一致)
-    - limit: 任意
-    - offset: 任意
+    - limit: 任意（default: `10`, min: `1`, max: `100`）
+    - offset: 任意（default: `0`, min: `0`）
+  - レスポンスヘッダー:
+    - `x-total-count`: 検索条件に一致した総件数
+    - `x-limit`: 実際に適用した `limit`
+    - `x-offset`: 実際に適用した `offset`
+  - 備考:
+    - レスポンス本文は後方互換のため `VideoItem[]` を維持
+    - `x-total-count` は同一条件の件数クエリで算出する
 
 - GET /api/videos/:id
   - 用途: 詳細取得
