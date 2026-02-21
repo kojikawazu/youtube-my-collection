@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Info } from "lucide-react";
 
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title: string;
   message: string;
   confirmLabel?: string;
@@ -19,13 +19,35 @@ export const Modal: React.FC<ModalProps> = ({
   onConfirm,
   title,
   message,
-  confirmLabel,
+  confirmLabel = "実行",
   cancelLabel = "キャンセル",
   variant = "info",
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "unset";
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow || "unset";
+    };
   }, [isOpen]);
+
+  const handleConfirm = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await onConfirm();
+      onClose();
+    } catch (error) {
+      console.error("Modal confirm failed", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -36,7 +58,11 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-red-950/20 backdrop-blur-md"
-            onClick={onClose}
+            onClick={() => {
+              if (!isSubmitting) {
+                onClose();
+              }
+            }}
           />
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -62,20 +88,25 @@ export const Modal: React.FC<ModalProps> = ({
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
-                  onConfirm();
-                  onClose();
+                  void handleConfirm();
                 }}
-                className={`w-full py-5 rounded-[1.5rem] font-bold transition-all hover:-translate-y-1 shadow-xl ${
+                disabled={isSubmitting}
+                className={`w-full py-5 rounded-[1.5rem] font-bold transition-all hover:-translate-y-1 shadow-xl disabled:cursor-not-allowed disabled:opacity-60 ${
                   variant === "danger"
                     ? "bg-red-500 text-white shadow-red-200"
                     : "bg-red-950 text-white shadow-red-950/20"
                 }`}
               >
-                {confirmLabel}
+                {isSubmitting ? "処理中..." : confirmLabel}
               </button>
               <button
-                onClick={onClose}
-                className="w-full py-5 rounded-[1.5rem] font-bold text-red-300 hover:text-red-500 transition-colors"
+                onClick={() => {
+                  if (!isSubmitting) {
+                    onClose();
+                  }
+                }}
+                disabled={isSubmitting}
+                className="w-full py-5 rounded-[1.5rem] font-bold text-red-300 hover:text-red-500 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {cancelLabel}
               </button>
