@@ -341,3 +341,34 @@ test("shows error banner on request timeout", async ({ page }) => {
 
   await expect(page.getByText("データの取得に失敗しました。")).toBeVisible();
 });
+
+test("does not call /api/auth/admin when not logged in", async ({ page }) => {
+  await page.route("**/api/videos**", async (route) => {
+    const payload = buildApiResponse(baseVideos, route);
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: {
+        "x-total-count": String(payload.totalCount),
+        "x-limit": String(payload.limit),
+        "x-offset": String(payload.offset),
+      },
+      body: payload.body,
+    });
+  });
+
+  const adminRequests: string[] = [];
+  page.on("request", (req) => {
+    if (req.url().includes("/api/auth/admin")) {
+      adminRequests.push(req.url());
+    }
+  });
+
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "コレクション" })).toBeVisible();
+
+  // Wait briefly to ensure no delayed auth requests fire
+  await page.waitForTimeout(1000);
+
+  expect(adminRequests).toHaveLength(0);
+});

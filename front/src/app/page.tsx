@@ -177,7 +177,11 @@ export default function Page() {
     const rejectNonAdmin = async () => {
       if (authRejectRef.current) return;
       authRejectRef.current = true;
-      await signOut();
+      try {
+        await signOut();
+      } catch {
+        // Ignore signOut errors (e.g. expired token → 403)
+      }
       setAccessToken(null);
       setIsAdmin(false);
       setCurrentScreen(Screen.List);
@@ -185,10 +189,14 @@ export default function Page() {
       authRejectRef.current = false;
     };
 
+    const clearSession = () => {
+      setAccessToken(null);
+      setIsAdmin(false);
+    };
+
     const applySession = async (session: Session | null) => {
       if (!session?.access_token) {
-        setAccessToken(null);
-        setIsAdmin(false);
+        clearSession();
         return;
       }
 
@@ -205,12 +213,22 @@ export default function Page() {
 
     const initSession = async () => {
       const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        clearSession();
+        return;
+      }
       await applySession(data.session);
     };
     void initSession();
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-      void applySession(session);
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        clearSession();
+        return;
+      }
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        void applySession(session);
+      }
     });
 
     return () => {
