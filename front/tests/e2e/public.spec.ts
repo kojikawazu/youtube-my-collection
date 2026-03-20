@@ -179,8 +179,7 @@ test.describe("normal flows", () => {
 
     await page.getByRole("combobox").selectOption({ label: "高評価順" });
 
-    const firstTitle = await page.locator("h3").first().innerText();
-    expect(firstTitle).toBe("React 2024 完全ガイド");
+    await expect(page.locator("h3").first()).toHaveText("React 2024 完全ガイド");
   });
 
   test("opens login screen", async ({ page }) => {
