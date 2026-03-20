@@ -56,6 +56,7 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
             </a>
           ),
           img: ({ ...props }) => (
+            // eslint-disable-next-line @next/next/no-img-element -- user-supplied URLs from markdown content
             <img
               {...props}
               alt={props.alt ?? ""}
