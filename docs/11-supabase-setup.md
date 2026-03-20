@@ -36,3 +36,4 @@ npx prisma generate
 - `POST /api/videos`
 - `PATCH /api/videos/:id`
 - `DELETE /api/videos/:id`
+- `GET /api/auth/admin`

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Session } from "@supabase/supabase-js";
 import {
@@ -19,7 +20,7 @@ import {
 } from "lucide-react";
 import { Screen, VideoItem, SortOption, Category } from "@/lib/types";
 import { Rating } from "@/components/Rating";
-import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { MarkdownRenderer } from "@/components/Markdown";
 import { Modal } from "@/components/Modal";
 import { CATEGORIES } from "@/lib/constants";
 import { getYoutubeThumbnail } from "@/lib/youtube";
@@ -516,10 +517,13 @@ export default function Page() {
                         className="group bg-white rounded-[2rem] overflow-hidden border border-red-50/50 hover:border-red-100 shadow-sm hover:shadow-2xl hover:shadow-red-500/10 transition-all cursor-pointer relative flex flex-col"
                       >
                         <div className="relative aspect-video overflow-hidden">
-                          <img
+                          <Image
                             src={video.thumbnailUrl}
                             alt=""
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            fill
+                            unoptimized
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                            className="object-cover group-hover:scale-105 transition-transform duration-700"
                           />
                           <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[10px] font-bold text-red-800 shadow-lg uppercase tracking-widest">
                             {video.category}
@@ -643,7 +647,7 @@ export default function Page() {
 
               <div className="bg-white rounded-[3rem] overflow-hidden border border-red-50/50 shadow-2xl shadow-red-500/5">
                 <div className="relative aspect-video">
-                  <img src={selectedVideo.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                  <Image src={selectedVideo.thumbnailUrl} alt="" fill unoptimized sizes="(max-width: 768px) 100vw, 896px" className="object-cover" />
                   <a
                     href={selectedVideo.youtubeUrl}
                     target="_blank"
