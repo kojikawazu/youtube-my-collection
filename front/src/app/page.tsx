@@ -521,6 +521,7 @@ export default function Page() {
                             src={video.thumbnailUrl}
                             alt=""
                             fill
+                            unoptimized
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                             className="object-cover group-hover:scale-105 transition-transform duration-700"
                           />
@@ -646,7 +647,7 @@ export default function Page() {
 
               <div className="bg-white rounded-[3rem] overflow-hidden border border-red-50/50 shadow-2xl shadow-red-500/5">
                 <div className="relative aspect-video">
-                  <Image src={selectedVideo.thumbnailUrl} alt="" fill sizes="(max-width: 768px) 100vw, 896px" className="object-cover" />
+                  <Image src={selectedVideo.thumbnailUrl} alt="" fill unoptimized sizes="(max-width: 768px) 100vw, 896px" className="object-cover" />
                   <a
                     href={selectedVideo.youtubeUrl}
                     target="_blank"
