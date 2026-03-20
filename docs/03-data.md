@@ -5,8 +5,8 @@
 ### フィールド
 - id: UUID もしくは整数
 - youtubeUrl: 文字列(必須)
-- title: 文字列(保存時に自動取得)
-- thumbnailUrl: 文字列(保存時に自動取得)
+- title: 文字列(ユーザー入力)
+- thumbnailUrl: 文字列(YouTube URLからクライアント側で自動生成)
 - tags: 文字列配列
   - 各タグ: 10文字以内
 - category: 文字列(10文字以内, UIは単一プリセット選択)
@@ -23,7 +23,8 @@
 - publishDate(将来拡張)
 
 ### 派生データ
-- title/thumbnailUrl は保存時にYouTube URLから取得
+- thumbnailUrl はクライアント側でYouTube URLから自動生成
+- title はユーザー入力
 
 ### 補足
 - UIはカテゴリのプリセットを提供するが、APIは文字列として扱う
@@ -35,3 +36,4 @@
   - Linux
   - テック企業
   - プログラミング
+  - 未分類(フォールバック値、UIセレクタには非表示)

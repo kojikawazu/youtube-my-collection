@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Screen, VideoItem, SortOption, Category } from "@/lib/types";
 import { Rating } from "@/components/Rating";
-import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { MarkdownRenderer } from "@/components/Markdown";
 import { Modal } from "@/components/Modal";
 import { CATEGORIES } from "@/lib/constants";
 import { getYoutubeThumbnail } from "@/lib/youtube";

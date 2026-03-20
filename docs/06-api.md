@@ -37,7 +37,7 @@
   - 用途: 新規作成
   - body:
     - youtubeUrl (required)
-    - title
+    - title (required)
     - thumbnailUrl
     - tags
     - category
@@ -46,16 +46,27 @@
     - rating
     - publishDate
   - 処理:
-    - YouTube URLからタイトル/サムネを取得して保存
+    - タイトルはクライアントから送信された値を保存
+    - サムネURLはクライアント側でYouTube URLから生成して送信
 
 - PATCH /api/videos/:id
   - 用途: 編集
   - body: 更新対象のみ
   - 処理:
-    - youtubeUrl更新時はタイトル/サムネを再取得
+    - クライアントから送信された値で更新
 
 - DELETE /api/videos/:id
   - 用途: 削除
+
+### 認証
+- GET /api/auth/admin
+  - 用途: 管理者判定
+  - ヘッダー: `Authorization: Bearer <token>` が必要
+  - レスポンス: `{ isAdmin: boolean }`
+  - 処理:
+    - Bearerトークンで Supabase Auth の `getUser` を呼び出し
+    - メールアドレスが `ADMIN_EMAIL` と一致すれば `isAdmin: true`
+    - 不一致・エラー時は `401` を返却
 
 ## レスポンス(共通)
 - video:
