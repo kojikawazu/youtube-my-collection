@@ -9,8 +9,8 @@ import {
   Calendar,
 } from "lucide-react";
 import { VideoItem } from "@/lib/types";
-import { Rating } from "@/components/Rating";
-import { MarkdownRenderer } from "@/components/Markdown";
+import { Rating } from "@/components/atoms/Rating";
+import { MarkdownRenderer } from "@/components/atoms/Markdown";
 import { TagList } from "@/components/molecules/TagList";
 
 type VideoDetailProps = {

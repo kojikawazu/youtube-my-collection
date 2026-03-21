@@ -3,7 +3,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { VideoItem } from "@/lib/types";
-import { Rating } from "@/components/Rating";
+import { Rating } from "@/components/atoms/Rating";
 import { TagList } from "@/components/molecules/TagList";
 
 type VideoCardProps = {
