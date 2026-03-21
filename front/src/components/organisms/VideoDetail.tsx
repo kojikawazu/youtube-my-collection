@@ -11,6 +11,7 @@ import {
 import { VideoItem } from "@/lib/types";
 import { Rating } from "@/components/Rating";
 import { MarkdownRenderer } from "@/components/Markdown";
+import { TagList } from "@/components/molecules/TagList";
 
 type VideoDetailProps = {
   video: VideoItem;
@@ -93,15 +94,8 @@ export const VideoDetail: React.FC<VideoDetailProps> = ({
             {video.title}
           </h1>
 
-          <div className="flex flex-wrap gap-2 mb-12">
-            {video.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs font-bold text-red-400 bg-red-50/30 px-3 py-1.5 rounded-xl border border-red-100/30"
-              >
-                #{tag}
-              </span>
-            ))}
+          <div className="mb-12">
+            <TagList tags={video.tags} size="md" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 border-t border-red-50 pt-12">

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { VideoItem } from "@/lib/types";
 import { Rating } from "@/components/Rating";
+import { TagList } from "@/components/molecules/TagList";
 
 type VideoCardProps = {
   video: VideoItem;
@@ -51,15 +52,8 @@ export const VideoCard: React.FC<VideoCardProps> = ({
         <h3 className="font-bold text-red-950 text-lg mb-3 line-clamp-2 leading-tight group-hover:text-red-500 transition-colors">
           {video.title}
         </h3>
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {video.tags.map((tag) => (
-            <span
-              key={tag}
-              className="text-[10px] px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold"
-            >
-              #{tag}
-            </span>
-          ))}
+        <div className="mb-4">
+          <TagList tags={video.tags} size="sm" />
         </div>
         <div className="flex items-center justify-between mt-auto pt-4 border-t border-red-50/50">
           <Rating value={video.rating} size="sm" />

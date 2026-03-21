@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
 import { Screen, VideoItem } from "@/lib/types";
 import { Modal } from "@/components/Modal";
+import { Toast } from "@/components/molecules/Toast";
 import { Header } from "@/components/organisms/Header";
 import { VideoList } from "@/components/organisms/VideoList";
 import { VideoDetail } from "@/components/organisms/VideoDetail";
@@ -233,19 +234,7 @@ export default function Page() {
         confirmLabel={modal.config.variant === "danger" ? "削除" : "保存"}
       />
 
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            key="toast"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="fixed right-6 top-6 z-[120] rounded-2xl border border-red-100 bg-white/90 px-4 py-3 text-sm font-bold text-red-600 shadow-lg shadow-red-200/40 backdrop-blur"
-          >
-            {toastMessage}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Toast message={toastMessage} />
 
       {isAdmin && currentScreen === Screen.List && (
         <motion.button
