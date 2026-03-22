@@ -27,6 +27,15 @@
 - 出力はエスケープ
 - 画像埋め込みは許可
 
+## Row Level Security (RLS)
+- `VideoEntry` テーブルで RLS を有効化済み
+- ポリシー:
+  - `Public read access`: SELECT を全ロールに許可（公開コレクションのため）
+  - INSERT/UPDATE/DELETE: ポリシーなし（デフォルト拒否）
+- Supabase REST API (PostgREST) を直接叩いても `anon` ロールでは書き込み不可
+- Prisma (`DATABASE_URL`) は `postgres` ロール（テーブルオーナー）で接続するため RLS をバイパスし、Next.js API 経由の CRUD は正常動作
+- 書き込み保護は RLS（DB層）と `requireAdmin`（API層）の二重防御
+
 ## 公開範囲
 - リスト/詳細は完全公開
 - 管理者操作は認証と権限で保護
