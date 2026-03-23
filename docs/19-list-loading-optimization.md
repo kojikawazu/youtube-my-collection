@@ -57,6 +57,31 @@ VideoCard のレイアウトに合致するスケルトンカード。
 | データ取得完了 | カード通常表示 |
 | エラー | エラーバナー（変更なし） |
 
+### 4. Vercel Cron ウォームアップ
+
+**新規ファイル:** `front/vercel.json`
+
+Vercel サーバレス関数は 5-15 分の非アクティブ後にコールドスタート（起動 + Prisma 接続確立で 2-4 秒）が発生する。
+Vercel Cron（Pro プラン）で 5 分ごとに `/api/videos` を直接叩き、対象の serverless function をウォーム状態に維持する。
+
+| 項目 | 内容 |
+|------|------|
+| Cron 対象 | `GET /api/videos`（公開エンドポイントを直接叩く） |
+| 間隔 | 5 分ごと (`*/5 * * * *`) |
+| 環境変数 | 不要 |
+
+#### なぜ専用エンドポイントではなく /api/videos を直接叩くか
+
+Vercel は Next.js API route を可能な限りまとめてバンドルするが、ルートごとに別の serverless function になる場合もある。
+専用の `/api/cron/warm` を叩いても `/api/videos` の関数がウォームになるとは限らない。
+実ユーザーが叩く経路を直接呼ぶことで、専用別ルートよりウォームアップの狙いが一致する。
+
+#### 効果の限界
+
+Vercel のウォーム状態維持は最適化の結果であり、保証ではない。
+デプロイ後に初回応答時間を実測し、効果を確認する必要がある。
+Cron 実行ログは Vercel ダッシュボード → Cron Jobs で確認できる。
+
 ## 未実施（Step B: 将来課題）
 
 - Prisma `select` で一覧取得から `goodPoints` / `memo` を除外
@@ -71,6 +96,7 @@ VideoCard のレイアウトに合致するスケルトンカード。
 | `front/src/hooks/useVideos.ts` | `bustCache` パラメータ + `bustCacheNextRef` でmutation後のCDN迂回 |
 | `front/src/components/molecules/SkeletonCard.tsx` | 新規作成 |
 | `front/src/components/organisms/VideoList.tsx` | スケルトン + カード・ページネーション全体のオーバーレイ |
+| `front/vercel.json` | 新規作成 — Cron 設定（5分間隔で /api/videos を直接叩く） |
 
 ## 検証結果
 
