@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
       "x-total-count": String(totalCount),
       "x-limit": String(limit),
       "x-offset": String(offset),
+      "Cache-Control": "public, s-maxage=30, stale-while-revalidate=59",
     },
   });
 }

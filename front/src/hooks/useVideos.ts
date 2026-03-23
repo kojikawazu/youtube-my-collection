@@ -14,9 +14,10 @@ export function useVideos() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const lastAppliedFiltersRef = useRef({ sortOption, debouncedSearchQuery });
+  const bustCacheNextRef = useRef(false);
 
   const loadVideos = useCallback(
-    async (page: number) => {
+    async (page: number, bustCache = false) => {
       setIsLoading(true);
       setLoadError(null);
       try {
@@ -33,6 +34,9 @@ export function useVideos() {
         });
         if (debouncedSearchQuery) {
           params.set("q", debouncedSearchQuery);
+        }
+        if (bustCache) {
+          params.set("_t", String(Date.now()));
         }
 
         const response = await fetch(`/api/videos?${params.toString()}`);
@@ -62,16 +66,17 @@ export function useVideos() {
   const refreshListPage = useCallback(
     async (page: number) => {
       if (page === currentPage) {
-        await loadVideos(page);
+        await loadVideos(page, true);
         return;
       }
+      bustCacheNextRef.current = true;
       setCurrentPage(page);
     },
     [currentPage, loadVideos]
   );
 
   const refreshCurrentPage = useCallback(async () => {
-    await loadVideos(currentPage);
+    await loadVideos(currentPage, true);
   }, [currentPage, loadVideos]);
 
   const deleteVideo = useCallback(
@@ -114,7 +119,9 @@ export function useVideos() {
       return;
     }
 
-    void loadVideos(currentPage);
+    const shouldBustCache = bustCacheNextRef.current;
+    bustCacheNextRef.current = false;
+    void loadVideos(currentPage, shouldBustCache);
   }, [currentPage, sortOption, debouncedSearchQuery, loadVideos]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
