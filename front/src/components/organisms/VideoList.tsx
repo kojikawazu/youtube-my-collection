@@ -1,6 +1,7 @@
 import React from "react";
 import { VideoItem, SortOption } from "@/lib/types";
 import { VideoCard } from "@/components/organisms/VideoCard";
+import { SkeletonCard } from "@/components/molecules/SkeletonCard";
 import { SearchBar } from "@/components/molecules/SearchBar";
 import { SortSelect } from "@/components/molecules/SortSelect";
 import { Pagination } from "@/components/molecules/Pagination";
@@ -63,12 +64,18 @@ export const VideoList: React.FC<VideoListProps> = ({
           {loadError}
         </div>
       )}
-      {isLoading ? (
-        <div className="rounded-[2rem] border border-red-50/50 bg-white/80 p-12 text-center text-sm text-red-400">
-          読み込み中...
+      {isLoading && videos.length === 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {Array.from({ length: 10 }, (_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
       ) : (
-        <>
+        <div
+          className={`transition-opacity duration-200 ${
+            isLoading ? "opacity-50 pointer-events-none" : "opacity-100"
+          }`}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {videos.map((video) => (
               <VideoCard
@@ -89,7 +96,7 @@ export const VideoList: React.FC<VideoListProps> = ({
               onPageChange={onPageChange}
             />
           )}
-        </>
+        </div>
       )}
     </div>
   );

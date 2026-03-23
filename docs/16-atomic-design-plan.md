@@ -41,7 +41,8 @@ front/src/
 │   │   ├── SortSelect.tsx        ← 並び替えセレクト
 │   │   ├── Pagination.tsx        ← ページ番号 + 前へ/次へ
 │   │   ├── TagList.tsx           ← タグチップの並び
-│   │   └── Toast.tsx             ← トースト通知
+│   │   ├── Toast.tsx             ← トースト通知
+│   │   └── SkeletonCard.tsx      ← ローディング用スケルトンカード
 │   ├── organisms/
 │   │   ├── Header.tsx            ← ナビゲーションバー
 │   │   ├── VideoCard.tsx         ← カード1枚
