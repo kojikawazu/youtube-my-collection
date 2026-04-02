@@ -43,7 +43,7 @@
 
 | # | テストケース | 入力 | 期待結果 | 優先度 |
 |---|---|---|---|---|
-| N-1 | openDeleteModal → isOpen=true、variant=danger | `openDeleteModal("テスト動画", fn)` | `isOpen===true`, `config.variant==="danger"`, title/message に動画タイトルが含まれる | High |
+| N-1 | openDeleteModal → isOpen=true、variant=danger | `openDeleteModal("テスト動画", fn)` | `isOpen===true`, `config.variant==="danger"`, `config.title==="動画を削除しますか？"`, `config.message` に動画タイトルが含まれる（`「テスト動画」を完全に削除します。`） | High |
 | N-2 | openSaveModal → isOpen=true、variant=info | `openSaveModal(fn)` | `isOpen===true`, `config.variant==="info"` | High |
 | N-3 | close → isOpen=false | `openDeleteModal` 後 `close()` | `isOpen===false` | High |
 | N-4 | config.onConfirm に渡した関数がそのまま保持される | `openDeleteModal("x", mockFn)` | `config.onConfirm === mockFn` | Medium |
@@ -121,18 +121,21 @@
 |---|---|---|---|---|
 | N-1 | 管理者セッションあり → isAdmin=true, accessToken セット | supabase.getSession → token, /api/auth/admin → `{isAdmin:true}` | `isAdmin===true`, `accessToken` が token と一致 | High |
 | N-2 | SIGNED_IN イベント → applySession が呼ばれる | onAuthStateChange で SIGNED_IN 発火 | `isAdmin===true`（admin API モック） | High |
-| N-3 | TOKEN_REFRESHED イベント → accessToken が更新される | onAuthStateChange で TOKEN_REFRESHED 発火 | 新 token が `accessToken` に反映される | Medium |
+| N-3 | TOKEN_REFRESHED イベント（管理者）→ accessToken が更新される | onAuthStateChange で TOKEN_REFRESHED 発火（admin API → `{isAdmin:true}`） | 新 token が `accessToken` に反映される | Medium |
 | N-4 | SIGNED_OUT イベント → isAdmin=false, accessToken=null | onAuthStateChange で SIGNED_OUT 発火 | `isAdmin===false`, `accessToken===null` | High |
 | N-5 | logout() → signOut 呼ばれ、状態クリア | `logout()` | `isAdmin===false`, `accessToken===null` | High |
 | N-6 | セッションなし → isAdmin=false, accessToken=null | supabase.getSession → null | `isAdmin===false` | High |
+
+> **login() について**: `login()` は `signInWithGoogle()` の 1 行ラッパーであり、OAuth リダイレクトを開始するだけ。ブラウザ遷移が伴うため unit テスト対象外とする。
 
 ### 準正常系
 
 | # | テストケース | 入力 | 期待結果 | 優先度 |
 |---|---|---|---|---|
-| S-1 | 非管理者セッション → signOut, showToast, onNonAdminRejected | /api/auth/admin → `{isAdmin:false}` | signOut 呼ばれる, `showToast("このアカウントは権限がありません。")`, `onNonAdminRejected` 呼ばれる | High |
-| S-2 | /api/auth/admin が 401 → 非管理者として扱う | admin API → 401 | `isAdmin===false` | High |
-| S-3 | logout() で signOut が例外 → 状態は正常にクリアされる | signOut が throw | `isAdmin===false`, `accessToken===null`（例外を飲む） | Medium |
+| S-1 | 非管理者セッション（初回ロード）→ signOut, showToast, onNonAdminRejected | supabase.getSession → token, /api/auth/admin → `{isAdmin:false}` | signOut 呼ばれる, `showToast("このアカウントは権限がありません。")`, `onNonAdminRejected` 呼ばれる | High |
+| S-2 | TOKEN_REFRESHED イベント（非管理者）→ rejectNonAdmin が呼ばれる | onAuthStateChange で TOKEN_REFRESHED 発火（admin API → `{isAdmin:false}`） | signOut 呼ばれる, `showToast("このアカウントは権限がありません。")`, `isAdmin===false` | Medium |
+| S-3 | /api/auth/admin が 401 → 非管理者として扱う | admin API → 401 | `isAdmin===false` | High |
+| S-4 | logout() で signOut が例外 → 状態は正常にクリアされる | signOut が throw | `isAdmin===false`, `accessToken===null`（例外を飲む） | Medium |
 
 ### 異常系
 

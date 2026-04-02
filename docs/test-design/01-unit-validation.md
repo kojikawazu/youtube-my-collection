@@ -43,6 +43,7 @@
 |---|---|---|---|---|---|
 | A-1 | tags が null → 空配列として扱われエラーなし | `tags: null` | `data.tags = []` | Unit | Low |
 | A-2 | rating が文字列数値 → 数値変換して検証 | `rating: "3"` | `data.rating === 3` | Unit | Low |
+| A-3 | rating が非数値文字列 → NaN になりエラー | `rating: "abc"` | `errors.rating` がセットされる（`Number("abc") === NaN → !isFinite → エラー`） | Unit | Low |
 
 ## テスト構成
 

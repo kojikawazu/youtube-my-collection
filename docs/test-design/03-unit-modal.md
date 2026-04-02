@@ -15,7 +15,7 @@
 |---|---|---|---|---|---|
 | N-1 | isOpen=true → 確認ボタンとキャンセルボタンが表示される | `isOpen=true` | 確認ボタン・キャンセルボタンが DOM に存在する | Unit | High |
 | N-2 | isOpen=true → body.style.overflow が "hidden" になる | `isOpen=true` | `document.body.style.overflow === "hidden"` | Unit | High |
-| N-3 | isOpen=false（閉じた後） → body.style.overflow が復元される | open → close | `document.body.style.overflow` が hidden でない | Unit | High |
+| N-3 | isOpen=false（閉じた後） → body.style.overflow が復元される | open → close | `document.body.style.overflow === "unset"`（`Modal.tsx` のクリーンアップが `previousOverflow \|\| "unset"` を設定するため、初期値 `""` の場合 `"unset"` になる） | Unit | High |
 | N-4 | 確認ボタンクリック → onConfirm が呼ばれ onClose が呼ばれる | onConfirm が resolve する関数 | `onConfirm` 1回呼ばれ、完了後 `onClose` 1回呼ばれる | Unit | High |
 | N-5 | 処理中は確認ボタンが disabled になり "処理中..." と表示される | onConfirm が pending の Promise | ボタン `disabled=true`, テキスト "処理中..." | Unit | High |
 | N-6 | variant=danger → 危険アイコンとボタンが表示される | `variant="danger"` | AlertTriangle アイコンが存在する | Unit | Low |
