@@ -139,9 +139,9 @@ describe("useVideos", () => {
     const videos10 = Array.from({ length: 10 }, (_, i) => makeVideo(String(i + 1)));
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, headers: { get: () => "11" }, json: async () => videos10 })
-      .mockResolvedValueOnce({ ok: true, headers: { get: () => "10" }, json: async () => videos10 })
+      .mockResolvedValueOnce({ ok: true, headers: { get: () => "11" }, json: async () => videos10 })
       .mockResolvedValueOnce({ ok: true, status: 204, headers: { get: () => null }, json: async () => ({}) })
-      .mockResolvedValue({ ok: true, headers: { get: () => "10" }, json: async () => videos10 });
+      .mockResolvedValue({ ok: true, headers: { get: () => "11" }, json: async () => videos10 });
     vi.stubGlobal("fetch", fetchMock);
     const { result } = renderHook(() => useVideos());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
