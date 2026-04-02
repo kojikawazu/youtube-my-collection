@@ -13,7 +13,9 @@ npm run dev
 npm run lint
 npm run build
 npm run start
-npm run test:e2e
+npm run test         # ユニットテスト（Vitest）
+npm run test:watch   # ユニットテスト watch モード
+npm run test:e2e     # E2Eテスト（Playwright）
 ```
 
 ## 設定
