@@ -116,7 +116,7 @@ test.describe("admin: normal flows", () => {
     await page.getByRole("button", { name: "保存して更新" }).click();
 
     // Confirm in modal
-    await page.getByRole("button", { name: "保存" }).click();
+    await page.getByRole("button", { name: "保存", exact: true }).click();
 
     await expect(page.getByText("追加しました。")).toBeVisible();
   });
@@ -152,7 +152,7 @@ test.describe("admin: normal flows", () => {
 
     // Save
     await page.getByRole("button", { name: "保存して更新" }).click();
-    await page.getByRole("button", { name: "保存" }).click();
+    await page.getByRole("button", { name: "保存", exact: true }).click();
 
     await expect(page.getByText("更新しました。")).toBeVisible();
     await expect(page.getByRole("heading", { name: "更新後タイトル", level: 1 })).toBeVisible();
@@ -189,8 +189,9 @@ test.describe("admin: normal flows", () => {
 
     await page.goto("/");
 
-    // Navigate to detail
+    // Navigate to detail — wait for detail heading to confirm transition completed
     await page.getByRole("heading", { name: "React 2024 完全ガイド" }).click();
+    await expect(page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 })).toBeVisible();
 
     // Click delete on detail page
     await page.getByRole("button", { name: "削除" }).click();
@@ -252,8 +253,8 @@ test.describe("admin: semi-normal flows", () => {
     // Click save without filling required fields
     await page.getByRole("button", { name: "保存して更新" }).click();
 
-    // Validation errors shown — modal should NOT open, so "保存" button (modal) is absent
-    await expect(page.getByRole("button", { name: "保存" })).toHaveCount(0);
+    // Validation errors shown — modal should NOT open, so modal "保存" button is absent
+    await expect(page.getByRole("button", { name: "保存", exact: true })).toHaveCount(0);
     expect(postCalls).toHaveLength(0);
   });
 
@@ -270,22 +271,21 @@ test.describe("admin: semi-normal flows", () => {
       await route.fallback();
     });
 
-    let alertMessage = "";
-    page.on("dialog", async (dialog) => {
-      alertMessage = dialog.message();
-      await dialog.accept();
-    });
-
     await page.goto("/");
 
     await page.locator("button.fixed").click();
     await page.getByPlaceholder("https://...").fill("https://youtube.com/watch?v=fail");
     await page.getByPlaceholder("印象的なタイトルを...").fill("失敗テスト");
     await page.getByRole("button", { name: "保存して更新" }).click();
-    await page.getByRole("button", { name: "保存" }).click();
 
-    await expect(page.getByRole("button", { name: "保存" })).toBeVisible();
-    expect(alertMessage).toContain("保存に失敗しました。");
+    const dialogPromise3a = page.waitForEvent("dialog");
+    await page.getByRole("button", { name: "保存", exact: true }).click();
+    const dialog3a = await dialogPromise3a;
+    const alertMessage3a = dialog3a.message();
+    await dialog3a.accept();
+
+    await expect(page.getByRole("button", { name: "保存", exact: true })).toBeVisible();
+    expect(alertMessage3a).toContain("保存に失敗しました。");
   });
 
   test("S-3b: edit API failure shows alert and modal stays open", async ({ page }) => {
@@ -301,22 +301,22 @@ test.describe("admin: semi-normal flows", () => {
       await route.fallback();
     });
 
-    let alertMessage = "";
-    page.on("dialog", async (dialog) => {
-      alertMessage = dialog.message();
-      await dialog.accept();
-    });
-
     await page.goto("/");
 
     await page.getByRole("heading", { name: "React 2024 完全ガイド" }).click();
+    await expect(page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 })).toBeVisible();
     await page.getByRole("button", { name: "編集" }).click();
     await page.getByPlaceholder("印象的なタイトルを...").fill("更新失敗テスト");
     await page.getByRole("button", { name: "保存して更新" }).click();
-    await page.getByRole("button", { name: "保存" }).click();
 
-    await expect(page.getByRole("button", { name: "保存" })).toBeVisible();
-    expect(alertMessage).toContain("更新に失敗しました。");
+    const dialogPromise3b = page.waitForEvent("dialog");
+    await page.getByRole("button", { name: "保存", exact: true }).click();
+    const dialog3b = await dialogPromise3b;
+    const alertMessage3b = dialog3b.message();
+    await dialog3b.accept();
+
+    await expect(page.getByRole("button", { name: "保存", exact: true })).toBeVisible();
+    expect(alertMessage3b).toContain("更新に失敗しました。");
   });
 
   test("S-4: delete API failure shows alert and modal stays open", async ({ page }) => {
@@ -332,19 +332,18 @@ test.describe("admin: semi-normal flows", () => {
       await route.fallback();
     });
 
-    let alertMessage = "";
-    page.on("dialog", async (dialog) => {
-      alertMessage = dialog.message();
-      await dialog.accept();
-    });
-
     await page.goto("/");
 
     await page.getByRole("button", { name: "削除" }).first().click();
+
+    const dialogPromise4 = page.waitForEvent("dialog");
     await page.getByRole("button", { name: "削除" }).last().click();
+    const dialog4 = await dialogPromise4;
+    const alertMessage4 = dialog4.message();
+    await dialog4.accept();
 
     await expect(page.getByRole("button", { name: "削除" }).last()).toBeVisible();
-    expect(alertMessage).toContain("削除に失敗しました。");
+    expect(alertMessage4).toContain("削除に失敗しました。");
   });
 
   test("S-5: double-click confirm button sends POST only once", async ({ page }) => {
@@ -375,7 +374,7 @@ test.describe("admin: semi-normal flows", () => {
     await page.getByPlaceholder("印象的なタイトルを...").fill("二重送信テスト");
     await page.getByRole("button", { name: "保存して更新" }).click();
 
-    const confirmBtn = page.getByRole("button", { name: "保存" });
+    const confirmBtn = page.getByRole("button", { name: "保存", exact: true });
     await confirmBtn.click();
     // Second click — button should be disabled (processing state), so click is ignored
     await confirmBtn.click();
