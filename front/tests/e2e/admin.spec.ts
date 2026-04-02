@@ -374,10 +374,9 @@ test.describe("admin: semi-normal flows", () => {
     await page.getByPlaceholder("印象的なタイトルを...").fill("二重送信テスト");
     await page.getByRole("button", { name: "保存して更新" }).click();
 
-    const confirmBtn = page.getByRole("button", { name: "保存", exact: true });
-    await confirmBtn.click();
-    // Button becomes disabled while in-flight — this is what prevents double submit
-    await expect(confirmBtn).toBeDisabled();
+    await page.getByRole("button", { name: "保存", exact: true }).click();
+    // Modal switches label to "処理中..." and disables the button while in-flight
+    await expect(page.getByRole("button", { name: "処理中..." })).toBeDisabled();
 
     await expect(page.getByText("追加しました。")).toBeVisible();
     expect(postCount).toBe(1);
