@@ -5,7 +5,13 @@ import { baseVideos, mockVideosApi, type MockVideo } from "./helpers";
 // Shared helpers
 // ---------------------------------------------------------------------------
 
-const SUPABASE_STORAGE_KEY = "sb-tbcpytvlzuknfxbaijbg-auth-token";
+// Derive storage key from NEXT_PUBLIC_SUPABASE_URL so it works both locally and in CI.
+// Supabase JS uses `sb-${hostname.split('.')[0]}-auth-token` as the key.
+// Local:  https://tbcpytvlzuknfxbaijbg.supabase.co  → sb-tbcpytvlzuknfxbaijbg-auth-token
+// CI:     http://localhost:3000                       → sb-localhost-auth-token
+const _supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://tbcpytvlzuknfxbaijbg.supabase.co";
+const _supabaseRef = new URL(_supabaseUrl).hostname.split(".")[0];
+const SUPABASE_STORAGE_KEY = `sb-${_supabaseRef}-auth-token`;
 const TEST_ACCESS_TOKEN = "test-admin-token";
 
 /** Inject a fake non-expired Supabase session into localStorage before page JS runs. */
