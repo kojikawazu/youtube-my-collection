@@ -376,8 +376,8 @@ test.describe("admin: semi-normal flows", () => {
 
     const confirmBtn = page.getByRole("button", { name: "保存", exact: true });
     await confirmBtn.click();
-    // Second click — button should be disabled (processing state), so click is ignored
-    await confirmBtn.click();
+    // Button becomes disabled while in-flight — this is what prevents double submit
+    await expect(confirmBtn).toBeDisabled();
 
     await expect(page.getByText("追加しました。")).toBeVisible();
     expect(postCount).toBe(1);
