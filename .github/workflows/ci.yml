@@ -15,7 +15,7 @@ on:
       - ".github/workflows/ci.yml"
 
 jobs:
-  lint-and-e2e:
+  lint-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -35,11 +35,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
       - name: Lint
         run: npm run lint
+
+      - name: Unit Test
+        run: npm run test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
       - name: E2E
         env:
