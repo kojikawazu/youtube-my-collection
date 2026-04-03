@@ -40,5 +40,5 @@
 - 401解消を確認済み。
 
 ## 検証
-- `npm run lint`（エラーなし）
-- `npm run build`（成功）
+- `pnpm run lint`（エラーなし）
+- `pnpm run build`（成功）

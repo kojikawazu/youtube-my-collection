@@ -155,8 +155,8 @@ page.tsx の JSX 表示部分を画面単位でコンポーネントに切り出
 
 - [ ] 上記6コンポーネントが `components/organisms/` に作成されている
 - [ ] page.tsx から画面単位のJSXが切り出されている（ロジックは残して良い）
-- [ ] `npm run build` が成功する
-- [ ] `npm run lint` がエラーなし
+- [ ] `pnpm run build` が成功する
+- [ ] `pnpm run lint` がエラーなし
 - [ ] E2Eテスト12ケースがすべて通過する
 - [ ] 管理者フロー手動確認（下記チェックリスト）がすべて通過する
 
@@ -231,8 +231,8 @@ page.tsx の JSX 表示部分を画面単位でコンポーネントに切り出
 
 - [ ] 上記5コンポーネントが `components/molecules/` に作成されている
 - [ ] organisms 内で molecules を使用している
-- [ ] `npm run build` が成功する
-- [ ] `npm run lint` がエラーなし
+- [ ] `pnpm run build` が成功する
+- [ ] `pnpm run lint` がエラーなし
 - [ ] E2Eテスト12ケースがすべて通過する
 - [ ] 管理者フロー手動確認チェックリスト（Phase 1 参照）がすべて通過する
 
@@ -337,8 +337,8 @@ modal.openSaveModal(async () => {
 - [ ] page.tsx が ~250行以下になっている
 - [ ] page.tsx に残る状態は `currentScreen` と `selectedVideo` のみ
 - [ ] page.tsx から `signInWithGoogle`, `signOut`, `fetch`, `supabase.auth` の直接呼び出しがない
-- [ ] `npm run build` が成功する
-- [ ] `npm run lint` がエラーなし
+- [ ] `pnpm run build` が成功する
+- [ ] `pnpm run lint` がエラーなし
 - [ ] E2Eテスト12ケースがすべて通過する
 - [ ] 管理者フロー手動確認チェックリスト（Phase 1 参照）がすべて通過する
 
@@ -360,8 +360,8 @@ modal.openSaveModal(async () => {
 
 - [ ] 既存コンポーネントが `atoms/` に移動されている
 - [ ] import パスがすべて更新されている
-- [ ] `npm run build` が成功する
-- [ ] `npm run lint` がエラーなし
+- [ ] `pnpm run build` が成功する
+- [ ] `pnpm run lint` がエラーなし
 - [ ] E2Eテスト12ケースがすべて通過する
 - [ ] 管理者フロー手動確認チェックリスト（Phase 1 参照）がすべて通過する
 
@@ -385,4 +385,4 @@ modal.openSaveModal(async () => {
 | propsバケツリレーの肥大 | Phase 3 のカスタムフック導入で軽減。それでも深い場合は React Context を検討 |
 | フック間の責務漏れ | 「カスタムフック責務境界」の表に従い、read/write がフックをまたがないことを確認する |
 | import パスの混乱 | `@/components/organisms/` 等のパスエイリアスを統一する |
-| Vercelデプロイへの影響 | 各Phase完了ごとに `npm run build` で検証。コンポーネント分割はビルド出力に影響しない |
+| Vercelデプロイへの影響 | 各Phase完了ごとに `pnpm run build` で検証。コンポーネント分割はビルド出力に影響しない |
