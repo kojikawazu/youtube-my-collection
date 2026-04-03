@@ -15,7 +15,7 @@ on:
       - ".github/workflows/ci.yml"
 
 jobs:
-  lint-and-e2e:
+  lint-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
