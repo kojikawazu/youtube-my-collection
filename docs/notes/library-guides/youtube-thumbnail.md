@@ -64,16 +64,17 @@ https://img.youtube.com/vi/{動画ID}/{品質}.jpg
 ## 使用箇所
 
 `getYoutubeThumbnail` はフォーム送信時に呼ばれ、サーバーに送る `thumbnailUrl` を生成する。
+（アトミックデザイン化により、保存ロジックは `page.tsx` から `hooks/useVideoForm.ts` へ移動済み。）
 
 ```tsx
-// page.tsx:326（新規追加時）
+// hooks/useVideoForm.ts:75（新規追加時）
 thumbnailUrl: getYoutubeThumbnail(formData.youtubeUrl ?? ""),
 
-// page.tsx:366（編集時）
+// hooks/useVideoForm.ts:109（編集時）
 thumbnailUrl: getYoutubeThumbnail(formData.youtubeUrl ?? ""),
 ```
 
-仕様書（`01-requirements.md`）で「サムネURLはYouTube URLからクライアント側で自動生成」と定められているため、ユーザーがサムネ URL を手入力する必要はない。
+仕様書（`02-requirements-specification.md`）で「サムネURLはYouTube URLからクライアント側で自動生成」と定められているため、ユーザーがサムネ URL を手入力する必要はない。
 
 ## なぜ YouTube Data API を使わないのか
 
@@ -86,4 +87,4 @@ thumbnailUrl: getYoutubeThumbnail(formData.youtubeUrl ?? ""),
 | 実装の複雑さ | 正規表現のみ | HTTP リクエスト + レスポンス解析 + エラーハンドリング |
 
 本プロジェクトではサムネイル画像だけが必要なので、API を使う必要がない。
-タイトルはユーザーが手入力する仕様（`01-requirements.md`）であり、API から自動取得する設計ではない。
+タイトルはユーザーが手入力する仕様（`02-requirements-specification.md`）であり、API から自動取得する設計ではない。

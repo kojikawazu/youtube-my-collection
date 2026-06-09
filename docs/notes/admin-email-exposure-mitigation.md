@@ -30,7 +30,7 @@
 ## 実施結果（2026-02-12）
 - `front/src/lib/auth.ts` から `NEXT_PUBLIC_ADMIN_EMAIL` と `isAdminEmail` を削除。
 - `front/src/app/page.tsx` は `/api/auth/admin` によるサーバー判定へ変更。
-- `docs/04-auth-security.md`, `docs/11-supabase-setup.md` を `ADMIN_EMAIL` のみの記載へ更新。
+- `docs/06-security-specification.md`, `docs/09-architecture-specification.md` を `ADMIN_EMAIL` のみの記載へ更新。
 - `front/src/` 配下で `NEXT_PUBLIC_ADMIN_EMAIL` 参照ゼロを確認。
 
 ## 追加対応（2026-02-12）

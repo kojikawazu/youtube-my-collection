@@ -1,4 +1,6 @@
-# API設計
+# API 仕様書
+
+エンドポイント・リクエスト/レスポンス形式・認証・エラーハンドリングを定義する。データモデルは [`05-data-specification.md`](./05-data-specification.md)、認証/認可方針は [`06-security-specification.md`](./06-security-specification.md) を参照。
 
 ## 前提
 - Next.js Route Handlers (`app/api/*`)
@@ -33,6 +35,11 @@
   - 用途: 詳細取得
 
 ### 管理者のみ
+- 認証/認可エラー（`requireAdmin`）:
+  - `Authorization` ヘッダー欠如・空トークン → `401 { error: "Unauthorized" }`
+  - トークン無効・`ADMIN_EMAIL` 不一致 → `403 { error: "Forbidden" }`
+- バリデーションエラー → `400 { errors }`
+
 - POST /api/videos
   - 用途: 新規作成
   - body:
@@ -65,8 +72,9 @@
   - レスポンス: `{ isAdmin: boolean }`
   - 処理:
     - Bearerトークンで Supabase Auth の `getUser` を呼び出し
-    - メールアドレスが `ADMIN_EMAIL` と一致すれば `isAdmin: true`
-    - 不一致・エラー時は `401` を返却
+    - メールアドレスが `ADMIN_EMAIL` と一致すれば `200 { isAdmin: true }`
+    - 有効なトークンだがメール不一致の場合は `200 { isAdmin: false }`（認可の結果であり認証は成功）
+    - トークン欠如・無効、または `getUser` 失敗時は `401 { isAdmin: false }`
 
 ## レスポンス(共通)
 - video:

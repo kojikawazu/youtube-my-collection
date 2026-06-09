@@ -12,7 +12,7 @@
 - `front/src/lib/auth.ts` からメール比較ロジックを削除
 - `front/src/app/page.tsx` の管理者判定をサーバー確認に変更
 - 非管理者ログイン時の拒否フロー（サインアウト + 通知）を維持
-- `docs/04-auth-security.md`, `docs/11-supabase-setup.md` を更新
+- `docs/06-security-specification.md`, `docs/09-architecture-specification.md` を更新
 - `rg -n "NEXT_PUBLIC_ADMIN_EMAIL"` で残存確認
 
 ## 受け入れ基準

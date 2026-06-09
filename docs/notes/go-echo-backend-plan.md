@@ -232,8 +232,8 @@ hooks に API 呼び出しが集約されているため、修正箇所が限定
 
 | ファイル | 箇所 | 変更内容 |
 |----------|------|---------|
-| `hooks/useVideos.ts:38` | GET 一覧 | `/api/videos` → `${API_BASE}/videos` |
-| `hooks/useVideos.ts:79` | DELETE | `/api/videos/${id}` → `${API_BASE}/videos/${id}` |
+| `hooks/useVideos.ts:42` | GET 一覧 | `/api/videos` → `${API_BASE}/videos` |
+| `hooks/useVideos.ts:84` | DELETE | `/api/videos/${id}` → `${API_BASE}/videos/${id}` |
 | `hooks/useVideoForm.ts:66` | POST | `/api/videos` → `${API_BASE}/videos` |
 | `hooks/useVideoForm.ts:99` | PATCH | `/api/videos/${id}` → `${API_BASE}/videos/${id}` |
 | `hooks/useAuth.ts:25` | GET 管理者判定 | `/api/auth/admin` → `${API_BASE}/auth/admin` |

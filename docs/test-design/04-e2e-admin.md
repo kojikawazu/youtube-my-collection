@@ -9,10 +9,10 @@
 
 ## ポリシー変更の背景
 
-`docs/04.e2e-cases.md` には「管理者操作はOAuthが必要なため現状はE2E対象外」と記載されている。
+`docs/08-test-specification.md` には「管理者操作はOAuthが必要なため現状はE2E対象外」と記載されている。
 本設計はこのポリシーを **変更** する。`page.route` による API モックと `addInitScript` によるセッション注入を組み合わせることで、実 OAuth なしに管理者フローをブラウザレベルで検証できるようになったため、管理者フローを E2E の対象に追加する。
 
-**`docs/04.e2e-cases.md` の「管理者操作はE2E対象外」という記述は、本設計の実装完了後に更新が必要。**
+**`docs/08-test-specification.md` の「管理者操作はE2E対象外」という記述は、本設計の実装完了後に更新が必要。**
 
 ---
 
@@ -101,8 +101,8 @@ await page.addInitScript(() => {
 
 | ドキュメント | 箇所 | 更新内容 |
 |---|---|---|
-| `docs/04.e2e-cases.md:17-19` | テスト方針「管理者操作はE2E対象外」 | 「`admin.spec.ts` で管理者フロー #N-1〜S-5, A-1 を E2E カバー済み。手動必須は #1（実 Google OAuth ログイン）のみ」に更新 |
-| `docs/16-atomic-design-plan.md:163-177` | 管理者フロー手動確認チェックリスト | 各項目に「自動化済み（`admin.spec.ts`）」または「手動必須」のラベルを追記 |
+| `docs/08-test-specification.md` | テスト方針「管理者操作はE2E対象外」 | 「`admin.spec.ts` で管理者フロー #N-1〜S-5, A-1 を E2E カバー済み。手動必須は #1（実 Google OAuth ログイン）のみ」に更新 |
+| `docs/notes/atomic-design-plan.md:163-177` | 管理者フロー手動確認チェックリスト | 各項目に「自動化済み（`admin.spec.ts`）」または「手動必須」のラベルを追記 |
 
 ---
 

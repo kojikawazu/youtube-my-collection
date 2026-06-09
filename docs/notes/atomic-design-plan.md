@@ -162,7 +162,7 @@ page.tsx の JSX 表示部分を画面単位でコンポーネントに切り出
 
 ### 管理者フロー手動確認チェックリスト
 
-`admin.spec.ts` により管理者フローの大部分が E2E 自動化済み（`docs/04.e2e-cases.md` 参照）。手動確認必須は実 Google OAuth を必要とする項目のみ。
+`admin.spec.ts` により管理者フローの大部分が E2E 自動化済み（`docs/08-test-specification.md` 参照）。手動確認必須は実 Google OAuth を必要とする項目のみ。
 
 - [ ] 許可メールでGoogleログイン → 管理者バッジ表示・FAB表示 **【手動必須 — 実OAuth】**
 - [x] 非許可メールでGoogleログイン → 「権限がありません」トースト表示・ログアウト状態に戻る（`admin.spec.ts` S-1）
