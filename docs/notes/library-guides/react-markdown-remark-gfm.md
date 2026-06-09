@@ -171,7 +171,7 @@ a: ({ children, ...props }) => (
 
 ## セキュリティ設計のまとめ
 
-本プロジェクトの仕様（`docs/04-auth-security.md`）で定められた Markdown の安全性要件:
+本プロジェクトの仕様（`docs/06-security-specification.md`）で定められた Markdown の安全性要件:
 
 | 要件 | 実現方法 |
 |------|----------|

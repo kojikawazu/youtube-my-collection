@@ -78,8 +78,8 @@
 - `front/src/app/`（一覧ページ）
 - `front/src/components/`（ページングUI部品を追加する場合）
 - `front/src/app/api/videos/route.ts`（必要に応じてクエリ処理確認）
-- `docs/02-screens.md`（リスト画面仕様）
-- `docs/06-api.md`（クエリ利用方針）
+- `docs/03-functional-specification.md`（リスト画面仕様）
+- `docs/07-api-specification.md`（クエリ利用方針）
 
 ## 手順（案）
 - ページサイズと初期ページ仕様を決定

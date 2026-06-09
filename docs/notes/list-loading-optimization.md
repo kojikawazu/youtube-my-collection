@@ -37,7 +37,7 @@ Cache-Control: public, s-maxage=30, stale-while-revalidate=59
 | `refreshListPage` / `refreshCurrentPage`（mutation 後） | `true` — CDN を迂回 |
 | `refreshListPage` でページ番号が変わる場合 | `bustCacheNextRef` 経由で次の useEffect に伝播 |
 
-これにより `docs/16-atomic-design-plan.md` の受け入れ条件（追加後に「リストに反映」、削除後に「リストから消える」）との整合性を維持する。
+これにより `docs/notes/atomic-design-plan.md` の受け入れ条件（追加後に「リストに反映」、削除後に「リストから消える」）との整合性を維持する。
 
 ### 2. スケルトンローディング UI
 

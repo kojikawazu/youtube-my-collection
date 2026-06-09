@@ -8,12 +8,15 @@
 - Key app paths: `front/src/app/` (routes/layout), `front/src/components/` (UI), `front/src/lib/` (data/auth/helpers), `front/public/` (static assets).
 
 ## Build, Test, and Development Commands
-Run commands from `front/` unless noted.
-- `npm install`: install dependencies.
-- `npm run dev`: start local dev server.
-- `npm run build`: production build.
-- `npm run start`: run the production server after build.
-- `npm run lint`: run ESLint checks.
+Run commands from `front/` unless noted. The project pins pnpm via `packageManager` (`pnpm@10.7.0`); enable it with `corepack enable`.
+- `pnpm install`: install dependencies.
+- `pnpm dev`: start local dev server.
+- `pnpm build`: production build.
+- `pnpm start`: run the production server after build.
+- `pnpm lint`: run ESLint checks.
+- `pnpm test` / `pnpm test:e2e`: unit (Vitest) / E2E (Playwright).
+
+First-time local setup (env vars, Supabase, Prisma) is documented in `docs/09-architecture-specification.md`.
 
 ## Coding Style & Naming Conventions
 - Language: TypeScript + React (Next.js App Router) with Tailwind CSS.
@@ -23,8 +26,9 @@ Run commands from `front/` unless noted.
 - Prefer small, focused helpers in `front/src/lib/`.
 
 ## Testing Guidelines
-- E2E testing is expected to use Playwright.
-- No unit test setup is currently documented; if adding tests, wire Playwright and document the command in this file.
+- Unit tests use Vitest + @testing-library/react (`pnpm test`).
+- E2E tests use Playwright (`pnpm test:e2e`); first run needs `pnpm exec playwright install`.
+- Test strategy and cases: `docs/08-test-specification.md` and `docs/test-design/`.
 
 ## Commit & Pull Request Guidelines
 - Git history uses short, direct messages (English or Japanese). Keep commit subjects concise and action-oriented.

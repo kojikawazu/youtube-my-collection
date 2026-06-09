@@ -22,8 +22,8 @@
 - `front/src/app/`（新規ページ/導線）
 - `front/src/app/api/videos/route.ts`（URLのみ登録時のハンドリング確認）
 - `front/src/lib/validation.ts`（URLバリデーション見直しが必要なら）
-- `docs/02-screens.md`（画面仕様）
-- `docs/06-api.md`（API利用パターン追記が必要なら）
+- `docs/03-functional-specification.md`（画面仕様）
+- `docs/07-api-specification.md`（API利用パターン追記が必要なら）
 
 ## 手順（案）
 - URLのみ登録ページのUI仕様を確定する
