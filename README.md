@@ -7,12 +7,6 @@ YouTube で良かった動画を後から見返せる**公開コレクション*
 
 **Tech:** Next.js 16 (App Router) / React 19 / TypeScript / Tailwind CSS / Supabase (Auth + Postgres) / Prisma ・ Deploy: Vercel
 
-## デモ / スクリーンショット
-
-> 🚧 デモ URL とスクリーンショットは未掲載。本番（Vercel）にデプロイ済みのため、URL と一覧/詳細のキャプチャを追加予定。
->
-> 記入手順: 本番 URL をこの節に記載し、画像は `docs/assets/` に配置して Markdown 画像記法で貼る。
-
 ## 主な機能
 
 - 🎬 **サムネ中心のカード一覧** — 動画をサムネイル・タイトル・タグ・カテゴリ・5 段階評価で一覧表示
@@ -50,24 +44,11 @@ pnpm dev                     # http://localhost:3000
 
 ## ドキュメント
 
-仕様は `docs/` 配下に標準仕様書として整理している。番号順に読むと全体像を把握できる。
+仕様書・補足資料・テスト設計の一覧は [docs/README.md](docs/README.md) を参照。
 
-| # | ドキュメント | 内容 |
-|---|---|---|
-| 01 | [要求仕様書](docs/01-business-requirements.md) | 背景・目的・スコープ・制約・決定事項 |
-| 02 | [要件仕様書](docs/02-requirements-specification.md) | 機能要件・データ項目・受け入れ条件 |
-| 03 | [機能仕様書](docs/03-functional-specification.md) | 画面仕様・遷移・UI/UX 方針 |
-| 04 | [非機能仕様書](docs/04-non-functional-specification.md) | パフォーマンス・可用性・エラー方針 |
-| 05 | [データ仕様書](docs/05-data-specification.md) | データモデル・Prisma スキーマ |
-| 06 | [セキュリティ仕様書](docs/06-security-specification.md) | 認証・認可・バリデーション・RLS |
-| 07 | [API 仕様書](docs/07-api-specification.md) | エンドポイント・リクエスト/レスポンス |
-| 08 | [テスト仕様書](docs/08-test-specification.md) | テスト戦略・E2E/ユニットケース |
-| 09 | [アーキテクチャ仕様書](docs/09-architecture-specification.md) | 技術スタック・構成・環境変数・**セットアップ手順** |
-| 10 | [その他仕様書](docs/10-miscellaneous-specification.md) | 用語集・参照索引 |
-| 11 | [タスク](docs/11-tasks.md) | 実績・将来課題 |
-
-- 補足・運用・履歴系の資料: [`docs/notes/`](docs/notes/)（ライブラリガイド・バグレポート・設計計画・OAuth シーケンス 等）
-- テスト設計の詳細: [`docs/test-design/`](docs/test-design/)
+- 標準仕様書（01〜11）: [docs/README.md](docs/README.md#標準仕様書)
+- 補足・運用・履歴系の資料: [docs/README.md](docs/README.md#notes--運用履歴参考資料)
+- テスト設計の詳細: [docs/README.md](docs/README.md#test-design--テスト設計)
 
 ## プロジェクト構成
 
@@ -80,13 +61,7 @@ base/    デザイン参照用の元 UI（read-only スナップショット）
 
 ### front/ の主要ファイル
 
-| パス | 役割 |
-|------|------|
-| `src/app/page.tsx` | 画面切替コーディネーター |
-| `src/components/{atoms,molecules,organisms}/` | UI 部品（Atomic Design） |
-| `src/hooks/` | 認証・一覧取得・フォーム等のロジック |
-| `src/app/api/videos/*`, `src/app/api/auth/admin/*` | Route Handlers（API） |
-| `src/lib/` | 型定義・バリデーション・Supabase/Prisma クライアント |
+front/src の詳細なディレクトリ構成（最終形）は [docs/notes/atomic-design-plan.md](docs/notes/atomic-design-plan.md#ディレクトリ構成最終形) を参照。
 
 ## 開発
 
