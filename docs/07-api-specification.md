@@ -2,6 +2,15 @@
 
 エンドポイント・リクエスト/レスポンス形式・認証・エラーハンドリングを定義する。データモデルは [`05-data-specification.md`](./05-data-specification.md)、認証/認可方針は [`06-security-specification.md`](./06-security-specification.md) を参照。
 
+## 目次
+
+- [前提](#前提)
+- [エンドポイント一覧](#エンドポイント一覧)
+  - [公開](#公開)
+  - [管理者のみ](#管理者のみ)
+  - [認証](#認証)
+- [レスポンス(共通)](#レスポンス共通)
+
 ## 前提
 - Next.js Route Handlers (`app/api/*`)
 - 公開はGETのみ

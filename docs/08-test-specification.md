@@ -2,6 +2,16 @@
 
 テスト戦略・テストケース・ツールを定義する。詳細なテスト設計（ユニット/E2E のケース表）は [`test-design/`](./test-design/) を参照。
 
+## 目次
+
+- [テスト戦略](#テスト戦略)
+- [実行方法](#実行方法)
+- [E2E ケース（公開フロー / Playwright）](#e2e-ケース公開フロー--playwright)
+- [管理者フロー E2E（admin.spec.ts）](#管理者フロー-e2eadminspects)
+- [ユニットテスト設計](#ユニットテスト設計)
+- [CI（GitHub Actions）](#cigithub-actions)
+- [原則](#原則)
+
 ## テスト戦略
 
 | レイヤー | ツール | 対象 |

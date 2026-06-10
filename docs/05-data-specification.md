@@ -2,6 +2,16 @@
 
 データモデルと DB スキーマ（Prisma）を定義する。API のレスポンス形式は [`07-api-specification.md`](./07-api-specification.md) を参照。
 
+## 目次
+
+- [エンティティ: VideoEntry（旧称 video_entries）](#エンティティ-videoentry旧称-video_entries)
+  - [フィールド](#フィールド)
+  - [インデックス](#インデックス)
+  - [派生データ](#派生データ)
+  - [補足](#補足)
+- [Prisma スキーマ](#prisma-スキーマ)
+  - [制約（アプリ側でバリデーション）](#制約アプリ側でバリデーション)
+
 ## エンティティ: VideoEntry（旧称 video_entries）
 
 ### フィールド

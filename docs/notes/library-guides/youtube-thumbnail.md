@@ -1,5 +1,16 @@
 # YouTube サムネイル取得の仕組み
 
+## 目次
+
+- [結論: YouTube API は使っていない](#結論-youtube-api-は使っていない)
+- [実装（front/src/lib/youtube.ts）](#実装frontsrclibyoutubets)
+  - [getYoutubeId — URL から動画 ID を抽出](#getyoutubeid--url-から動画-id-を抽出)
+  - [getYoutubeThumbnail — 動画 ID からサムネイル URL を生成](#getyoutubethumbnail--動画-id-からサムネイル-url-を生成)
+- [YouTube サムネイル画像エンドポイント](#youtube-サムネイル画像エンドポイント)
+  - [利用可能な品質一覧](#利用可能な品質一覧)
+- [使用箇所](#使用箇所)
+- [なぜ YouTube Data API を使わないのか](#なぜ-youtube-data-api-を使わないのか)
+
 ## 結論: YouTube API は使っていない
 
 本プロジェクトでは YouTube Data API を一切使用していない。

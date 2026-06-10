@@ -2,6 +2,16 @@
 
 認証・認可・入力バリデーション・データ保護方針を定義する。OAuth の詳細シーケンスは [`notes/oauth-sequence.md`](./notes/oauth-sequence.md)、トラブルシューティングは [`notes/auth-troubleshooting.md`](./notes/auth-troubleshooting.md) を参照。
 
+## 目次
+
+- [認証](#認証)
+- [権限制御（認可）](#権限制御認可)
+  - [管理者メール露出対策（決定事項）](#管理者メール露出対策決定事項)
+- [入力バリデーション](#入力バリデーション)
+- [Markdown 安全性](#markdown-安全性)
+- [Row Level Security (RLS)](#row-level-security-rls)
+- [公開範囲](#公開範囲)
+
 ## 認証
 
 - Google OAuth2 ログイン
