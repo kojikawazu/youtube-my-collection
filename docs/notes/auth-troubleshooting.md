@@ -1,5 +1,17 @@
 # 認証トラブルシューティング
 
+## 目次
+
+- [よくある原因](#よくある原因)
+- [確認すべき場所](#確認すべき場所)
+  - [1) Supabase側](#1-supabase側)
+  - [2) Google Cloud Console側](#2-google-cloud-console側)
+- [典型的なエラーと対応](#典型的なエラーと対応)
+  - [redirect_uri_mismatch](#redirect_uri_mismatch)
+  - [/#access_token=... で戻る](#access_token-で戻る)
+  - [provider is not enabled](#provider-is-not-enabled)
+- [セキュリティ注意](#セキュリティ注意)
+
 ## よくある原因
 - SupabaseのAuth Flowが `Implicit` になっており、`/#access_token=...` で戻ってくる
 - Google OAuthのリダイレクトURIがSupabaseのcallbackと一致していない
