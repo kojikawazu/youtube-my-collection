@@ -98,6 +98,18 @@ npx prisma generate
 
 CDN キャッシュ / スケルトン UI / Vercel Cron ウォームアップ等の方針は [`04-non-functional-specification.md`](./04-non-functional-specification.md) を参照。
 
+## デプロイ（Vercel）と Ignored Build Step
+
+- 本番は `main` ブランチ・`front/` のみ。`front/vercel.json` の `ignoreCommand` で `front/` に変更がないデプロイをスキップする。
+- **マージ安全な比較**: 旧来の `git diff HEAD^ HEAD` はマージコミットで `HEAD^` が第2親（feature 側）に解決され、`front/` 差分が空になって**本番デプロイを誤スキップする不具合**があった。前回成功デプロイの SHA を使う形に変更:
+
+  ```
+  test -n "$VERCEL_GIT_PREVIOUS_SHA" && git diff --quiet "$VERCEL_GIT_PREVIOUS_SHA" HEAD -- front/
+  ```
+
+  - `VERCEL_GIT_PREVIOUS_SHA`（直近成功デプロイの SHA、Ignored Build Step 有効時のみ Vercel が提供）と HEAD を比較し、マージ親に依存しない。
+  - 前回 SHA が無い場合（初回等）はビルド（安全側）。
+
 ## API ドキュメント生成（Zod 単一ソース）
 
 - `lib/schemas/video.ts` の Zod スキーマを「検証・TypeScript 型・OpenAPI」の単一ソースとする。
