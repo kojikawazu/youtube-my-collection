@@ -1,27 +1,11 @@
-export type Category =
-  | "AI"
-  | "クラウド"
-  | "バックエンド"
-  | "フロントエンド"
-  | "CI/CD"
-  | "Linux"
-  | "テック企業"
-  | "プログラミング"
-  | "未分類";
+import type { z } from "zod";
+import type { videoItemSchema } from "@/lib/schemas/video";
 
-export type VideoItem = {
-  id: string;
-  title: string;
-  youtubeUrl: string;
-  thumbnailUrl: string;
-  tags: string[];
-  category: Category;
-  rating: number;
-  addedDate: string;
-  publishDate: string | null;
-  goodPoints: string;
-  memo: string;
-};
+/** 動画 1 件のレスポンス型。Zod スキーマ（schemas/video.ts）を単一ソースに導出。 */
+export type VideoItem = z.infer<typeof videoItemSchema>;
+
+/** カテゴリの literal union（プリセット + フォールバック）。 */
+export type Category = VideoItem["category"];
 
 export type SortOption = "newest" | "future" | "rating";
 

@@ -91,4 +91,6 @@ model VideoEntry {
 | memo | 2000 文字以内 |
 | rating | 1-5 |
 
+> 上記の制約は `front/src/lib/schemas/video.ts` の Zod スキーマを単一ソースとして検証する（`lib/validation.ts` はその薄いアダプタ）。OpenAPI もこのスキーマから生成される（[`07-api-specification.md`](./07-api-specification.md#openapi--swagger-ui)）。
+
 > スキーマ更新は `prisma db pull` のみ使用。手順は [`09-architecture-specification.md`](./09-architecture-specification.md) を参照。
