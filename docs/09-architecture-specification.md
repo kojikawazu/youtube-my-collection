@@ -22,6 +22,7 @@
 | 認証 | Supabase Auth (Google OAuth2, PKCE) + `ADMIN_EMAIL` allowlist |
 | データベース | Supabase Postgres / ORM: Prisma |
 | API | Next.js Route Handlers (`app/api/*`) で DB アクセス |
+| バリデーション / API ドキュメント | Zod（`lib/schemas/`）を単一ソースに検証・型・OpenAPI を導出。`@asteasolutions/zod-to-openapi` で OpenAPI 生成、`/docs` に Swagger UI |
 | デプロイ | 本番: Vercel（`main` ブランチ、`front/` のみ） |
 
 ## 構成方針
@@ -97,6 +98,13 @@ npx prisma generate
 
 CDN キャッシュ / スケルトン UI / Vercel Cron ウォームアップ等の方針は [`04-non-functional-specification.md`](./04-non-functional-specification.md) を参照。
 
+## API ドキュメント生成（Zod 単一ソース）
+
+- `lib/schemas/video.ts` の Zod スキーマを「検証・TypeScript 型・OpenAPI」の単一ソースとする。
+- `lib/openapi.ts` が OpenAPI 3.0 を生成し、`GET /api/openapi.json` で配信。`GET /docs` が CDN の Swagger UI（SRI 付き）で表示する。
+- 詳細・将来の TypeSpec / Go 契約への発展は [`notes/openapi-zod-plan.md`](./notes/openapi-zod-plan.md) を参照。
+
 ## 将来構成
 
 Go + Echo 共通バックエンドへの API 移行計画は [`notes/go-echo-backend-plan.md`](./notes/go-echo-backend-plan.md) を参照。
+移行時は本計画で得た自動生成 OpenAPI を TypeSpec へ起こし直し、Next/Go の共有契約に格上げする。

@@ -10,6 +10,7 @@
   - [管理者のみ](#管理者のみ)
   - [認証](#認証)
 - [レスポンス(共通)](#レスポンス共通)
+- [OpenAPI / Swagger UI](#openapi--swagger-ui)
 
 ## 前提
 - Next.js Route Handlers (`app/api/*`)
@@ -98,3 +99,17 @@
   - rating
   - publishDate (nullable)
   - addedDate
+
+## OpenAPI / Swagger UI
+
+本仕様書を正準としつつ、実装と同期する「動く版」として OpenAPI ドキュメントを **Zod スキーマから自動生成**する。
+
+| 項目 | 内容 |
+|------|------|
+| 真実のソース | `front/src/lib/schemas/video.ts`（Zod）。検証・型・OpenAPI を兼ねる |
+| 生成 | `front/src/lib/openapi.ts`（`@asteasolutions/zod-to-openapi`） |
+| OpenAPI JSON | `GET /api/openapi.json`（OpenAPI 3.0） |
+| Swagger UI | `GET /docs`（CDN の Swagger UI を SRI 付きで読み込む静的 HTML） |
+
+- バリデーションの単一ソース化により、入力スキーマ（`VideoInput` / `VideoUpdate`）・レスポンス（`VideoItem`）が上記エンドポイント定義と構造的に一致する。
+- 設計の経緯・将来の TypeSpec 移行方針は [`notes/openapi-zod-plan.md`](./notes/openapi-zod-plan.md) を参照。

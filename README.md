@@ -5,7 +5,7 @@
 
 YouTube で良かった動画を後から見返せる**公開コレクション**。一般公開のリスト/詳細閲覧と、管理者（単一ユーザー）による追加・編集・削除を提供する。
 
-**Tech:** Next.js 16 (App Router) / React 19 / TypeScript / Tailwind CSS / Supabase (Auth + Postgres) / Prisma ・ Deploy: Vercel
+**Tech:** Next.js 16 (App Router) / React 19 / TypeScript / Tailwind CSS / Supabase (Auth + Postgres) / Prisma / Zod ・ Deploy: Vercel
 
 ## 主な機能
 
@@ -41,6 +41,8 @@ pnpm dev                     # http://localhost:3000
 | `pnpm build` / `pnpm start` | 本番ビルド / 起動 |
 | `pnpm lint` | ESLint |
 | `pnpm test` / `pnpm test:e2e` | ユニット（Vitest）/ E2E（Playwright） |
+
+API ドキュメント（OpenAPI / Swagger UI）は開発サーバー起動後 [`http://localhost:3000/docs`](http://localhost:3000/docs) で閲覧できる（OpenAPI JSON は `/api/openapi.json`）。Zod スキーマから自動生成され、設計の経緯は [`docs/notes/openapi-zod-plan.md`](docs/notes/openapi-zod-plan.md) を参照。
 
 ## ドキュメント
 
