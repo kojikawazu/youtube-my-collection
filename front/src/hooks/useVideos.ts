@@ -26,11 +26,7 @@ export function useVideos() {
           offset: String((page - 1) * PAGE_SIZE),
           order: "desc",
           sort:
-            sortOption === "future"
-              ? "published"
-              : sortOption === "rating"
-                ? "rating"
-                : "added",
+            sortOption === "future" ? "published" : sortOption === "rating" ? "rating" : "added",
         });
         if (debouncedSearchQuery) {
           params.set("q", debouncedSearchQuery);
@@ -51,7 +47,7 @@ export function useVideos() {
         setTotalCount(
           Number.isFinite(parsedTotalCount) && parsedTotalCount >= 0
             ? parsedTotalCount
-            : data.length
+            : data.length,
         );
       } catch (error) {
         console.error(error);
@@ -60,7 +56,7 @@ export function useVideos() {
         setIsLoading(false);
       }
     },
-    [sortOption, debouncedSearchQuery]
+    [sortOption, debouncedSearchQuery],
   );
 
   const refreshListPage = useCallback(
@@ -72,7 +68,7 @@ export function useVideos() {
       bustCacheNextRef.current = true;
       setCurrentPage(page);
     },
-    [currentPage, loadVideos]
+    [currentPage, loadVideos],
   );
 
   const refreshCurrentPage = useCallback(async () => {
@@ -96,7 +92,7 @@ export function useVideos() {
       const nextPage = Math.min(currentPage, nextTotalPages);
       await refreshListPage(nextPage);
     },
-    [totalCount, currentPage, refreshListPage]
+    [totalCount, currentPage, refreshListPage],
   );
 
   useEffect(() => {
@@ -109,8 +105,7 @@ export function useVideos() {
   useEffect(() => {
     const prev = lastAppliedFiltersRef.current;
     const filtersChanged =
-      prev.sortOption !== sortOption ||
-      prev.debouncedSearchQuery !== debouncedSearchQuery;
+      prev.sortOption !== sortOption || prev.debouncedSearchQuery !== debouncedSearchQuery;
 
     lastAppliedFiltersRef.current = { sortOption, debouncedSearchQuery };
 
@@ -126,10 +121,7 @@ export function useVideos() {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const visiblePageNumbers = useMemo(() => {
-    const startCentered = Math.max(
-      1,
-      currentPage - Math.floor(MAX_VISIBLE_PAGE_BUTTONS / 2)
-    );
+    const startCentered = Math.max(1, currentPage - Math.floor(MAX_VISIBLE_PAGE_BUTTONS / 2));
     let end = startCentered + MAX_VISIBLE_PAGE_BUTTONS - 1;
     if (end > totalPages) {
       end = totalPages;

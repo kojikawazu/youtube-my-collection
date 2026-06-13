@@ -60,7 +60,11 @@ describe("Modal", () => {
 
   it("should show 'processing' state while onConfirm is pending", async () => {
     let resolveConfirm!: () => void;
-    const onConfirm = vi.fn().mockReturnValue(new Promise<void>((res) => { resolveConfirm = res; }));
+    const onConfirm = vi.fn().mockReturnValue(
+      new Promise<void>((res) => {
+        resolveConfirm = res;
+      }),
+    );
     render(<Modal {...defaultProps} onConfirm={onConfirm} />);
     fireEvent.click(screen.getByRole("button", { name: "実行" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "処理中..." })).toBeDisabled());
@@ -78,7 +82,11 @@ describe("Modal", () => {
 
   it("should call onConfirm only once when confirm button is clicked twice rapidly", async () => {
     let resolveConfirm!: () => void;
-    const onConfirm = vi.fn().mockReturnValue(new Promise<void>((res) => { resolveConfirm = res; }));
+    const onConfirm = vi.fn().mockReturnValue(
+      new Promise<void>((res) => {
+        resolveConfirm = res;
+      }),
+    );
     render(<Modal {...defaultProps} onConfirm={onConfirm} />);
     fireEvent.click(screen.getByRole("button", { name: "実行" }));
     fireEvent.click(screen.getByRole("button", { name: "処理中..." }));
@@ -98,7 +106,11 @@ describe("Modal", () => {
 
   it("should not call onClose when cancel is clicked while submitting", async () => {
     let resolveConfirm!: () => void;
-    const onConfirm = vi.fn().mockReturnValue(new Promise<void>((res) => { resolveConfirm = res; }));
+    const onConfirm = vi.fn().mockReturnValue(
+      new Promise<void>((res) => {
+        resolveConfirm = res;
+      }),
+    );
     const onClose = vi.fn();
     render(<Modal {...defaultProps} onConfirm={onConfirm} onClose={onClose} />);
     fireEvent.click(screen.getByRole("button", { name: "実行" }));

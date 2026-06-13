@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-type RequireAdminResult =
-  | { ok: true; email: string }
-  | { ok: false; response: NextResponse };
+type RequireAdminResult = { ok: true; email: string } | { ok: false; response: NextResponse };
 
 const maskEmail = (value: string) => {
   if (!value) return "";
@@ -38,9 +36,7 @@ export const requireAdmin = async (
 
   const { data: authData, error: authError } = await supabase.auth.getUser(token);
   const email = authData?.user?.email ?? "";
-  const emailMatches = adminEmail
-    ? email.toLowerCase() === adminEmail.toLowerCase()
-    : false;
+  const emailMatches = adminEmail ? email.toLowerCase() === adminEmail.toLowerCase() : false;
 
   if (authError || !adminEmail || !emailMatches) {
     console.warn(`[${context}] auth check failed`, {

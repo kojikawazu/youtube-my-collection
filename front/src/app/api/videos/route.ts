@@ -33,7 +33,7 @@ const toVideoItem = (video: {
 const parseNumber = (
   value: string | null,
   fallback: number,
-  range: { min?: number; max?: number } = {}
+  range: { min?: number; max?: number } = {},
 ) => {
   if (value === null) return fallback;
   const parsed = Number(value);
@@ -60,8 +60,8 @@ export async function GET(request: NextRequest) {
     sort === "rating"
       ? { rating: sortOrder }
       : sort === "published"
-      ? { publishDate: sortOrder }
-      : { createdAt: sortOrder };
+        ? { publishDate: sortOrder }
+        : { createdAt: sortOrder };
 
   const where: Prisma.VideoEntryWhereInput = {
     ...(tag ? { tags: { has: tag } } : {}),

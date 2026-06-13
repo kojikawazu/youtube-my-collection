@@ -42,13 +42,11 @@ export const VideoList: React.FC<VideoListProps> = ({
   onVideoDelete,
 }) => {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
         <div className="space-y-1">
-          <h1 className="text-4xl font-extrabold text-red-950 tracking-tight">
-            コレクション
-          </h1>
-          <p className="text-red-800/50 font-medium">
+          <h1 className="text-4xl font-extrabold tracking-tight text-red-950">コレクション</h1>
+          <p className="font-medium text-red-800/50">
             お気に入りの動画を整理して、いつでも見返そう。
           </p>
         </div>
@@ -65,7 +63,7 @@ export const VideoList: React.FC<VideoListProps> = ({
         </div>
       )}
       {isLoading && videos.length === 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 10 }, (_, i) => (
             <SkeletonCard key={i} />
           ))}
@@ -73,10 +71,10 @@ export const VideoList: React.FC<VideoListProps> = ({
       ) : (
         <div
           className={`transition-opacity duration-200 ${
-            isLoading ? "opacity-50 pointer-events-none" : "opacity-100"
+            isLoading ? "pointer-events-none opacity-50" : "opacity-100"
           }`}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {videos.map((video) => (
               <VideoCard
                 key={video.id}

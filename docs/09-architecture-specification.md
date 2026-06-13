@@ -23,6 +23,8 @@
 | データベース | Supabase Postgres / ORM: Prisma |
 | API | Next.js Route Handlers (`app/api/*`) で DB アクセス |
 | バリデーション / API ドキュメント | Zod（`lib/schemas/`）を単一ソースに検証・型・OpenAPI を導出。`@asteasolutions/zod-to-openapi` で OpenAPI 生成、`/docs` に Swagger UI |
+| コード品質 | ESLint（`eslint-config-next` Flat Config）/ Prettier（`prettier-plugin-tailwindcss` で Tailwind クラス整列、`eslint-config-prettier` で競合回避） |
+| CI | GitHub Actions（`.github/workflows/ci.yml`）で format チェック → Lint → ユニット → E2E |
 | デプロイ | 本番: Vercel（`main` ブランチ、`front/` のみ） |
 
 ## 構成方針

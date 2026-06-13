@@ -35,7 +35,9 @@ describe("useVideoForm", () => {
 
   it("should initialize form with defaults on initAdd", () => {
     const { result } = renderHook(() => useVideoForm(makeOptions()));
-    act(() => { result.current.initAdd(); });
+    act(() => {
+      result.current.initAdd();
+    });
     expect(result.current.formData.category).toBe("プログラミング");
     expect(result.current.formData.rating).toBe(3);
     expect(result.current.formErrors).toEqual({});
@@ -44,17 +46,25 @@ describe("useVideoForm", () => {
   it("should copy video data on initEdit", () => {
     const video = makeVideo();
     const { result } = renderHook(() => useVideoForm(makeOptions()));
-    act(() => { result.current.initEdit(video); });
+    act(() => {
+      result.current.initEdit(video);
+    });
     expect(result.current.formData).toMatchObject(video);
     expect(result.current.formErrors).toEqual({});
   });
 
   it("should update field and clear corresponding error on updateField", () => {
     const { result } = renderHook(() => useVideoForm(makeOptions()));
-    act(() => { result.current.initAdd(); });
+    act(() => {
+      result.current.initAdd();
+    });
     // バリデーションエラーを発生させる
-    act(() => { result.current.handleSave("add"); });
-    act(() => { result.current.updateField("title", "新タイトル"); });
+    act(() => {
+      result.current.handleSave("add");
+    });
+    act(() => {
+      result.current.updateField("title", "新タイトル");
+    });
     expect(result.current.formData.title).toBe("新タイトル");
     expect(result.current.formErrors.title).toBeUndefined();
   });
@@ -62,21 +72,30 @@ describe("useVideoForm", () => {
   it("should return valid=true and call POST on handleSave(add) with valid data", async () => {
     const showToast = vi.fn();
     const refreshListPage = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      status: 201,
-      json: async () => makeVideo(),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 201,
+        json: async () => makeVideo(),
+      }),
+    );
     const { result } = renderHook(() => useVideoForm(makeOptions({ showToast, refreshListPage })));
-    act(() => { result.current.initAdd(); });
+    act(() => {
+      result.current.initAdd();
+    });
     act(() => {
       result.current.updateField("title", "テスト");
       result.current.updateField("youtubeUrl", "https://youtube.com/watch?v=abc");
     });
     let saveResult: { action: () => Promise<unknown>; valid: boolean } | undefined;
-    act(() => { saveResult = result.current.handleSave("add"); });
+    act(() => {
+      saveResult = result.current.handleSave("add");
+    });
     expect(saveResult!.valid).toBe(true);
-    await act(async () => { await saveResult!.action(); });
+    await act(async () => {
+      await saveResult!.action();
+    });
     expect(showToast).toHaveBeenCalledWith("追加しました。");
     expect(refreshListPage).toHaveBeenCalledWith(1);
   });
@@ -85,18 +104,29 @@ describe("useVideoForm", () => {
     const updated = makeVideo({ title: "更新後タイトル" });
     const showToast = vi.fn();
     const refreshCurrentPage = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => updated,
-    }));
-    const { result } = renderHook(() => useVideoForm(makeOptions({ showToast, refreshCurrentPage })));
-    act(() => { result.current.initEdit(makeVideo()); });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => updated,
+      }),
+    );
+    const { result } = renderHook(() =>
+      useVideoForm(makeOptions({ showToast, refreshCurrentPage })),
+    );
+    act(() => {
+      result.current.initEdit(makeVideo());
+    });
     let saveResult: { action: () => Promise<unknown>; valid: boolean } | undefined;
-    act(() => { saveResult = result.current.handleSave("edit", "video-1"); });
+    act(() => {
+      saveResult = result.current.handleSave("edit", "video-1");
+    });
     expect(saveResult!.valid).toBe(true);
     let returnValue: unknown;
-    await act(async () => { returnValue = await saveResult!.action(); });
+    await act(async () => {
+      returnValue = await saveResult!.action();
+    });
     expect(showToast).toHaveBeenCalledWith("更新しました。");
     expect(returnValue).toMatchObject(updated);
   });
@@ -105,9 +135,13 @@ describe("useVideoForm", () => {
 
   it("should return valid=false and set youtubeUrl error when url is empty", () => {
     const { result } = renderHook(() => useVideoForm(makeOptions()));
-    act(() => { result.current.initAdd(); });
+    act(() => {
+      result.current.initAdd();
+    });
     let saveResult: { valid: boolean } | undefined;
-    act(() => { saveResult = result.current.handleSave("add"); });
+    act(() => {
+      saveResult = result.current.handleSave("add");
+    });
     expect(saveResult!.valid).toBe(false);
     expect(result.current.formErrors.youtubeUrl).toBeDefined();
   });
@@ -119,7 +153,9 @@ describe("useVideoForm", () => {
       result.current.updateField("youtubeUrl", "https://youtube.com/watch?v=abc");
     });
     let saveResult: { valid: boolean } | undefined;
-    act(() => { saveResult = result.current.handleSave("add"); });
+    act(() => {
+      saveResult = result.current.handleSave("add");
+    });
     expect(saveResult!.valid).toBe(false);
     expect(result.current.formErrors.title).toBeDefined();
   });
@@ -133,7 +169,9 @@ describe("useVideoForm", () => {
       result.current.updateField("tags", ["12345678901"]);
     });
     let saveResult: { valid: boolean } | undefined;
-    act(() => { saveResult = result.current.handleSave("add"); });
+    act(() => {
+      saveResult = result.current.handleSave("add");
+    });
     expect(saveResult!.valid).toBe(false);
     expect(result.current.formErrors.tags).toBeDefined();
   });
@@ -147,7 +185,9 @@ describe("useVideoForm", () => {
       result.current.updateField("id", undefined);
     });
     let saveResult: { action: () => Promise<unknown>; valid: boolean } | undefined;
-    act(() => { saveResult = result.current.handleSave("edit", undefined); });
+    act(() => {
+      saveResult = result.current.handleSave("edit", undefined);
+    });
     expect(saveResult!.valid).toBe(true);
     await expect(saveResult!.action()).rejects.toThrow();
   });
@@ -164,7 +204,9 @@ describe("useVideoForm", () => {
       result.current.updateField("title", "タイトル");
     });
     let saveResult: { action: () => Promise<unknown>; valid: boolean } | undefined;
-    act(() => { saveResult = result.current.handleSave("add"); });
+    act(() => {
+      saveResult = result.current.handleSave("add");
+    });
     await expect(saveResult!.action()).rejects.toThrow();
     expect(showToast).not.toHaveBeenCalled();
   });
@@ -173,9 +215,13 @@ describe("useVideoForm", () => {
     const showToast = vi.fn();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
     const { result } = renderHook(() => useVideoForm(makeOptions({ showToast })));
-    act(() => { result.current.initEdit(makeVideo()); });
+    act(() => {
+      result.current.initEdit(makeVideo());
+    });
     let saveResult: { action: () => Promise<unknown>; valid: boolean } | undefined;
-    act(() => { saveResult = result.current.handleSave("edit", "video-1"); });
+    act(() => {
+      saveResult = result.current.handleSave("edit", "video-1");
+    });
     await expect(saveResult!.action()).rejects.toThrow();
     expect(showToast).not.toHaveBeenCalled();
   });

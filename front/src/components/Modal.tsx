@@ -68,30 +68,28 @@ export const Modal: React.FC<ModalProps> = ({
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-sm bg-white rounded-[3rem] shadow-2xl p-10 text-center border border-red-50"
+            className="relative w-full max-w-sm rounded-[3rem] border border-red-50 bg-white p-10 text-center shadow-2xl"
           >
             <div
-              className={`w-20 h-20 mx-auto mb-8 rounded-[2rem] flex items-center justify-center ${
+              className={`mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-[2rem] ${
                 variant === "danger" ? "bg-red-50 text-red-500" : "bg-red-50 text-red-950"
               }`}
             >
               {variant === "danger" ? (
-                <AlertTriangle className="w-10 h-10" />
+                <AlertTriangle className="h-10 w-10" />
               ) : (
-                <Info className="w-10 h-10" />
+                <Info className="h-10 w-10" />
               )}
             </div>
-            <h2 className="text-2xl font-extrabold text-red-950 mb-3">{title}</h2>
-            <p className="text-red-800/50 text-sm font-medium leading-relaxed mb-10">
-              {message}
-            </p>
+            <h2 className="mb-3 text-2xl font-extrabold text-red-950">{title}</h2>
+            <p className="mb-10 text-sm leading-relaxed font-medium text-red-800/50">{message}</p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
                   void handleConfirm();
                 }}
                 disabled={isSubmitting}
-                className={`w-full py-5 rounded-[1.5rem] font-bold transition-all hover:-translate-y-1 shadow-xl disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`w-full rounded-[1.5rem] py-5 font-bold shadow-xl transition-all hover:-translate-y-1 disabled:cursor-not-allowed disabled:opacity-60 ${
                   variant === "danger"
                     ? "bg-red-500 text-white shadow-red-200"
                     : "bg-red-950 text-white shadow-red-950/20"
@@ -106,7 +104,7 @@ export const Modal: React.FC<ModalProps> = ({
                   }
                 }}
                 disabled={isSubmitting}
-                className="w-full py-5 rounded-[1.5rem] font-bold text-red-300 hover:text-red-500 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-[1.5rem] py-5 font-bold text-red-300 transition-colors hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {cancelLabel}
               </button>

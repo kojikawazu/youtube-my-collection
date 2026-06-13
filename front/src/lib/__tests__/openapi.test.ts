@@ -1,10 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildOpenApiDocument } from "@/lib/openapi";
-import {
-  CATEGORY_VALUES,
-  videoInputSchema,
-  videoItemSchema,
-} from "@/lib/schemas/video";
+import { CATEGORY_VALUES, videoInputSchema, videoItemSchema } from "@/lib/schemas/video";
 
 // 生成は決定的なので 1 回だけ実行して使い回す。
 const doc = buildOpenApiDocument();
@@ -20,7 +16,7 @@ describe("buildOpenApiDocument", () => {
   it("公開・管理・認証の全エンドポイントを OpenAPI 3.0 として生成する", () => {
     expect(doc.openapi).toBe("3.0.0");
     expect(Object.keys(paths).sort()).toEqual(
-      ["/api/auth/admin", "/api/videos", "/api/videos/{id}"].sort()
+      ["/api/auth/admin", "/api/videos", "/api/videos/{id}"].sort(),
     );
     expect(paths["/api/videos"].get).toBeDefined();
     expect(paths["/api/videos"].post).toBeDefined();
@@ -38,17 +34,15 @@ describe("buildOpenApiDocument", () => {
     // ドキュメントは openapi.ts で再ラップして生成するため、検証スキーマの
     // shape とプロパティ集合が一致することを保証してドリフトを防ぐ。
     expect(Object.keys(schemas.VideoItem.properties).sort()).toEqual(
-      Object.keys(videoItemSchema.shape).sort()
+      Object.keys(videoItemSchema.shape).sort(),
     );
     expect(Object.keys(schemas.VideoInput.properties).sort()).toEqual(
-      Object.keys(videoInputSchema.shape).sort()
+      Object.keys(videoInputSchema.shape).sort(),
     );
   });
 
   it("VideoInput の必須は youtubeUrl/title/rating、rating は 1-5 の integer", () => {
-    expect(schemas.VideoInput.required.sort()).toEqual(
-      ["rating", "title", "youtubeUrl"].sort()
-    );
+    expect(schemas.VideoInput.required.sort()).toEqual(["rating", "title", "youtubeUrl"].sort());
     expect(schemas.VideoInput.properties.rating).toMatchObject({
       type: "integer",
       minimum: 1,

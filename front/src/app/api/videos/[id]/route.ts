@@ -79,9 +79,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         ...(hasDataField(data, "goodPoints") ? { goodPoints: data.goodPoints } : {}),
         ...(hasDataField(data, "memo") ? { memo: data.memo } : {}),
         ...(hasDataField(data, "rating") ? { rating: data.rating } : {}),
-        ...(hasDataField(data, "publishDate")
-          ? { publishDate: data.publishDate ?? null }
-          : {}),
+        ...(hasDataField(data, "publishDate") ? { publishDate: data.publishDate ?? null } : {}),
       },
     });
 

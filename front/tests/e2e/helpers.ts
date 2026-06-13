@@ -72,7 +72,7 @@ export const baseVideos: MockVideo[] = [
 const parseNumber = (
   value: string | null,
   fallback: number,
-  range: { min?: number; max?: number } = {}
+  range: { min?: number; max?: number } = {},
 ) => {
   if (value === null) return fallback;
   const parsed = Number(value);
@@ -110,8 +110,8 @@ export const buildApiResponse = (dataset: MockVideo[], route: Route) => {
         sort === "rating"
           ? a.rating - b.rating
           : sort === "published"
-          ? toTimestamp(a.publishDate) - toTimestamp(b.publishDate)
-          : toTimestamp(a.addedDate) - toTimestamp(b.addedDate);
+            ? toTimestamp(a.publishDate) - toTimestamp(b.publishDate)
+            : toTimestamp(a.addedDate) - toTimestamp(b.addedDate);
       return compare * direction;
     });
 

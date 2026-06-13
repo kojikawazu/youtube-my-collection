@@ -16,35 +16,25 @@ type MarkdownRendererProps = {
 
 export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
   return (
-    <div className="text-sm sm:text-base bg-white/50 p-4 rounded-xl border border-red-50/50 text-red-950/80 space-y-2">
+    <div className="space-y-2 rounded-xl border border-red-50/50 bg-white/50 p-4 text-sm text-red-950/80 sm:text-base">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         urlTransform={(uri) => safeUri(uri)}
         components={{
           h1: ({ children }) => (
-            <h1 className="text-xl font-bold text-red-800 mt-3 mb-2">{children}</h1>
+            <h1 className="mt-3 mb-2 text-xl font-bold text-red-800">{children}</h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-lg font-bold text-red-800 mt-3 mb-2">{children}</h2>
+            <h2 className="mt-3 mb-2 text-lg font-bold text-red-800">{children}</h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-base font-bold text-red-800 mt-3 mb-1.5">{children}</h3>
+            <h3 className="mt-3 mb-1.5 text-base font-bold text-red-800">{children}</h3>
           ),
-          h4: ({ children }) => (
-            <h4 className="font-bold text-red-800 mt-2 mb-1">{children}</h4>
-          ),
-          p: ({ children }) => (
-            <p className="leading-relaxed text-red-900/90">{children}</p>
-          ),
-          ul: ({ children }) => (
-            <ul className="space-y-1 ml-4 list-disc">{children}</ul>
-          ),
-          ol: ({ children }) => (
-            <ol className="space-y-1 ml-4 list-decimal">{children}</ol>
-          ),
-          li: ({ children }) => (
-            <li className="leading-relaxed">{children}</li>
-          ),
+          h4: ({ children }) => <h4 className="mt-2 mb-1 font-bold text-red-800">{children}</h4>,
+          p: ({ children }) => <p className="leading-relaxed text-red-900/90">{children}</p>,
+          ul: ({ children }) => <ul className="ml-4 list-disc space-y-1">{children}</ul>,
+          ol: ({ children }) => <ol className="ml-4 list-decimal space-y-1">{children}</ol>,
+          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
           a: ({ children, ...props }) => (
             <a
               {...props}

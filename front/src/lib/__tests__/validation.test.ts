@@ -41,7 +41,10 @@ describe("validateVideoInput", () => {
   });
 
   it("should skip missing fields in partial mode", () => {
-    const { errors } = validateVideoInput({ youtubeUrl: "https://youtube.com/watch?v=x" }, { partial: true });
+    const { errors } = validateVideoInput(
+      { youtubeUrl: "https://youtube.com/watch?v=x" },
+      { partial: true },
+    );
     expect(errors.title).toBeUndefined();
     expect(errors.rating).toBeUndefined();
   });

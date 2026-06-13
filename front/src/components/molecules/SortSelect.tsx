@@ -11,7 +11,7 @@ export const SortSelect: React.FC<SortSelectProps> = ({ value, onChange }) => {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value as SortOption)}
-      className="bg-white border border-red-100 text-red-900 text-sm rounded-2xl px-4 py-2.5 focus:ring-4 focus:ring-red-50 outline-none shadow-sm font-medium"
+      className="rounded-2xl border border-red-100 bg-white px-4 py-2.5 text-sm font-medium text-red-900 shadow-sm outline-none focus:ring-4 focus:ring-red-50"
     >
       <option value="newest">最新の追加</option>
       <option value="future">最新の公開</option>

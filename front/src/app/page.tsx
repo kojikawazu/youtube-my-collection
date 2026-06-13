@@ -121,7 +121,7 @@ export default function Page() {
         alert(
           mode === "add"
             ? "保存に失敗しました。"
-            : `更新に失敗しました。${error instanceof Error ? error.message : ""}`
+            : `更新に失敗しました。${error instanceof Error ? error.message : ""}`,
         );
         throw error;
       }
@@ -203,9 +203,7 @@ export default function Page() {
                 onErrorClear={form.clearError}
                 onSave={handleSaveRequest}
                 onCancel={() =>
-                  currentScreen === Screen.Add
-                    ? navigateToList()
-                    : navigateToDetail(selectedVideo!)
+                  currentScreen === Screen.Add ? navigateToList() : navigateToDetail(selectedVideo!)
                 }
               />
             </motion.div>
@@ -241,9 +239,9 @@ export default function Page() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           onClick={navigateToAdd}
-          className="fixed bottom-10 right-10 w-16 h-16 bg-red-500 text-white rounded-[2rem] flex items-center justify-center shadow-2xl shadow-red-500/40 hover:bg-red-600 hover:scale-110 transition-all z-40"
+          className="fixed right-10 bottom-10 z-40 flex h-16 w-16 items-center justify-center rounded-[2rem] bg-red-500 text-white shadow-2xl shadow-red-500/40 transition-all hover:scale-110 hover:bg-red-600"
         >
-          <Plus className="w-8 h-8" />
+          <Plus className="h-8 w-8" />
         </motion.button>
       )}
 
