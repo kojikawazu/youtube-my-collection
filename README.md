@@ -42,7 +42,7 @@ pnpm dev                     # http://localhost:3000
 | `pnpm lint` | ESLint |
 | `pnpm test` / `pnpm test:e2e` | ユニット（Vitest）/ E2E（Playwright） |
 
-API ドキュメント（OpenAPI / Swagger UI）は開発サーバー起動後 [`http://localhost:3000/docs`](http://localhost:3000/docs) で閲覧できる（OpenAPI JSON は `/api/openapi.json`）。Zod スキーマから自動生成され、設計の経緯は [`docs/notes/openapi-zod-plan.md`](docs/notes/openapi-zod-plan.md) を参照。
+API ドキュメント（OpenAPI / Swagger UI）は開発サーバー起動後 [`http://localhost:3000/docs`](http://localhost:3000/docs) で閲覧できる（OpenAPI JSON は `/api/openapi.json`）。**管理者限定**で、管理者ログインしていない場合はログイン誘導が表示される。Zod スキーマから自動生成され、設計の経緯は [`docs/notes/openapi-zod-plan.md`](docs/notes/openapi-zod-plan.md) を参照。
 
 ## ドキュメント
 

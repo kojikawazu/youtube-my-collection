@@ -108,8 +108,8 @@
 |------|------|
 | 真実のソース | `front/src/lib/schemas/video.ts`（Zod）。検証・型・OpenAPI を兼ねる |
 | 生成 | `front/src/lib/openapi.ts`（`@asteasolutions/zod-to-openapi`） |
-| OpenAPI JSON | `GET /api/openapi.json`（OpenAPI 3.0） |
-| Swagger UI | `GET /docs`（CDN の Swagger UI を SRI 付きで読み込む静的 HTML） |
+| OpenAPI JSON | `GET /api/openapi.json`（OpenAPI 3.0）。**管理者限定**: `requireAdmin` で保護し、未認証は 401・非管理者は 403 |
+| Swagger UI | `GET /docs`（CDN の Swagger UI を SRI 付きで読み込む）。**管理者限定**: クライアントガードで管理者セッションが無ければログイン誘導を表示。Swagger UI は `requestInterceptor` で Bearer トークンを注入 |
 
 - バリデーションの単一ソース化により、入力スキーマ（`VideoInput` / `VideoUpdate`）・レスポンス（`VideoItem`）が上記エンドポイント定義と構造的に一致する。
 - 設計の経緯・将来の TypeSpec 移行方針は [`notes/openapi-zod-plan.md`](./notes/openapi-zod-plan.md) を参照。
