@@ -16,10 +16,7 @@ export function useConfirmModal() {
     variant: "info",
   });
 
-  const openDeleteModal = (
-    title: string,
-    onConfirm: () => Promise<void>
-  ) => {
+  const openDeleteModal = (title: string, onConfirm: () => Promise<void>) => {
     setConfig({
       title: "動画を削除しますか？",
       message: `「${title}」を完全に削除します。`,

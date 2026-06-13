@@ -15,11 +15,11 @@ test.describe("normal flows", () => {
     await page.getByRole("heading", { name: "React 2024 完全ガイド" }).click();
 
     await expect(
-      page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 })
+      page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 }),
     ).toBeVisible();
     await expect(page.getByRole("link", { name: "YouTube を開く" })).toHaveAttribute(
       "href",
-      "https://youtube.com/watch?v=example2"
+      "https://youtube.com/watch?v=example2",
     );
 
     await page.getByRole("button", { name: "コレクションへ" }).click();

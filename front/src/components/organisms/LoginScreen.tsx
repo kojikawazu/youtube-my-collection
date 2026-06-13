@@ -7,41 +7,35 @@ type LoginScreenProps = {
   onBack: () => void;
 };
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({
-  onGoogleLogin,
-  onBack,
-}) => {
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoogleLogin, onBack }) => {
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-[3.5rem] border border-red-50 shadow-2xl shadow-red-500/5 p-10 sm:p-16 text-center">
-        <div className="mb-10 relative inline-block">
-          <div className="w-24 h-24 bg-red-50 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6">
-            <ShieldCheck className="w-12 h-12 text-red-500" />
+    <div className="flex min-h-[80vh] items-center justify-center px-4">
+      <div className="w-full max-w-md rounded-[3.5rem] border border-red-50 bg-white p-10 text-center shadow-2xl shadow-red-500/5 sm:p-16">
+        <div className="relative mb-10 inline-block">
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-red-50">
+            <ShieldCheck className="h-12 w-12 text-red-500" />
           </div>
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ repeat: Infinity, duration: 2 }}
-            className="absolute -bottom-2 -right-2 w-8 h-8 bg-red-500 border-4 border-white rounded-full flex items-center justify-center"
+            className="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-red-500"
           >
-            <div className="w-1.5 h-1.5 bg-white rounded-full" />
+            <div className="h-1.5 w-1.5 rounded-full bg-white" />
           </motion.div>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-red-950 mb-3 tracking-tight">
-          管理者ログイン
-        </h1>
-        <p className="text-sm text-red-800/40 mb-12 font-medium leading-relaxed">
-          管理権限が必要です。<br />Googleアカウントで認証してください。
+        <h1 className="mb-3 text-3xl font-extrabold tracking-tight text-red-950">管理者ログイン</h1>
+        <p className="mb-12 text-sm leading-relaxed font-medium text-red-800/40">
+          管理権限が必要です。
+          <br />
+          Googleアカウントで認証してください。
         </p>
 
         <button
           onClick={onGoogleLogin}
-          className="w-full flex items-center justify-center gap-4 bg-white border border-gray-100 hover:border-red-200 hover:bg-red-50 text-gray-700 font-bold py-5 px-8 rounded-[2rem] transition-all shadow-sm mb-8 group"
+          className="group mb-8 flex w-full items-center justify-center gap-4 rounded-[2rem] border border-gray-100 bg-white px-8 py-5 font-bold text-gray-700 shadow-sm transition-all hover:border-red-200 hover:bg-red-50"
         >
-          <svg
-            className="w-6 h-6 group-hover:scale-110 transition-transform"
-            viewBox="0 0 48 48"
-          >
+          <svg className="h-6 w-6 transition-transform group-hover:scale-110" viewBox="0 0 48 48">
             <path
               fill="#EA4335"
               d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
@@ -64,7 +58,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
         <button
           onClick={onBack}
-          className="text-sm font-bold text-red-300 hover:text-red-500 transition-colors uppercase tracking-widest"
+          className="text-sm font-bold tracking-widest text-red-300 uppercase transition-colors hover:text-red-500"
         >
           コレクションへ戻る
         </button>

@@ -50,7 +50,7 @@ export function useVideoForm({
 
   const handleSave = (
     mode: "add" | "edit",
-    selectedVideoId?: string
+    selectedVideoId?: string,
   ): {
     action: () => Promise<VideoItem | null>;
     valid: boolean;

@@ -9,7 +9,8 @@ import { baseVideos, mockVideosApi, type MockVideo } from "./helpers";
 // Supabase JS uses `sb-${hostname.split('.')[0]}-auth-token` as the key.
 // Local:  https://tbcpytvlzuknfxbaijbg.supabase.co  → sb-tbcpytvlzuknfxbaijbg-auth-token
 // CI:     http://localhost:3000                       → sb-localhost-auth-token
-const _supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tbcpytvlzuknfxbaijbg.supabase.co";
+const _supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tbcpytvlzuknfxbaijbg.supabase.co";
 const _supabaseRef = new URL(_supabaseUrl).hostname.split(".")[0];
 const SUPABASE_STORAGE_KEY = `sb-${_supabaseRef}-auth-token`;
 const TEST_ACCESS_TOKEN = "test-admin-token";
@@ -36,7 +37,7 @@ const injectAdminSession = async (page: import("@playwright/test").Page) => {
       };
       localStorage.setItem(key, JSON.stringify(fakeSession));
     },
-    { key: SUPABASE_STORAGE_KEY, token: TEST_ACCESS_TOKEN }
+    { key: SUPABASE_STORAGE_KEY, token: TEST_ACCESS_TOKEN },
   );
 };
 
@@ -44,7 +45,7 @@ const injectAdminSession = async (page: import("@playwright/test").Page) => {
 const mockAdminApi = async (
   page: import("@playwright/test").Page,
   isAdmin: boolean,
-  status = 200
+  status = 200,
 ) => {
   await page.route("**/api/auth/admin**", async (route) => {
     await route.fulfill({
@@ -142,7 +143,9 @@ test.describe("admin: normal flows", () => {
 
     // Navigate to detail
     await page.getByRole("heading", { name: "React 2024 完全ガイド" }).click();
-    await expect(page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 }),
+    ).toBeVisible();
 
     // Click edit button
     await page.getByRole("button", { name: "編集" }).click();
@@ -191,7 +194,9 @@ test.describe("admin: normal flows", () => {
 
     // Navigate to detail — wait for detail heading to confirm transition completed
     await page.getByRole("heading", { name: "React 2024 完全ガイド" }).click();
-    await expect(page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 }),
+    ).toBeVisible();
 
     // Click delete on detail page
     await page.getByRole("button", { name: "削除" }).click();
@@ -304,7 +309,9 @@ test.describe("admin: semi-normal flows", () => {
     await page.goto("/");
 
     await page.getByRole("heading", { name: "React 2024 完全ガイド" }).click();
-    await expect(page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "編集" }).click();
     await page.getByPlaceholder("印象的なタイトルを...").fill("更新失敗テスト");
     await page.getByRole("button", { name: "保存して更新" }).click();

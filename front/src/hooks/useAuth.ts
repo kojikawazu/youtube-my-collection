@@ -83,17 +83,15 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
     };
     void initSession();
 
-    const { data: subscription } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === "SIGNED_OUT") {
-          clearSession();
-          return;
-        }
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          void applySession(session);
-        }
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        clearSession();
+        return;
       }
-    );
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        void applySession(session);
+      }
+    });
 
     return () => {
       subscription.subscription.unsubscribe();

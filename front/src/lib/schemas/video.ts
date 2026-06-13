@@ -16,8 +16,7 @@ export const CATEGORY_VALUES = [...CATEGORIES, "未分類"] as const;
 
 // --- 正規化ヘルパー（旧 validation.ts の挙動を踏襲） ---
 
-const toStringValue = (value: unknown): string =>
-  typeof value === "string" ? value.trim() : "";
+const toStringValue = (value: unknown): string => (typeof value === "string" ? value.trim() : "");
 
 const normalizeTags = (value: unknown): string[] => {
   if (Array.isArray(value)) {
@@ -47,24 +46,23 @@ const parsePublishDate = (value: unknown): Date | null | undefined => {
 
 // --- フィールドスキーマ（メッセージは旧実装と 1:1） ---
 
-const requiredString = (message: string) =>
-  z.preprocess(toStringValue, z.string().min(1, message));
+const requiredString = (message: string) => z.preprocess(toStringValue, z.string().min(1, message));
 
 const textField = (label: string) =>
   z.preprocess(
     toStringValue,
-    z.string().max(MAX_TEXT_LENGTH, `${label}は${MAX_TEXT_LENGTH}文字以内です。`)
+    z.string().max(MAX_TEXT_LENGTH, `${label}は${MAX_TEXT_LENGTH}文字以内です。`),
   );
 
 const tagsField = z.preprocess(
   normalizeTags,
-  z.array(z.string().max(MAX_TAG_LENGTH, `タグは${MAX_TAG_LENGTH}文字以内です。`))
+  z.array(z.string().max(MAX_TAG_LENGTH, `タグは${MAX_TAG_LENGTH}文字以内です。`)),
 );
 
 const categoryField = z
   .preprocess(
     toStringValue,
-    z.string().max(MAX_CATEGORY_LENGTH, `カテゴリは${MAX_CATEGORY_LENGTH}文字以内です。`)
+    z.string().max(MAX_CATEGORY_LENGTH, `カテゴリは${MAX_CATEGORY_LENGTH}文字以内です。`),
   )
   // 空文字は「未分類」にフォールバック
   .transform((value) => value || "未分類");
@@ -72,19 +70,14 @@ const categoryField = z
 const ratingField = z
   .preprocess(
     (value) => (typeof value === "number" ? value : Number(value)),
-    z
-      .number()
-      .refine(
-        (n) => Number.isFinite(n) && n >= MIN_RATING && n <= MAX_RATING,
-        { message: `評価は${MIN_RATING}〜${MAX_RATING}で入力してください。` }
-      )
+    z.number().refine((n) => Number.isFinite(n) && n >= MIN_RATING && n <= MAX_RATING, {
+      message: `評価は${MIN_RATING}〜${MAX_RATING}で入力してください。`,
+    }),
   )
   // 小数は四捨五入
   .transform((n) => Math.round(n));
 
-const publishDateField = z
-  .preprocess(parsePublishDate, z.date().nullable().optional())
-  .optional();
+const publishDateField = z.preprocess(parsePublishDate, z.date().nullable().optional()).optional();
 
 /**
  * 動画入力スキーマ（作成 / POST）。検証の正準。

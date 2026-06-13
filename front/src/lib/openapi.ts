@@ -4,12 +4,7 @@ import {
   extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import {
-  videoInputSchema,
-  videoItemSchema,
-  MIN_RATING,
-  MAX_RATING,
-} from "@/lib/schemas/video";
+import { videoInputSchema, videoItemSchema, MIN_RATING, MAX_RATING } from "@/lib/schemas/video";
 
 // OpenAPI 用メタデータ（.openapi()）はこのサーバー専用モジュールでのみ付与し、
 // クライアントバンドルに zod-to-openapi を持ち込まない。

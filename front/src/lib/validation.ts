@@ -1,8 +1,4 @@
-import {
-  videoInputSchema,
-  videoUpdateSchema,
-  type NormalizedVideo,
-} from "@/lib/schemas/video";
+import { videoInputSchema, videoUpdateSchema, type NormalizedVideo } from "@/lib/schemas/video";
 
 export type ValidationErrors = {
   youtubeUrl?: string;
@@ -29,7 +25,7 @@ export type { NormalizedVideo };
  */
 export const validateVideoInput = (
   input: unknown,
-  options: ValidateOptions = {}
+  options: ValidateOptions = {},
 ): { data: NormalizedVideo; errors: ValidationErrors } => {
   const schema = options.partial ? videoUpdateSchema : videoInputSchema;
   const result = schema.safeParse(input ?? {});

@@ -21,7 +21,7 @@ export const Rating: React.FC<RatingProps> = ({ value, max = 5, size = "md" }) =
         <svg
           key={star}
           className={`${sizeClasses[size]} ${
-            star <= value ? "text-red-400 fill-current" : "text-gray-200 fill-current"
+            star <= value ? "fill-current text-red-400" : "fill-current text-gray-200"
           }`}
           viewBox="0 0 24 24"
         >

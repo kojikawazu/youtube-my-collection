@@ -26,7 +26,7 @@ const mockFetch = (body: VideoItem[], totalCount: number, status = 200) => {
       status,
       headers: { get: (key: string) => (key === "x-total-count" ? String(totalCount) : null) },
       json: async () => body,
-    })
+    }),
   );
 };
 
@@ -54,7 +54,7 @@ describe("useVideos", () => {
         ok: true,
         headers: { get: () => null },
         json: async () => [makeVideo("1"), makeVideo("2"), makeVideo("3")],
-      })
+      }),
     );
     const { result } = renderHook(() => useVideos());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -71,7 +71,9 @@ describe("useVideos", () => {
     const { result } = renderHook(() => useVideos());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     const callsBefore = fetchMock.mock.calls.length;
-    act(() => { result.current.setSortOption("rating"); });
+    act(() => {
+      result.current.setSortOption("rating");
+    });
     await waitFor(() => expect(fetchMock.mock.calls.length).toBeGreaterThan(callsBefore));
   });
 
@@ -85,15 +87,25 @@ describe("useVideos", () => {
     vi.stubGlobal("fetch", fetchMock);
     const { result } = renderHook(() => useVideos());
     // 初回フェッチを完了させる
-    await act(async () => { await vi.runAllTimersAsync(); });
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
     const callsBefore = fetchMock.mock.calls.length;
-    act(() => { result.current.setSearchQuery("React"); });
+    act(() => {
+      result.current.setSearchQuery("React");
+    });
     // 299ms では fetch されない
-    await act(async () => { vi.advanceTimersByTime(299); });
+    await act(async () => {
+      vi.advanceTimersByTime(299);
+    });
     expect(fetchMock.mock.calls.length).toBe(callsBefore);
     // 300ms でデバウンスが発火し fetch される
-    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-    await act(async () => { await vi.runAllTimersAsync(); });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
     expect(fetchMock.mock.calls.length).toBeGreaterThan(callsBefore);
     const lastUrl = fetchMock.mock.calls.at(-1)?.[0] as string;
     expect(lastUrl).toContain("q=React");
@@ -117,37 +129,63 @@ describe("useVideos", () => {
     mockFetch([], 100);
     const { result } = renderHook(() => useVideos());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    act(() => { result.current.setCurrentPage(6); });
+    act(() => {
+      result.current.setCurrentPage(6);
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.visiblePageNumbers).toEqual([4, 5, 6, 7, 8]);
   });
 
   it("should call DELETE then GET on deleteVideo", async () => {
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce({ ok: true, headers: { get: () => "1" }, json: async () => [makeVideo("1")] })
-      .mockResolvedValueOnce({ ok: true, status: 204, headers: { get: () => null }, json: async () => ({}) })
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: { get: () => "1" },
+        json: async () => [makeVideo("1")],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        headers: { get: () => null },
+        json: async () => ({}),
+      })
       .mockResolvedValue({ ok: true, headers: { get: () => "0" }, json: async () => [] });
     vi.stubGlobal("fetch", fetchMock);
     const { result } = renderHook(() => useVideos());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(async () => { await result.current.deleteVideo("1", "token"); });
-    const methods = fetchMock.mock.calls.map((c) => (c[1] as RequestInit | undefined)?.method ?? "GET");
+    await act(async () => {
+      await result.current.deleteVideo("1", "token");
+    });
+    const methods = fetchMock.mock.calls.map(
+      (c) => (c[1] as RequestInit | undefined)?.method ?? "GET",
+    );
     expect(methods).toContain("DELETE");
   });
 
   it("should navigate to previous page when last item on final page is deleted", async () => {
     const videos10 = Array.from({ length: 10 }, (_, i) => makeVideo(String(i + 1)));
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce({ ok: true, headers: { get: () => "11" }, json: async () => videos10 })
       .mockResolvedValueOnce({ ok: true, headers: { get: () => "11" }, json: async () => videos10 })
-      .mockResolvedValueOnce({ ok: true, status: 204, headers: { get: () => null }, json: async () => ({}) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        headers: { get: () => null },
+        json: async () => ({}),
+      })
       .mockResolvedValue({ ok: true, headers: { get: () => "11" }, json: async () => videos10 });
     vi.stubGlobal("fetch", fetchMock);
     const { result } = renderHook(() => useVideos());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    act(() => { result.current.setCurrentPage(2); });
+    act(() => {
+      result.current.setCurrentPage(2);
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(async () => { await result.current.deleteVideo("11", "token"); });
+    await act(async () => {
+      await result.current.deleteVideo("11", "token");
+    });
     expect(result.current.currentPage).toBe(1);
   });
 
@@ -169,9 +207,13 @@ describe("useVideos", () => {
     vi.stubGlobal("fetch", fetchMock);
     const { result } = renderHook(() => useVideos());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    act(() => { result.current.setCurrentPage(3); });
+    act(() => {
+      result.current.setCurrentPage(3);
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    act(() => { result.current.setSortOption("rating"); });
+    act(() => {
+      result.current.setSortOption("rating");
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.currentPage).toBe(1);
   });
@@ -186,9 +228,19 @@ describe("useVideos", () => {
   });
 
   it("should throw when deleteVideo API returns error", async () => {
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce({ ok: true, headers: { get: () => "1" }, json: async () => [makeVideo("1")] })
-      .mockResolvedValueOnce({ ok: false, status: 500, headers: { get: () => null }, json: async () => ({}) });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: { get: () => "1" },
+        json: async () => [makeVideo("1")],
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        headers: { get: () => null },
+        json: async () => ({}),
+      });
     vi.stubGlobal("fetch", fetchMock);
     const { result } = renderHook(() => useVideos());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
