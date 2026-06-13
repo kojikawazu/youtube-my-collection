@@ -100,9 +100,9 @@ Zod スキーマ（単一の真実）
 
 ### 5. Swagger UI の配信
 
-- `GET /api/openapi.json`（新規 Route Handler）: 生成した OpenAPI を返す。
-- `/docs`（新規 page）: CDN の Swagger UI を読み込み `/api/openapi.json` を指す静的 HTML ページ。
-- 公開範囲は読み取り専用ドキュメントとして**公開**（エンドポイント構成は既にリポジトリ上で公開済みのため新たな露出はない）。本番で隠したい要望が出た場合は後続で `NODE_ENV` ガードを検討。
+- `GET /api/openapi.json`（Route Handler）: 生成した OpenAPI を返す。
+- `/docs`（page）: CDN の Swagger UI を読み込み `/api/openapi.json` を指すページ。
+- **公開範囲（更新）**: 当初は読み取り専用ドキュメントとして公開していたが、**管理者限定に変更**した。`/api/openapi.json` を `requireAdmin`（`ADMIN_EMAIL` allowlist）で保護し、`/docs` はクライアントガードで管理者セッションが無ければログイン誘導を表示する（Swagger UI は `requestInterceptor` で Bearer トークンを注入）。`NODE_ENV` ガードではなく既存の Bearer 認証に揃えることで、認証モデルの二重化を避けた。
 
 ### 6. 型の統合（types.ts）
 

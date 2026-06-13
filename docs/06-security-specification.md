@@ -67,3 +67,6 @@
 
 - リスト/詳細は完全公開
 - 管理者操作は認証と権限で保護（API のステータスコード契約は [`07-api-specification.md`](./07-api-specification.md) を参照）
+- **API ドキュメント（OpenAPI / Swagger UI）は管理者限定**:
+  - `GET /api/openapi.json` は `requireAdmin`（`ADMIN_EMAIL` allowlist）で保護し、未認証は 401・非管理者は 403。
+  - `/docs`（Swagger UI）はクライアントガードで、管理者セッションが無い場合はログイン誘導を表示する（スキーマ本体はサーバー側ゲートで保護されるため、HTML シェルからの露出はない）。Swagger UI は `requestInterceptor` で Bearer トークンを注入する。
