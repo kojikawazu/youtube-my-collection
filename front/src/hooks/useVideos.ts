@@ -7,7 +7,7 @@ const MAX_VISIBLE_PAGE_BUTTONS = 5;
 /**
  * 一覧画面の状態機械。動画リストの取得・ページング・検索（300ms デバウンス）・並び替えを束ねる。
  * 検索/並び替えが変わると 1 ページ目へリセットし、CRUD 後はキャッシュを無効化して再取得する。
- * 返り値はリスト表示に必要な state・操作関数・派生値（`totalPages` / `visiblePageNumbers`）を含む。
+ * @returns リスト表示に必要な state・操作関数・派生値（`totalPages` / `visiblePageNumbers` 等）
  */
 export function useVideos() {
   const [videos, setVideos] = useState<VideoItem[]>([]);

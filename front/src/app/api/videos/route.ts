@@ -4,7 +4,10 @@ import { validateVideoInput } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-server";
 
-/** Prisma の VideoEntry を API レスポンス形（日付を ISO 文字列化、`createdAt`→`addedDate`）へ変換する。 */
+/**
+ * Prisma の VideoEntry を API レスポンス形（日付を ISO 文字列化、`createdAt`→`addedDate`）へ変換する。
+ * @returns API レスポンス形の動画オブジェクト
+ */
 const toVideoItem = (video: {
   id: string;
   youtubeUrl: string;
@@ -31,7 +34,12 @@ const toVideoItem = (video: {
   addedDate: video.createdAt.toISOString(),
 });
 
-/** クエリ文字列を整数へ変換する。未指定/不正値は `fallback`、範囲外は min/max にクランプする。 */
+/**
+ * クエリ文字列を整数へ変換する。未指定/不正値は `fallback`、範囲外は min/max にクランプする。
+ * @param value 変換元のクエリ文字列（未指定は null）
+ * @param fallback 未指定/不正値のときに使う既定値
+ * @returns 変換・クランプ後の整数
+ */
 const parseNumber = (
   value: string | null,
   fallback: number,
@@ -51,6 +59,8 @@ const parseNumber = (
  * 動画一覧を返す（公開・認証不要）。
  * 並び替え（追加日/評価/公開日）・キーワード（タイトル部分一致 + タグ一致）・タグ/カテゴリ絞り込み・
  * ページング（limit/offset）に対応。総件数は `x-total-count` ヘッダで返し、CDN キャッシュを付与する。
+ * @param request 一覧取得のリクエスト（クエリで並び替え・検索・ページングを指定）
+ * @returns 動画一覧の JSON（`x-total-count` 等のヘッダ付き）
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -103,6 +113,8 @@ export async function GET(request: NextRequest) {
 /**
  * 動画を新規作成する（管理者限定）。
  * 認可 → バリデーション（失敗は 400）→ 作成し、201 で作成済みの動画を返す。
+ * @param request 作成リクエスト（Bearer 認可と JSON ボディを含む）
+ * @returns 作成した動画の JSON（201）。認可・検証失敗は 400/401/403
  */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request, "api/videos");

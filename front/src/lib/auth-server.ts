@@ -3,7 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 
 type RequireAdminResult = { ok: true; email: string } | { ok: false; response: NextResponse };
 
-/** ログ出力用にメールをマスクする（`a***@example.com`）。ローカル部が 1 文字以下なら `***`。 */
+/**
+ * ログ出力用にメールをマスクする（`a***@example.com`）。ローカル部が 1 文字以下なら `***`。
+ * @param value マスク対象のメールアドレス
+ * @returns マスク済み文字列。空入力は空文字、ローカル部が短い場合は `***`
+ */
 const maskEmail = (value: string) => {
   if (!value) return "";
   const at = value.indexOf("@");
@@ -19,6 +23,9 @@ const maskEmail = (value: string) => {
  * - トークン欠落 → 401 Unauthorized（未認証）
  * - 検証失敗 / allowlist 不一致 → 403 Forbidden（認証済みだが権限なし）
  * `ok: false` の場合は呼び出し側でそのまま返せる `response` を含む。
+ * @param request 認可対象の API リクエスト（Authorization ヘッダーを参照）
+ * @param context ログ識別用のラベル（呼び出し元エンドポイント名）
+ * @returns 成功なら `{ ok: true, email }`、失敗なら 401/403 の `response` を含む結果
  */
 export const requireAdmin = async (
   request: NextRequest,
