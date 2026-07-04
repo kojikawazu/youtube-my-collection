@@ -40,6 +40,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Prisma Client を生成しないと @prisma/client が型を export せず typecheck が落ちる。
+      - name: Generate Prisma Client
+        run: pnpm exec prisma generate
+
       - name: Format check
         run: pnpm run format:check
 
