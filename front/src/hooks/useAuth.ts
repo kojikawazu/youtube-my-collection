@@ -12,7 +12,7 @@ type UseAuthOptions = {
  * 管理者セッションを管理するフック。Supabase の認証状態を購読し、
  * `/api/auth/admin` でサーバー側の allowlist 判定を行う（クライアントにメールを露出しない）。
  * allowlist 外のアカウントでログインした場合はサインアウトさせ、`onNonAdminRejected` を呼ぶ。
- * 返り値: `isAdmin` / `accessToken`（API 認可用）/ `login` / `logout`。
+ * @returns 管理者判定 `isAdmin`・API 認可用 `accessToken`・`login` / `logout`
  */
 export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -26,7 +26,11 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
     onNonAdminRejectedRef.current = onNonAdminRejected;
   }, [showToast, onNonAdminRejected]);
 
-  /** サーバーの `/api/auth/admin` にトークンを渡し、管理者 allowlist 判定の可否を得る。失敗時は false。 */
+  /**
+   * サーバーの `/api/auth/admin` にトークンを渡し、管理者 allowlist 判定の可否を得る。失敗時は false。
+   * @param token 検証する Supabase アクセストークン
+   * @returns 管理者なら true、非管理者・通信失敗なら false
+   */
   const verifyAdminSession = async (token: string) => {
     try {
       const response = await fetch("/api/auth/admin", {
@@ -65,7 +69,10 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
       setIsAdmin(false);
     };
 
-    /** セッションを検証し、allowlist 通過なら管理者として確定、外れていれば拒否処理へ回す。 */
+    /**
+     * セッションを検証し、allowlist 通過なら管理者として確定、外れていれば拒否処理へ回す。
+     * @param session 検証対象の Supabase セッション（未ログインは null）
+     */
     const applySession = async (session: Session | null) => {
       if (!session?.access_token) {
         clearSession();

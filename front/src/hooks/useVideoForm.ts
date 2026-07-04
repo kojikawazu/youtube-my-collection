@@ -14,6 +14,7 @@ type UseVideoFormOptions = {
  * 追加/編集フォームの状態とフィールド単位のバリデーションエラーを管理するフック。
  * `handleSave` は検証してから「実際に送信する非同期アクション」を返す遅延実行方式で、
  * 呼び出し側が確認モーダルを挟めるようにしている（追加は 1 ページ目、編集は現在ページを再取得）。
+ * @returns フォーム state（`formData` / `formErrors`）と操作関数（`initAdd` / `initEdit` / `updateField` / `clearError` / `handleSave` 等）
  */
 export function useVideoForm({
   accessToken,
@@ -38,13 +39,20 @@ export function useVideoForm({
     setFormErrors({});
   };
 
-  /** 既存動画の値でフォームを初期化する（編集開始時）。 */
+  /**
+   * 既存動画の値でフォームを初期化する（編集開始時）。
+   * @param video フォームへ流し込む編集対象の動画
+   */
   const initEdit = (video: VideoItem) => {
     setFormData({ ...video });
     setFormErrors({});
   };
 
-  /** 1 フィールドを更新し、そのフィールドに残っていたエラーがあれば消す（入力で即解消）。 */
+  /**
+   * 1 フィールドを更新し、そのフィールドに残っていたエラーがあれば消す（入力で即解消）。
+   * @param field 更新するフォームフィールド名
+   * @param value 新しい値
+   */
   const updateField = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (formErrors[field as keyof ValidationErrors]) {
@@ -52,7 +60,10 @@ export function useVideoForm({
     }
   };
 
-  /** 指定フィールドのバリデーションエラーを消す。 */
+  /**
+   * 指定フィールドのバリデーションエラーを消す。
+   * @param field エラーを解除するフィールド名
+   */
   const clearError = (field: keyof ValidationErrors) => {
     setFormErrors((prev) => ({ ...prev, [field]: undefined }));
   };
@@ -60,6 +71,9 @@ export function useVideoForm({
   /**
    * 入力を検証し、成功時のみ送信を行う `action` を返す（この時点では送信しない）。
    * `valid: false` の場合は `action` が no-op（`null` を返す）。編集成功時のみ更新後の動画を返す。
+   * @param mode 追加（add）か編集（edit）か
+   * @param selectedVideoId 編集時の更新対象 ID（`formData.id` を優先し、その fallback）
+   * @returns 遅延送信する `action` と、検証に通ったかを表す `valid`
    */
   const handleSave = (
     mode: "add" | "edit",

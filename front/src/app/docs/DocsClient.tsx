@@ -27,6 +27,8 @@ type Status = "loading" | "unauthorized" | "error" | "ready";
 type SwaggerRequest = { headers: Record<string, string>; [key: string]: unknown };
 
 declare global {
+  // グローバル拡張は宣言マージが必要で type では表現できないため interface を使う。
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {
     SwaggerUIBundle?: (config: {
       url: string;
@@ -69,7 +71,10 @@ const loadScript = (src: string, integrity: string) =>
     document.head.appendChild(script);
   });
 
-/** サーバーの `/api/auth/admin` で管理者判定を得る。失敗・例外時は false。 */
+/**
+ * サーバーの `/api/auth/admin` で管理者判定を得る。失敗・例外時は false。
+ * @param token 検証する Supabase アクセストークン
+ */
 const verifyAdmin = async (token: string): Promise<boolean> => {
   try {
     const response = await fetch("/api/auth/admin", {

@@ -22,6 +22,9 @@ export type { NormalizedVideo };
  * 内部エンジンは Zod（`schemas/video.ts`）に一本化しているが、公開契約
  * （シグネチャ・戻り値 `{ data, errors }`・エラーメッセージ）は従来実装と
  * 完全に同一に保つ。これにより Route Handler / 既存テストは無変更で動作する。
+ * @param input 検証対象の生の入力（フォーム値や JSON ボディ）
+ * @param options partial=true で更新用（送信されたフィールドのみ検証）に切り替える
+ * @returns 正規化済みデータ `data` と、フィールド別の先頭エラー `errors`
  */
 export const validateVideoInput = (
   input: unknown,

@@ -1,7 +1,10 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-/** http(s) の URL のみ通し、それ以外（`javascript:` 等）は空文字にする XSS 対策。 */
+/**
+ * http(s) の URL のみ通し、それ以外（`javascript:` 等）は空文字にする XSS 対策。
+ * @param uri 検査対象の URL（未指定可）
+ */
 const safeUri = (uri?: string) => {
   if (!uri) return "";
   const trimmed = uri.trim();

@@ -46,7 +46,11 @@ const listQuery = z.object({
   offset: z.coerce.number().int().min(0).optional(),
 });
 
-/** OpenAPI レスポンスの `application/json` コンテンツ定義を組み立てる小ヘルパー。 */
+/**
+ * OpenAPI レスポンスの `application/json` コンテンツ定義を組み立てる小ヘルパー。
+ * @param schema レスポンスボディを表す Zod スキーマ
+ * @returns `content["application/json"].schema` 形のコンテンツ定義
+ */
 const json = <T extends z.ZodTypeAny>(schema: T) => ({
   content: { "application/json": { schema } },
 });
@@ -54,6 +58,7 @@ const json = <T extends z.ZodTypeAny>(schema: T) => ({
 /**
  * Zod スキーマ（`schemas/video.ts`）から OpenAPI 3.0 ドキュメントを生成する。
  * 仕様の正準は `docs/07-api-specification.md`。本生成物はその「動く版」。
+ * @returns 生成した OpenAPI 3.0 ドキュメントオブジェクト
  */
 export function buildOpenApiDocument() {
   const registry = new OpenAPIRegistry();

@@ -9,7 +9,10 @@ type RouteParams = {
   }>;
 };
 
-/** Prisma の VideoEntry を API レスポンス形（日付を ISO 文字列化、`createdAt`→`addedDate`）へ変換する。 */
+/**
+ * Prisma の VideoEntry を API レスポンス形（日付を ISO 文字列化、`createdAt`→`addedDate`）へ変換する。
+ * @returns API レスポンス形の動画オブジェクト
+ */
 const toVideoItem = (video: {
   id: string;
   youtubeUrl: string;
@@ -36,7 +39,11 @@ const toVideoItem = (video: {
   addedDate: video.createdAt.toISOString(),
 });
 
-/** 動画 1 件を ID で返す（公開・認証不要）。存在しなければ 404。 */
+/**
+ * 動画 1 件を ID で返す（公開・認証不要）。存在しなければ 404。
+ * @param _request 未使用のリクエスト（Route Handler の署名合わせ）
+ * @returns 動画 1 件の JSON。未検出は 404
+ */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   const video = await prisma.videoEntry.findUnique({
@@ -54,6 +61,8 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  * 動画を部分更新する（管理者限定）。
  * 認可 → partial バリデーション → 送信されたフィールドのみ更新する。
  * 対象が存在しない場合（Prisma P2025）は 404、その他の失敗は 500。
+ * @param request 更新リクエスト（Bearer 認可と部分更新の JSON ボディ）
+ * @returns 更新後の動画 JSON。未検出 404 / 検証失敗 400 / その他 500
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
@@ -102,7 +111,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-/** 動画を削除する（管理者限定）。認可 → ID 解決 → 削除。失敗時は 500。 */
+/**
+ * 動画を削除する（管理者限定）。認可 → ID 解決 → 削除。失敗時は 500。
+ * @param request 削除リクエスト（Bearer 認可、ID はパス優先でボディを fallback）
+ * @returns 削除成功 `{ ok: true }` の JSON。失敗時は 500
+ */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id: routeId } = await params;
