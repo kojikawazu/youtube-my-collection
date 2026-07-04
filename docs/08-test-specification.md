@@ -16,7 +16,7 @@
 
 | レイヤー | ツール | 対象 |
 |----------|--------|------|
-| ユニット | Vitest + @testing-library/react | `lib/validation.ts`、各フック、`Modal.tsx`、Route Handler の認可単体（`auth/admin`・`openapi.json`） |
+| ユニット | Vitest + @testing-library/react | `lib/validation.ts`、各フック、主要コンポーネント（atoms/molecules/organisms）、Route Handler の認可単体（`auth/admin`・`openapi.json`） |
 | 結合（IT） | Vitest（node）+ 実 Prisma + PostgreSQL | `api/videos*` の Route Handler を実 DB で実行（認可・ページング・検索・部分更新・DB マッピング） |
 | E2E | Playwright | 公開フロー（`public.spec.ts`）、管理者フロー（`admin.spec.ts`） |
 
@@ -71,6 +71,7 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 - バリデーション純粋関数: [`test-design/01-unit-validation.md`](./test-design/01-unit-validation.md)
 - カスタムフック: [`test-design/02-unit-hooks.md`](./test-design/02-unit-hooks.md)
 - Modal コンポーネント: [`test-design/03-unit-modal.md`](./test-design/03-unit-modal.md)
+- 主要コンポーネント（atoms/molecules/organisms）: [`test-design/06-unit-organisms.md`](./test-design/06-unit-organisms.md)
 
 ## CI（GitHub Actions）
 
