@@ -20,12 +20,12 @@
 | 結合（IT） | Vitest（node）+ 実 Prisma + PostgreSQL | `api/videos*` の Route Handler を実 DB で実行（認可・ページング・検索・部分更新・DB マッピング） |
 | E2E | Playwright | 公開フロー（`public.spec.ts`）、管理者フロー（`admin.spec.ts`） |
 
-- **モック境界**: UT は外部 I/O（`fetch`/Supabase SDK）でモック、IT は Supabase 認証（`getUser`）のみモックし **Route Handler + Prisma/DB は実物**。「UT の下・E2E の上」で実行されなかった帯を IT が埋める。
-- **テスト DB**: 本番と同じ PostgreSQL を `docker-compose.test.yml` で起動。スキーマは既存 Prisma マイグレーションを `prisma migrate deploy` で適用（`src/test/it-global-setup.ts`）、各テスト前に `VideoEntry` を truncate（`src/test/it-setup.ts`）。
+- **モック境界**: UT は外部 I/O（`fetch`/Supabase SDK）でモック。IT / 公開 E2E は Supabase 認証（`getUser` / セッション）のみモックし **Route Handler + Prisma/DB は実物**。公開フロー E2E はブラウザ → 実 route → Prisma → Postgres を通す。
+- **テスト DB**: 本番と同じ PostgreSQL を `docker-compose.test.yml` で起動。スキーマは既存 Prisma マイグレーションを `prisma migrate deploy` で適用（IT: `src/test/it-global-setup.ts` / E2E: `tests/e2e/global-setup.ts`）。IT は各テスト前に `VideoEntry` を truncate、公開 E2E は各テストで seed し直す（`tests/e2e/db.ts`）。DB 共有のため E2E は直列実行（`workers: 1`）。
 
 - 公開ユーザーの閲覧体験を優先的に自動化
-- 管理者操作(追加/編集/削除)は `admin.spec.ts` で E2E カバー済み（N-1〜S-5, A-1）。手動必須は実 Google OAuth ログイン（#1）のみ
-- `/api/videos` は E2E 内でモックし、DB 依存を排除
+- **公開フロー（`public.spec.ts`）は実テスト DB を seed** して実 route を検証（読み取りは認証不要）。500 / timeout の FE エラーテストのみ意図的に network をモックする。
+- **管理者フロー（`admin.spec.ts`）は API モック維持**（N-1〜S-5, A-1）。mutation は実 route だと `requireAdmin`→実 Supabase 認証が必要で 403 になるため、auth をモックする方針上 E2E ではモックする。mutation のサーバーロジックは **IT（実 DB）でカバー済み**。手動必須は実 Google OAuth ログイン（#1）のみ。
 - モックは外部 I/O（HTTP・SDK）のみ。ビジネスロジックはモックしない
 
 ## 実行方法
