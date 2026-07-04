@@ -1,9 +1,17 @@
 import { test, expect } from "@playwright/test";
-import { baseVideos, mockVideosApi, type MockVideo } from "./helpers";
+import { baseVideos, type MockVideo } from "./helpers";
+import { seedVideos, disconnectDb } from "./db";
+
+// 公開フローは実テスト DB を seed し、ブラウザ → 実 route → Prisma → Postgres を通して検証する。
+// 500 / timeout の FE エラーテストのみ、意図的に壊れた応答を作るため network をモックする。
+
+test.afterAll(async () => {
+  await disconnectDb();
+});
 
 test.describe("normal flows", () => {
-  test.beforeEach(async ({ page }) => {
-    await mockVideosApi(page, baseVideos);
+  test.beforeEach(async () => {
+    await seedVideos(baseVideos);
   });
 
   test("list renders and navigates to detail", async ({ page }) => {
@@ -68,7 +76,7 @@ test("supports pagination with 10 items per page", async ({ page }) => {
     memo: "memo",
   }));
 
-  await mockVideosApi(page, paginationVideos);
+  await seedVideos(paginationVideos);
   await page.goto("/");
 
   await expect(page.locator("h3")).toHaveCount(10);
@@ -95,7 +103,7 @@ test("shows at most five page number buttons", async ({ page }) => {
     memo: "memo",
   }));
 
-  await mockVideosApi(page, paginationVideos);
+  await seedVideos(paginationVideos);
   await page.goto("/");
 
   await expect(page.getByText("1 / 7")).toBeVisible();
@@ -126,7 +134,7 @@ test("resets to first page when sort option changes", async ({ page }) => {
     memo: "memo",
   }));
 
-  await mockVideosApi(page, paginationVideos);
+  await seedVideos(paginationVideos);
   await page.goto("/");
 
   await page.getByRole("button", { name: "2" }).click();
@@ -140,18 +148,7 @@ test("resets to first page when sort option changes", async ({ page }) => {
 });
 
 test("gracefully handles empty list", async ({ page }) => {
-  await page.route("**/api/videos**", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      headers: {
-        "x-total-count": "0",
-        "x-limit": "10",
-        "x-offset": "0",
-      },
-      body: JSON.stringify([]),
-    });
-  });
+  await seedVideos([]);
 
   await page.goto("/");
 
@@ -161,7 +158,7 @@ test("gracefully handles empty list", async ({ page }) => {
 });
 
 test("shows unpublished label when publishDate is null", async ({ page }) => {
-  const withUnpublished = [
+  const withUnpublished: MockVideo[] = [
     {
       ...baseVideos[0],
       id: "unpublished-1",
@@ -170,7 +167,7 @@ test("shows unpublished label when publishDate is null", async ({ page }) => {
     },
   ];
 
-  await mockVideosApi(page, withUnpublished);
+  await seedVideos(withUnpublished);
 
   await page.goto("/");
   await page.getByRole("heading", { name: "公開日未設定の動画" }).click();
@@ -179,6 +176,7 @@ test("shows unpublished label when publishDate is null", async ({ page }) => {
 });
 
 test("shows error banner when api fails", async ({ page }) => {
+  // FE のエラー表示検証。実 route ではなく壊れた 500 応答を作るため network をモックする。
   await page.route("**/api/videos**", async (route) => {
     await route.fulfill({
       status: 500,
@@ -193,6 +191,7 @@ test("shows error banner when api fails", async ({ page }) => {
 });
 
 test("shows error banner on request timeout", async ({ page }) => {
+  // タイムアウト時の FE 挙動検証。実 route では再現できないため abort する。
   await page.route("**/api/videos**", async (route) => {
     await route.abort("timedout");
   });
@@ -203,7 +202,7 @@ test("shows error banner on request timeout", async ({ page }) => {
 });
 
 test("does not call /api/auth/admin when not logged in", async ({ page }) => {
-  await mockVideosApi(page, baseVideos);
+  await seedVideos(baseVideos);
 
   const adminRequests: string[] = [];
   page.on("request", (req) => {
