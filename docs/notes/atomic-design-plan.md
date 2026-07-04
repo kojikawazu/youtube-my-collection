@@ -51,16 +51,24 @@
 
 ## page.tsx の役割
 
-page.tsx は**単一ルートのスクリーン切替コーディネーター**として残す。
-所有する状態は `currentScreen` と `selectedVideo` のみ。
-ビジネスロジック（認証・データ取得・CRUD）はすべてカスタムフックに委譲する。
+page.tsx は**pages 層の薄いシェル**に徹する。ロジックは `useHomeScreen`（画面遷移の状態機械 + CRUD 協調ハンドラ）へ、描画は `HomeTemplate`（templates 層）へ委ね、page.tsx 自身は両者を接続するだけの1行に収める。
+
+```tsx
+export default function Page() {
+  return <HomeTemplate {...useHomeScreen()} />;
+}
+```
+
+- **templates 層（`HomeTemplate`）**: organisms + Modal/Toast/FAB を配置し `currentScreen` で表示を切り替える presentational コンポーネント。状態もデータ取得も持たず、すべて props で受け取る。
+- **`useHomeScreen`**: `currentScreen` / `selectedVideo` の所有と、各フック（認証・一覧・フォーム・トースト・確認モーダル）の合成・遷移・保存/削除の協調を担う。戻り値は `HomeTemplateProps` 型で、templates への注入契約を型で保証する。
+- ビジネスロジック（認証・データ取得・CRUD）は従来通り単機能フックへ委譲する（下表）。`useHomeScreen` はそれらを束ねる合成ルート。
 
 ## ディレクトリ構成（最終形）
 
 ```
 front/src/
 ├── app/
-│   └── page.tsx                  ← 画面切替コーディネーターのみ (~250行)
+│   └── page.tsx                  ← pages 層の薄いシェル（<HomeTemplate {...useHomeScreen()} /> の1行）
 ├── components/
 │   ├── atoms/
 │   │   ├── Rating.tsx            ← 既存を移動
@@ -79,8 +87,11 @@ front/src/
 │   │   ├── VideoForm.tsx         ← 追加/編集フォーム
 │   │   ├── LoginScreen.tsx       ← ログイン画面
 │   │   └── Footer.tsx            ← フッター
+│   ├── templates/
+│   │   └── HomeTemplate.tsx      ← ホーム画面のレイアウト（organisms 配置・画面切替）。presentational
 │   └── Modal.tsx                 ← 既存のまま維持
 └── hooks/
+    ├── useHomeScreen.ts          ← ホーム画面の合成ルート（遷移状態機械 + CRUD 協調）。戻り値は HomeTemplateProps
     ├── useAuth.ts                ← セッション管理・管理者判定・ログイン/ログアウト
     ├── useVideos.ts              ← 一覧取得・検索・ソート・ページネーション
     ├── useVideoForm.ts           ← フォーム状態・バリデーション・保存
