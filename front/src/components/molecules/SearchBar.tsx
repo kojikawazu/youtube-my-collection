@@ -6,6 +6,7 @@ type SearchBarProps = {
   onChange: (value: string) => void;
 };
 
+/** キーワード検索の入力欄（値は親が保持する制御コンポーネント）。 */
 export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
   return (
     <div className="group relative">

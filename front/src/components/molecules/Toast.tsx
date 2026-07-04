@@ -5,6 +5,7 @@ type ToastProps = {
   message: string | null;
 };
 
+/** 画面下部に一時的な通知メッセージを表示するトースト。 */
 export const Toast: React.FC<ToastProps> = ({ message }) => {
   return (
     <AnimatePresence>

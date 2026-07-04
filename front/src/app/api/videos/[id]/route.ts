@@ -9,6 +9,7 @@ type RouteParams = {
   }>;
 };
 
+/** Prisma の VideoEntry を API レスポンス形（日付を ISO 文字列化、`createdAt`→`addedDate`）へ変換する。 */
 const toVideoItem = (video: {
   id: string;
   youtubeUrl: string;
@@ -35,6 +36,7 @@ const toVideoItem = (video: {
   addedDate: video.createdAt.toISOString(),
 });
 
+/** 動画 1 件を ID で返す（公開・認証不要）。存在しなければ 404。 */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   const video = await prisma.videoEntry.findUnique({
@@ -48,6 +50,11 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   return NextResponse.json(toVideoItem(video));
 }
 
+/**
+ * 動画を部分更新する（管理者限定）。
+ * 認可 → partial バリデーション → 送信されたフィールドのみ更新する。
+ * 対象が存在しない場合（Prisma P2025）は 404、その他の失敗は 500。
+ */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { id: routeId } = await params;
@@ -65,6 +72,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ errors }, { status: 400 });
     }
 
+    // 未送信フィールドを既定値で上書きしないよう、キーの有無で更新対象を判定する。
     const hasDataField = <T extends object, K extends keyof T>(target: T, key: K) =>
       Object.prototype.hasOwnProperty.call(target, key);
 
@@ -94,6 +102,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 }
 
+/** 動画を削除する（管理者限定）。認可 → ID 解決 → 削除。失敗時は 500。 */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id: routeId } = await params;

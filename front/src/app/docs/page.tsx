@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/** `/docs` のサーバーラッパー。noindex を付与し、認証ガード本体を DocsClient に委譲する。 */
 export default function DocsPage() {
   return <DocsClient />;
 }

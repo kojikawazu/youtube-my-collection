@@ -8,6 +8,12 @@ type UseAuthOptions = {
   onNonAdminRejected: () => void;
 };
 
+/**
+ * 管理者セッションを管理するフック。Supabase の認証状態を購読し、
+ * `/api/auth/admin` でサーバー側の allowlist 判定を行う（クライアントにメールを露出しない）。
+ * allowlist 外のアカウントでログインした場合はサインアウトさせ、`onNonAdminRejected` を呼ぶ。
+ * 返り値: `isAdmin` / `accessToken`（API 認可用）/ `login` / `logout`。
+ */
 export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -20,6 +26,7 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
     onNonAdminRejectedRef.current = onNonAdminRejected;
   }, [showToast, onNonAdminRejected]);
 
+  /** サーバーの `/api/auth/admin` にトークンを渡し、管理者 allowlist 判定の可否を得る。失敗時は false。 */
   const verifyAdminSession = async (token: string) => {
     try {
       const response = await fetch("/api/auth/admin", {
@@ -36,6 +43,7 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
   };
 
   useEffect(() => {
+    /** allowlist 外のログインを拒否する。サインアウト→状態クリア→通知を行う（多重実行を ref でガード）。 */
     const rejectNonAdmin = async () => {
       if (rejectRef.current) return;
       rejectRef.current = true;
@@ -51,11 +59,13 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
       rejectRef.current = false;
     };
 
+    /** 認証状態を未ログインへ戻す（トークン破棄・管理者フラグ解除）。 */
     const clearSession = () => {
       setAccessToken(null);
       setIsAdmin(false);
     };
 
+    /** セッションを検証し、allowlist 通過なら管理者として確定、外れていれば拒否処理へ回す。 */
     const applySession = async (session: Session | null) => {
       if (!session?.access_token) {
         clearSession();
@@ -73,6 +83,7 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
       await rejectNonAdmin();
     };
 
+    /** マウント時に既存セッションを取得し、あれば検証する（リロード後の管理者状態復元）。 */
     const initSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
@@ -83,6 +94,7 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
     };
     void initSession();
 
+    // Supabase の認証イベントを購読し、サインアウト/サインイン/トークン更新に応じて状態を同期する。
     const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
         clearSession();
@@ -98,10 +110,12 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
     };
   }, []);
 
+  /** Google OAuth ログインを開始する。 */
   const login = () => {
     signInWithGoogle();
   };
 
+  /** サインアウトしてローカルの認証状態をクリアする（サインアウト失敗でも state 掃除は行う）。 */
   const logout = async () => {
     try {
       await signOut();

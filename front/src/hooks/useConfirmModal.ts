@@ -7,6 +7,10 @@ type ModalConfig = {
   variant: "danger" | "info";
 };
 
+/**
+ * 確認モーダルの開閉と表示内容を管理するフック。
+ * 削除（`danger`）・保存（`info`）のプリセットを用意し、`onConfirm` に実行アクションを差し込む。
+ */
 export function useConfirmModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [config, setConfig] = useState<ModalConfig>({
@@ -16,6 +20,7 @@ export function useConfirmModal() {
     variant: "info",
   });
 
+  /** 削除確認モーダル（`danger`）を、対象タイトル入りの文言で開く。 */
   const openDeleteModal = (title: string, onConfirm: () => Promise<void>) => {
     setConfig({
       title: "動画を削除しますか？",
@@ -26,6 +31,7 @@ export function useConfirmModal() {
     setIsOpen(true);
   };
 
+  /** 保存確認モーダル（`info`）を開く。 */
   const openSaveModal = (onConfirm: () => Promise<void>) => {
     setConfig({
       title: "変更を保存しますか？",
@@ -36,6 +42,7 @@ export function useConfirmModal() {
     setIsOpen(true);
   };
 
+  /** モーダルを閉じる。 */
   const close = () => {
     setIsOpen(false);
   };

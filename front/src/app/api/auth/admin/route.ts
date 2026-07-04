@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+/**
+ * ログイン中のユーザーが管理者かをサーバー側で判定して `{ isAdmin }` を返す。
+ * allowlist（`ADMIN_EMAIL`）との照合をサーバーに閉じ、管理者メールをクライアントへ露出させない。
+ * トークン欠落 / 検証失敗は 401。
+ */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   const token = authHeader ? authHeader.replace(/^Bearer\s+/i, "").trim() : "";

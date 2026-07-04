@@ -7,6 +7,7 @@ type PaginationProps = {
   onPageChange: (page: number) => void;
 };
 
+/** ページ番号ボタンと前後ナビを表示するページャ。 */
 export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   totalPages,

@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+/** http(s) の URL のみ通し、それ以外（`javascript:` 等）は空文字にする XSS 対策。 */
 const safeUri = (uri?: string) => {
   if (!uri) return "";
   const trimmed = uri.trim();
@@ -14,6 +15,7 @@ type MarkdownRendererProps = {
   content: string;
 };
 
+/** ユーザー入力の Markdown を安全に描画する（生 HTML 無効・http(s) のリンク/画像のみ許可）。 */
 export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
   return (
     <div className="space-y-2 rounded-xl border border-red-50/50 bg-white/50 p-4 text-sm text-red-950/80 sm:text-base">

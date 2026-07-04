@@ -8,6 +8,7 @@ type HeaderProps = {
   onLogoClick: () => void;
 };
 
+/** サイトヘッダー。ロゴと、管理者状態に応じたログイン/ログアウト操作を表示する。 */
 export const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLogin, onLogoClick }) => {
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-red-50 bg-white/70 px-6 py-4 backdrop-blur-xl">

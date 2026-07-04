@@ -18,6 +18,10 @@ import { useVideos } from "@/hooks/useVideos";
 import { useVideoForm } from "@/hooks/useVideoForm";
 import { useConfirmModal } from "@/hooks/useConfirmModal";
 
+/**
+ * アプリのルート画面。一覧/詳細/フォーム/ログインの画面遷移を統括し、
+ * 各フック（認証・一覧・フォーム・トースト・確認モーダル）を配線する司令塔コンポーネント。
+ */
 export default function Page() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.List);
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);

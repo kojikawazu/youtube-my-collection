@@ -7,6 +7,7 @@ type LoginScreenProps = {
   onBack: () => void;
 };
 
+/** 管理者ログイン画面。Google ログインの開始と一覧へ戻る導線を提供する。 */
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onGoogleLogin, onBack }) => {
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">

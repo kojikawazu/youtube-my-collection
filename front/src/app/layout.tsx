@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description: "お気に入りのYouTube動画を整理する公開コレクション。",
 };
 
+/** 全ページ共通のルートレイアウト（`lang="ja"` と全体スタイルを付与）。 */
 export default function RootLayout({
   children,
 }: Readonly<{

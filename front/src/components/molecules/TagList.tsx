@@ -10,6 +10,7 @@ const sizeStyles = {
   md: "text-xs font-bold text-red-400 bg-red-50/30 px-3 py-1.5 rounded-xl border border-red-100/30",
 };
 
+/** タグをチップ状に並べて表示する。 */
 export const TagList: React.FC<TagListProps> = ({ tags, size = "sm" }) => {
   return (
     <div className={`flex flex-wrap ${size === "sm" ? "gap-1.5" : "gap-2"}`}>

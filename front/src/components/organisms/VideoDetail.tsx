@@ -14,6 +14,7 @@ type VideoDetailProps = {
   onDelete: (id: string, title: string) => void;
 };
 
+/** 動画詳細画面。埋め込み・評価・タグ・Markdown メモを表示し、管理者には編集/削除を出す。 */
 export const VideoDetail: React.FC<VideoDetailProps> = ({
   video,
   isAdmin,

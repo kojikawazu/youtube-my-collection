@@ -24,6 +24,10 @@ type VideoListProps = {
   onVideoDelete: (id: string, title: string, e?: React.MouseEvent) => void;
 };
 
+/**
+ * 一覧画面。検索/並び替えバー・カードグリッド・ページングをまとめ、
+ * ローディング（スケルトン）・エラー・空状態の表示を切り替える。
+ */
 export const VideoList: React.FC<VideoListProps> = ({
   videos,
   isAdmin,
