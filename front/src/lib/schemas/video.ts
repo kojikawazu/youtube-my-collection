@@ -16,8 +16,10 @@ export const CATEGORY_VALUES = [...CATEGORIES, "未分類"] as const;
 
 // --- 正規化ヘルパー（旧 validation.ts の挙動を踏襲） ---
 
+/** 文字列なら trim して返し、それ以外は空文字にする（フォーム値の正規化）。 */
 const toStringValue = (value: unknown): string => (typeof value === "string" ? value.trim() : "");
 
+/** タグを文字列配列へ正規化する。配列はそのまま、文字列はカンマ区切りで分割し、空要素を除く。 */
 const normalizeTags = (value: unknown): string[] => {
   if (Array.isArray(value)) {
     return value
@@ -34,6 +36,7 @@ const normalizeTags = (value: unknown): string[] => {
   return [];
 };
 
+/** 公開日を Date へ正規化する。null は null、無効/未指定は undefined（＝未送信扱い）。 */
 const parsePublishDate = (value: unknown): Date | null | undefined => {
   if (value === null) return null;
   if (value instanceof Date) return value;

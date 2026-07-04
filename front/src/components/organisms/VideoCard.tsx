@@ -13,6 +13,7 @@ type VideoCardProps = {
   onDelete: (id: string, title: string, e?: React.MouseEvent) => void;
 };
 
+/** 一覧に並ぶ動画カード。サムネ・タイトル・タグ・評価を表示し、管理者には削除ボタンを出す。 */
 export const VideoCard: React.FC<VideoCardProps> = ({ video, isAdmin, onClick, onDelete }) => {
   return (
     <motion.div

@@ -4,6 +4,7 @@ import { validateVideoInput } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-server";
 
+/** Prisma の VideoEntry を API レスポンス形（日付を ISO 文字列化、`createdAt`→`addedDate`）へ変換する。 */
 const toVideoItem = (video: {
   id: string;
   youtubeUrl: string;
@@ -30,6 +31,7 @@ const toVideoItem = (video: {
   addedDate: video.createdAt.toISOString(),
 });
 
+/** クエリ文字列を整数へ変換する。未指定/不正値は `fallback`、範囲外は min/max にクランプする。 */
 const parseNumber = (
   value: string | null,
   fallback: number,
@@ -45,6 +47,11 @@ const parseNumber = (
   return integer;
 };
 
+/**
+ * 動画一覧を返す（公開・認証不要）。
+ * 並び替え（追加日/評価/公開日）・キーワード（タイトル部分一致 + タグ一致）・タグ/カテゴリ絞り込み・
+ * ページング（limit/offset）に対応。総件数は `x-total-count` ヘッダで返し、CDN キャッシュを付与する。
+ */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const sort = searchParams.get("sort") ?? "added";
@@ -93,6 +100,10 @@ export async function GET(request: NextRequest) {
   });
 }
 
+/**
+ * 動画を新規作成する（管理者限定）。
+ * 認可 → バリデーション（失敗は 400）→ 作成し、201 で作成済みの動画を返す。
+ */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request, "api/videos");
   if (!auth.ok) return auth.response;

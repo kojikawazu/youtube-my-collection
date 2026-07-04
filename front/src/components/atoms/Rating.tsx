@@ -6,6 +6,7 @@ type RatingProps = {
   size?: "sm" | "md" | "lg";
 };
 
+/** 5 段階評価を星アイコンで表示する読み取り専用コンポーネント。 */
 export const Rating: React.FC<RatingProps> = ({ value, max = 5, size = "md" }) => {
   const stars = Array.from({ length: max }, (_, i) => i + 1);
 

@@ -1,10 +1,16 @@
+/** `watch?v=` / `embed/` / `youtu.be/` の 3 形式に対応。動画 ID をキャプチャする。 */
 const YOUTUBE_REGEX = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/;
 
+/** YouTube URL から動画 ID を抽出する。対応形式外なら `null`。 */
 export const getYoutubeId = (url: string): string | null => {
   const match = url.match(YOUTUBE_REGEX);
   return match ? match[1] : null;
 };
 
+/**
+ * YouTube URL からサムネイル URL（`hqdefault.jpg`）を生成する。
+ * ID を抽出できない URL では、カード崩れを防ぐため Unsplash のプレースホルダ画像を返す。
+ */
 export const getYoutubeThumbnail = (url: string): string => {
   const id = getYoutubeId(url);
   if (!id) {

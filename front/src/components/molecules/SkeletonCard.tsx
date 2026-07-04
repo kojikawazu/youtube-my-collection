@@ -1,5 +1,6 @@
 import React from "react";
 
+/** 一覧の初回ロード中に表示するカードのプレースホルダ（スケルトン）。 */
 export const SkeletonCard: React.FC = () => {
   return (
     <div className="flex flex-col overflow-hidden rounded-[2rem] border border-red-50/50 bg-white shadow-sm">

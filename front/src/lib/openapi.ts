@@ -46,6 +46,7 @@ const listQuery = z.object({
   offset: z.coerce.number().int().min(0).optional(),
 });
 
+/** OpenAPI レスポンスの `application/json` コンテンツ定義を組み立てる小ヘルパー。 */
 const json = <T extends z.ZodTypeAny>(schema: T) => ({
   content: { "application/json": { schema } },
 });

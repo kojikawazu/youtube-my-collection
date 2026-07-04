@@ -1,6 +1,7 @@
 import React from "react";
 import { Youtube } from "lucide-react";
 
+/** サイト共通のフッター。 */
 export const Footer: React.FC = () => {
   return (
     <footer className="border-t border-red-50 px-6 py-12 text-center">

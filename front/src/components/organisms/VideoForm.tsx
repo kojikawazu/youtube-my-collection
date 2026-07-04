@@ -14,6 +14,7 @@ type VideoFormProps = {
   onCancel: () => void;
 };
 
+/** 動画の追加/編集フォーム（`mode` で切替）。入力とフィールド単位のエラー表示を担う。 */
 export const VideoForm: React.FC<VideoFormProps> = ({
   mode,
   formData,

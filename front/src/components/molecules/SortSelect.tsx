@@ -6,6 +6,7 @@ type SortSelectProps = {
   onChange: (value: SortOption) => void;
 };
 
+/** 並び替え条件（追加日/評価 等）を選ぶセレクトボックス。 */
 export const SortSelect: React.FC<SortSelectProps> = ({ value, onChange }) => {
   return (
     <select

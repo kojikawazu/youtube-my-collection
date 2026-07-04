@@ -69,6 +69,7 @@ const loadScript = (src: string, integrity: string) =>
     document.head.appendChild(script);
   });
 
+/** サーバーの `/api/auth/admin` で管理者判定を得る。失敗・例外時は false。 */
 const verifyAdmin = async (token: string): Promise<boolean> => {
   try {
     const response = await fetch("/api/auth/admin", {
@@ -82,6 +83,11 @@ const verifyAdmin = async (token: string): Promise<boolean> => {
   }
 };
 
+/**
+ * API ドキュメント画面のクライアントガード。
+ * セッション取得 → 管理者判定 → 通過時のみ Swagger UI を CDN から読み込んで描画する。
+ * 非管理者にはログイン誘導、読み込み失敗時はエラーを表示する。
+ */
 export function DocsClient() {
   const [status, setStatus] = useState<Status>("loading");
 

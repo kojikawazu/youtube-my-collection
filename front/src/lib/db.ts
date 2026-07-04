@@ -6,6 +6,10 @@ type GlobalWithPrisma = typeof globalThis & {
 
 const globalForPrisma = globalThis as GlobalWithPrisma;
 
+/**
+ * アプリ共有の PrismaClient シングルトン。
+ * 開発時の HMR で接続が増え続けないよう globalThis にキャッシュする（本番では都度生成）。
+ */
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({

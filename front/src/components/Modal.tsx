@@ -13,6 +13,7 @@ type ModalProps = {
   variant?: "danger" | "info";
 };
 
+/** 確認ダイアログ（`danger`/`info`）。実行中は送信ボタンを無効化し二重実行を防ぐ。 */
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,

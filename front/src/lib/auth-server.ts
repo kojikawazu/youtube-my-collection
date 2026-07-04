@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 type RequireAdminResult = { ok: true; email: string } | { ok: false; response: NextResponse };
 
+/** ログ出力用にメールをマスクする（`a***@example.com`）。ローカル部が 1 文字以下なら `***`。 */
 const maskEmail = (value: string) => {
   if (!value) return "";
   const at = value.indexOf("@");
@@ -12,6 +13,13 @@ const maskEmail = (value: string) => {
   return `${name[0]}***@${domain}`;
 };
 
+/**
+ * API Route で管理者を要求する認可の正準。
+ * Bearer トークンを Supabase で検証し、`ADMIN_EMAIL` allowlist と照合する。
+ * - トークン欠落 → 401 Unauthorized（未認証）
+ * - 検証失敗 / allowlist 不一致 → 403 Forbidden（認証済みだが権限なし）
+ * `ok: false` の場合は呼び出し側でそのまま返せる `response` を含む。
+ */
 export const requireAdmin = async (
   request: NextRequest,
   context: string,
