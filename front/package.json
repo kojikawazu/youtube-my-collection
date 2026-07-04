@@ -23,6 +23,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:it": "vitest run --config vitest.it.config.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

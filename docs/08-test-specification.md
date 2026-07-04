@@ -16,8 +16,12 @@
 
 | レイヤー | ツール | 対象 |
 |----------|--------|------|
-| ユニット | Vitest + @testing-library/react | `lib/validation.ts`、各フック、`Modal.tsx` |
+| ユニット | Vitest + @testing-library/react | `lib/validation.ts`、各フック、`Modal.tsx`、Route Handler の認可単体（`auth/admin`・`openapi.json`） |
+| 結合（IT） | Vitest（node）+ 実 Prisma + PostgreSQL | `api/videos*` の Route Handler を実 DB で実行（認可・ページング・検索・部分更新・DB マッピング） |
 | E2E | Playwright | 公開フロー（`public.spec.ts`）、管理者フロー（`admin.spec.ts`） |
+
+- **モック境界**: UT は外部 I/O（`fetch`/Supabase SDK）でモック、IT は Supabase 認証（`getUser`）のみモックし **Route Handler + Prisma/DB は実物**。「UT の下・E2E の上」で実行されなかった帯を IT が埋める。
+- **テスト DB**: 本番と同じ PostgreSQL を `docker-compose.test.yml` で起動。スキーマは既存 Prisma マイグレーションを `prisma migrate deploy` で適用（`src/test/it-global-setup.ts`）、各テスト前に `VideoEntry` を truncate（`src/test/it-setup.ts`）。
 
 - 公開ユーザーの閲覧体験を優先的に自動化
 - 管理者操作(追加/編集/削除)は `admin.spec.ts` で E2E カバー済み（N-1〜S-5, A-1）。手動必須は実 Google OAuth ログイン（#1）のみ
@@ -28,11 +32,15 @@
 
 ```bash
 cd front
-pnpm test          # ユニット（Vitest）
+pnpm test          # ユニット（Vitest・DB 非依存）
+docker compose -f docker-compose.test.yml up -d   # テスト DB（IT/E2E 用）
+pnpm test:it       # 結合（Vitest node + 実 Prisma + PostgreSQL）
 pnpm test:e2e      # E2E（Playwright）
 ```
 
-※ E2E 初回はブラウザをインストールするため `pnpm exec playwright install` を実行。
+- IT/E2E は `docker-compose.test.yml` の PostgreSQL を要求する（既定 `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ymc_test?schema=public`、環境変数で上書き可）。
+- E2E 初回はブラウザをインストールするため `pnpm exec playwright install` を実行。
+- IT ケースの詳細は [`test-design/05-it-api-routes.md`](./test-design/05-it-api-routes.md) を参照。
 
 ## E2E ケース（公開フロー / Playwright）
 
@@ -69,9 +77,10 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 `.github/workflows/ci.yml` が、`main` / `feature/**` / `chore/**` への push と PR（`front/**` 変更時）で以下を実行する。
 
 1. `pnpm install --frozen-lockfile`（Node 20 / pnpm 10.7.0）
-2. `pnpm run lint`
+2. `pnpm run format:check` / `pnpm run lint` / `pnpm run typecheck`
 3. `pnpm run test`（ユニット）
-4. `pnpm exec playwright install --with-deps` → `pnpm run test:e2e`（E2E）
+4. `docker compose -f docker-compose.test.yml up -d --wait` → `pnpm exec prisma generate` → `pnpm run test:it`（結合・実 DB）
+5. `pnpm exec playwright install --with-deps` → `pnpm run test:e2e`（E2E）
 
 E2E は Supabase へ実接続せず、`NEXT_PUBLIC_SUPABASE_URL` 等にダミー値を渡し、API はルートモックで動作する。ステータスは README の CI バッジで確認できる。
 
