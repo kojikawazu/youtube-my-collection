@@ -85,7 +85,9 @@ describe("useAuth", () => {
     let authStateCallback: (event: string, session: unknown) => void = () => {};
     mockOnAuthStateChange.mockImplementation((cb) => {
       authStateCallback = cb as typeof authStateCallback;
-      return { data: { subscription: { unsubscribe: vi.fn() } } } as ReturnType<
+      // モックは hook が使う unsubscribe だけを実装し Subscription 全体とは構造的に
+      // 重ならないため、意図的な部分モックとして unknown 経由でキャストする。
+      return { data: { subscription: { unsubscribe: vi.fn() } } } as unknown as ReturnType<
         typeof supabase.auth.onAuthStateChange
       >;
     });
