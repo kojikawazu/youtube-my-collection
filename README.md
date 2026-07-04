@@ -39,9 +39,13 @@ pnpm dev                     # http://localhost:3000
 |---|---|
 | `pnpm dev` | 開発サーバー |
 | `pnpm build` / `pnpm start` | 本番ビルド / 起動 |
-| `pnpm lint` | ESLint |
+| `pnpm lint` / `pnpm typecheck` | ESLint / 型チェック（`tsc --noEmit`） |
 | `pnpm format` / `pnpm format:check` | Prettier 整形 / 整形チェック |
-| `pnpm test` / `pnpm test:e2e` | ユニット（Vitest）/ E2E（Playwright） |
+| `pnpm test` | ユニット（Vitest・DB 非依存） |
+| `pnpm test:it` | 結合（Vitest node + 実 Prisma + PostgreSQL） |
+| `pnpm test:e2e` | E2E（Playwright） |
+
+> IT / E2E はテスト DB を使う。先に `docker compose -f front/docker-compose.test.yml up -d` で PostgreSQL を起動する（既定 `DATABASE_URL` は `postgresql://postgres:postgres@localhost:5432/ymc_test?schema=public`）。
 
 API ドキュメント（OpenAPI / Swagger UI）は開発サーバー起動後 [`http://localhost:3000/docs`](http://localhost:3000/docs) で閲覧できる（OpenAPI JSON は `/api/openapi.json`）。**管理者限定**で、管理者ログインしていない場合はログイン誘導が表示される。Zod スキーマから自動生成され、設計の経緯は [`docs/notes/openapi-zod-plan.md`](docs/notes/openapi-zod-plan.md) を参照。
 
