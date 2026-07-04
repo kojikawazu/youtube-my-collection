@@ -17,6 +17,7 @@
 | レイヤー | ツール | 対象 |
 |----------|--------|------|
 | ユニット | Vitest + @testing-library/react | `lib/validation.ts`、各フック、主要コンポーネント（atoms/molecules/organisms）、Route Handler の認可単体（`auth/admin`・`openapi.json`） |
+| FE 統合 | Vitest（jsdom）+ @testing-library/react | `app/page.tsx` の画面遷移・フック→コンポーネント配線（I/O のみモック、実フック＋実コンポーネント） |
 | 結合（IT） | Vitest（node）+ 実 Prisma + PostgreSQL | `api/videos*` の Route Handler を実 DB で実行（認可・ページング・検索・部分更新・DB マッピング） |
 | E2E | Playwright | 公開フロー（`public.spec.ts`）、管理者フロー（`admin.spec.ts`） |
 
@@ -26,6 +27,8 @@
 - 公開ユーザーの閲覧体験を優先的に自動化
 - **公開フロー（`public.spec.ts`）は実テスト DB を seed** して実 route を検証（読み取りは認証不要）。500 / timeout の FE エラーテストのみ意図的に network をモックする。
 - **管理者フロー（`admin.spec.ts`）は API モック維持**（N-1〜S-5, A-1）。mutation は実 route だと `requireAdmin`→実 Supabase 認証が必要で 403 になるため、auth をモックする方針上 E2E ではモックする。mutation のサーバーロジックは **IT（実 DB）でカバー済み**。手動必須は実 Google OAuth ログイン（#1）のみ。
+- **FE 統合（`app/__tests__/page.test.tsx`）**: 司令塔 `page.tsx` を jsdom で描画し、`fetch`/Supabase SDK/アニメ/画像のみモック。実フック（`useVideos`/`useAuth`/`useVideoForm` 等）と実コンポーネントを通し、画面遷移と `isAdmin` 等の配線バグを UT と E2E の中間で捕まえる。
+- **BFF の UT は追加しない**（意図的）: `api/videos*` は Prisma を薄く包むコントローラで、純粋ロジック（`parseNumber` の clamp・`toVideoItem` の変換）は **IT が実 DB で実行済み**。Prisma をモックした UT は IT と守備範囲が重複し低忠実度になるため、IT に委ねる。
 - モックは外部 I/O（HTTP・SDK）のみ。ビジネスロジックはモックしない
 
 ## 実行方法
