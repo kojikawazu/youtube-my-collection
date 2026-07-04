@@ -56,6 +56,14 @@ jobs:
       - name: Unit Test
         run: pnpm run test
 
+      - name: Start test database
+        run: docker compose -f docker-compose.test.yml up -d --wait
+
+      - name: Integration Test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ymc_test?schema=public
+        run: pnpm run test:it
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps
 
