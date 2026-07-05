@@ -54,24 +54,34 @@ export function useHomeScreen(): HomeTemplateProps {
 
   // --- Navigation ---
 
+  /** 一覧へ戻る。詳細の選択を解除し、先頭までスクロールする。 */
   const navigateToList = () => {
     setCurrentScreen(Screen.List);
     setSelectedVideo(null);
     window.scrollTo(0, 0);
   };
 
+  /**
+   * 指定動画の詳細へ遷移する。選択動画を保持し、先頭までスクロールする。
+   * @param video 詳細表示する動画
+   */
   const navigateToDetail = (video: VideoItem) => {
     setSelectedVideo(video);
     setCurrentScreen(Screen.Detail);
     window.scrollTo(0, 0);
   };
 
+  /** 追加画面へ遷移する。遷移前に form.initAdd() で入力欄を初期化する。 */
   const navigateToAdd = () => {
     form.initAdd();
     setCurrentScreen(Screen.Add);
     window.scrollTo(0, 0);
   };
 
+  /**
+   * 編集画面へ遷移する。遷移前に form.initEdit(video) で既存値を流し込む。
+   * @param video 編集対象の動画
+   */
   const navigateToEdit = (video: VideoItem) => {
     form.initEdit(video);
     setCurrentScreen(Screen.Edit);

@@ -26,6 +26,7 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // 表示中は背景（body）のスクロールをロックし、閉じたら元の overflow 値へ復元する。
   useEffect(() => {
     if (!isOpen) return;
 
@@ -36,6 +37,10 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen]);
 
+  /**
+   * 確認アクションを実行する。二重実行を防ぎつつ onConfirm を await し、成功時のみ閉じる。
+   * 失敗時はモーダルを閉じずにエラーをログし、ユーザーが再操作できるようにする。
+   */
   const handleConfirm = async () => {
     if (isSubmitting) return;
 
