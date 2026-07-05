@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { VideoItem } from "@/lib/types";
+import { VideoItem } from "@/types";
 import { ValidationErrors, validateVideoInput } from "@/lib/validation";
 import { getYoutubeThumbnail } from "@/lib/youtube";
 

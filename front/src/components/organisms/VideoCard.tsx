@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
-import { VideoItem } from "@/lib/types";
+import { VideoItem } from "@/types";
 import { Rating } from "@/components/atoms/Rating";
 import { TagList } from "@/components/molecules/TagList";
 

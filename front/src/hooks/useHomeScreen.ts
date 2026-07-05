@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Screen, VideoItem } from "@/lib/types";
+import { Screen, VideoItem } from "@/types";
 import type { HomeTemplateProps } from "@/components/templates/HomeTemplate";
 import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/hooks/useAuth";

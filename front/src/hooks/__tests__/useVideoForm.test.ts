@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useVideoForm } from "../useVideoForm";
-import type { VideoItem } from "@/lib/types";
+import type { VideoItem } from "@/types";
 
 const makeVideo = (overrides: Partial<VideoItem> = {}): VideoItem => ({
   id: "video-1",

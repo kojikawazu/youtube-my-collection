@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { VideoItem, SortOption } from "@/lib/types";
+import { VideoItem, SortOption } from "@/types";
 
 const PAGE_SIZE = 10;
 const MAX_VISIBLE_PAGE_BUTTONS = 5;

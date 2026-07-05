@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
-import type { VideoItem } from "@/lib/types";
+import type { VideoItem } from "@/types";
 
 // FE 統合テスト（IT）: page.tsx の画面遷移とフック→コンポーネントの配線を、
 // I/O（fetch / Supabase SDK / 認証ラッパ / アニメ / 画像最適化）だけモックして検証する。

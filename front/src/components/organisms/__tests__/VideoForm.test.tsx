@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import type { VideoItem } from "@/lib/types";
+import type { VideoItem } from "@/types";
 import { VideoForm } from "../VideoForm";
 
 const formData: Partial<VideoItem> = {

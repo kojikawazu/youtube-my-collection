@@ -1,8 +1,8 @@
 import React from "react";
 import { Tag } from "lucide-react";
-import { VideoItem, Category } from "@/lib/types";
+import { VideoItem, Category } from "@/types";
 import { ValidationErrors } from "@/lib/validation";
-import { CATEGORIES } from "@/lib/constants";
+import { CATEGORIES } from "@/constants";
 
 type VideoFormProps = {
   mode: "add" | "edit";

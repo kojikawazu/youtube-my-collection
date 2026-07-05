@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import type { VideoItem } from "@/lib/types";
+import type { VideoItem } from "@/types";
 
 // 子の VideoCard が使う framer-motion / next/image を DOM に落とす。
 vi.mock("framer-motion", () => ({
