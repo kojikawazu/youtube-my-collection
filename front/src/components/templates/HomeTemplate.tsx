@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
-import { Screen, VideoItem, SortOption } from "@/lib/types";
+import { Screen, VideoItem, SortOption } from "@/types";
 import { ValidationErrors } from "@/lib/validation";
 import { Modal } from "@/components/Modal";
 import { Toast } from "@/components/molecules/Toast";

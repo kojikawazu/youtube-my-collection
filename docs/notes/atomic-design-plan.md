@@ -90,14 +90,21 @@ front/src/
 │   ├── templates/
 │   │   └── HomeTemplate.tsx      ← ホーム画面のレイアウト（organisms 配置・画面切替）。presentational
 │   └── Modal.tsx                 ← 既存のまま維持
-└── hooks/
-    ├── useHomeScreen.ts          ← ホーム画面の合成ルート（遷移状態機械 + CRUD 協調）。戻り値は HomeTemplateProps
-    ├── useAuth.ts                ← セッション管理・管理者判定・ログイン/ログアウト
-    ├── useVideos.ts              ← 一覧取得・検索・ソート・ページネーション
-    ├── useVideoForm.ts           ← フォーム状態・バリデーション・保存
-    ├── useConfirmModal.ts        ← モーダル開閉・確認実行
-    └── useToast.ts               ← トースト表示制御
+├── hooks/
+│   ├── useHomeScreen.ts          ← ホーム画面の合成ルート（遷移状態機械 + CRUD 協調）。戻り値は HomeTemplateProps
+│   ├── useAuth.ts                ← セッション管理・管理者判定・ログイン/ログアウト
+│   ├── useVideos.ts              ← 一覧取得・検索・ソート・ページネーション
+│   ├── useVideoForm.ts           ← フォーム状態・バリデーション・保存
+│   ├── useConfirmModal.ts        ← モーダル開閉・確認実行
+│   └── useToast.ts               ← トースト表示制御
+├── types/
+│   └── index.ts                  ← 型のみ（VideoItem / Category / SortOption / Screen）。`@/types` で参照
+├── constants/
+│   └── index.ts                  ← 定数のみ（CATEGORIES）。`@/constants` で参照
+└── lib/                          ← auth / db / schemas / validation / youtube 等のロジック層（型・定数は置かない）
 ```
+
+> **型・定数の置き場**: 純粋な型は `types/`、ランタイム定数は `constants/` に分離する（`lib/` はロジック層に専念）。フォルダ名と中身（型 / 値）を一致させ、`import type` できるかが一目で分かる状態を保つ。
 
 ## カスタムフック責務境界
 

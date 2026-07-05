@@ -1,5 +1,5 @@
 import React from "react";
-import { VideoItem, SortOption } from "@/lib/types";
+import { VideoItem, SortOption } from "@/types";
 import { VideoCard } from "@/components/organisms/VideoCard";
 import { SkeletonCard } from "@/components/molecules/SkeletonCard";
 import { SearchBar } from "@/components/molecules/SearchBar";

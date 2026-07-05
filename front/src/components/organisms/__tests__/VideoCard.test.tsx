@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
-import type { VideoItem } from "@/lib/types";
+import type { VideoItem } from "@/types";
 
 // framer-motion / next/image は外部 I/O 相当。motion 固有 props と最適化を剥がし DOM 検証に集中する。
 vi.mock("framer-motion", () => ({

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CATEGORIES } from "@/lib/constants";
+import { CATEGORIES } from "@/constants";
 
 // このモジュールは「検証・型」の単一ソース。クライアントバンドルにも載るため、
 // サーバー専用の OpenAPI 生成（zod-to-openapi）には依存させない。

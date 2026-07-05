@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { Play, Trash2, Edit3, ChevronLeft, Youtube, Calendar } from "lucide-react";
-import { VideoItem } from "@/lib/types";
+import { VideoItem } from "@/types";
 import { Rating } from "@/components/atoms/Rating";
 import { MarkdownRenderer } from "@/components/atoms/Markdown";
 import { TagList } from "@/components/molecules/TagList";
