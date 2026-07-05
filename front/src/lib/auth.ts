@@ -17,6 +17,10 @@ export const signInWithGoogle = async () => {
   });
 };
 
+/**
+ * 現在のセッションをサインアウトする。
+ * @returns Supabase のサインアウト結果を表す Promise
+ */
 export const signOut = async () => {
   return supabase.auth.signOut();
 };

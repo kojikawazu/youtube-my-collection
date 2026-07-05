@@ -55,6 +55,7 @@ const loadStylesheet = (href: string, integrity: string) =>
     document.head.appendChild(link);
   });
 
+// loadStylesheet と対。CDN スクリプトを SRI 付きで一度だけ読み込む（src で重複検知）。
 const loadScript = (src: string, integrity: string) =>
   new Promise<void>((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) {

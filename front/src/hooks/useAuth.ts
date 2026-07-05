@@ -21,6 +21,7 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
   const showToastRef = useRef(showToast);
   const onNonAdminRejectedRef = useRef(onNonAdminRejected);
 
+  // 最新の showToast / onNonAdminRejected を ref に写し、下の購読 useEffect（空依存で張り直さない）から常に最新版を呼べるようにする。
   useEffect(() => {
     showToastRef.current = showToast;
     onNonAdminRejectedRef.current = onNonAdminRejected;
