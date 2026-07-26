@@ -7,7 +7,14 @@ export type VideoItem = z.infer<typeof videoItemSchema>;
 /** カテゴリの literal union（プリセット + フォールバック）。 */
 export type Category = VideoItem["category"];
 
-export type SortOption = "newest" | "future" | "rating";
+/** 一覧の並び順。値は API の `sort` パラメータへ変換して送る（`future` → `published`）。 */
+export type SortOption =
+  /** 追加日の新しい順（既定） */
+  | "newest"
+  /** 公開日の新しい順 */
+  | "future"
+  /** 良かったレベルの高い順 */
+  | "rating";
 
 export enum Screen {
   List = "list",
