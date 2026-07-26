@@ -2,7 +2,8 @@
 // 引き込まれるとビルド時にエラーになるよう server-only で境界を機械的に守る。
 import "server-only";
 
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 type RequireAdminResult = { ok: true; email: string } | { ok: false; response: NextResponse };

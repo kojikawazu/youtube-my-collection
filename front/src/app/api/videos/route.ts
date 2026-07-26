@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/lib/validation";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-server";
 import { toVideoItem } from "@/lib/videos";
 

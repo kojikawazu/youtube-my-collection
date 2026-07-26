@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import type { Screen, VideoItem } from "@/types";
 import type { HomeTemplateProps } from "@/types/home-template";
 import { useToast } from "@/hooks/useToast";

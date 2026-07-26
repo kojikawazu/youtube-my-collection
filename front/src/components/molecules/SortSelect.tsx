@@ -1,5 +1,5 @@
 import React from "react";
-import { SortOption } from "@/types";
+import type { SortOption } from "@/types";
 
 type SortSelectProps = {
   value: SortOption;

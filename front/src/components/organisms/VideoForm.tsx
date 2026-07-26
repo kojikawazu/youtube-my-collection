@@ -1,6 +1,6 @@
 import React from "react";
 import { Tag } from "lucide-react";
-import { VideoItem, Category } from "@/types";
+import type { VideoItem, Category } from "@/types";
 import type { ValidationErrors } from "@/types/validation";
 import { CATEGORIES } from "@/constants";
 

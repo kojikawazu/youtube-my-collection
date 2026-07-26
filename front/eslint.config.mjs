@@ -85,6 +85,12 @@ const eslintConfig = defineConfig([
       // 型定義は type に統一（union / 交差 / z.infer を表現できる上位互換）。
       // 宣言マージが必要なグローバル拡張（interface Window 等）のみ eslint-disable で例外扱い。
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+      // 型のみの import は import type にする（バンドラが型を確実に消せる・
+      // 副作用のない循環参照を避けられる）。--fix で自動修正できる。
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        { prefer: "type-imports", fixStyle: "separate-type-imports" },
+      ],
     },
   },
   // Disable ESLint formatting rules that conflict with Prettier.
