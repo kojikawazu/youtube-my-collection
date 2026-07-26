@@ -21,6 +21,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // server-only は "react-server" 条件が無い環境では意図的に throw する実装。
+      // Vitest は Next のサーバー実行環境ではないため、そのままだと
+      // lib/db.ts を import した時点で失敗する。Next 側の境界チェックは
+      // ビルドで担保されるので、テストでは空モジュール（本体が用意する empty.js）へ差し替える。
+      "server-only": path.resolve(__dirname, "./node_modules/server-only/empty.js"),
     },
   },
 });

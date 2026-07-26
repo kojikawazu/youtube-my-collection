@@ -1,3 +1,7 @@
+// Prisma クライアントは DATABASE_URL で DB へ直接接続する。Client Component から
+// 引き込まれるとビルド時にエラーになるよう server-only で境界を機械的に守る。
+import "server-only";
+
 import { PrismaClient } from "@prisma/client";
 
 type GlobalWithPrisma = typeof globalThis & {

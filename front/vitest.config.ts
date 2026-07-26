@@ -14,6 +14,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // server-only は "react-server" 条件が無い環境では意図的に throw する実装。
+      // Vitest は Next のサーバー実行環境ではないため、Route Handler の UT が
+      // lib/auth-server を import した時点で失敗する。境界チェックは
+      // CI のビルドで担保するので、テストでは空モジュールへ差し替える。
+      "server-only": path.resolve(__dirname, "./node_modules/server-only/empty.js"),
     },
   },
 });
