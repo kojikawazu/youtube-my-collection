@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { VideoItem } from "@/types";
-import { ValidationErrors, validateVideoInput } from "@/lib/validation";
+import { validateVideoInput } from "@/lib/validation";
+import type { ValidationErrors } from "@/types/validation";
 import { getYoutubeThumbnail } from "@/lib/youtube";
 
 type UseVideoFormOptions = {

@@ -1,14 +1,5 @@
 import { videoInputSchema, videoUpdateSchema, type NormalizedVideo } from "@/lib/schemas/video";
-
-export type ValidationErrors = {
-  youtubeUrl?: string;
-  title?: string;
-  tags?: string;
-  category?: string;
-  goodPoints?: string;
-  memo?: string;
-  rating?: string;
-};
+import type { ValidationErrors } from "@/types/validation";
 
 type ValidateOptions = {
   partial?: boolean;
