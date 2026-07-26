@@ -18,6 +18,11 @@ YouTubeで良かった動画を後から見返せる公開コレクションの�
 | coding-standards.md | 全体 | コーディング規約（TypeScript strict・pnpm・ESLint/Prettier） |
 | error-handling.md | 全体 | エラーハンドリング方針（バリデーション・HTTP ステータス） |
 | security.md | 全体 | セキュリティ設計方針（認証・通信・インジェクション対策） |
+| duplication.md | 全体 | 重複と共通化の判断基準（同じ知識のみ共通化・3 回目で共通化） |
+| static-analysis.md | 全体 | 静的解析の運用（役割分担・CI 必須・警告ゼロ・抑制コメント） |
+| dead-code.md | 全体 | デッドコード禁止（未使用コード・コメントアウト・旧実装を残さない） |
+| github-actions.md | `.github/workflows/**` | CI 発火ルール（関係あるジョブだけ動かす・必須チェックと paths の併用禁止） |
+| typescript.md | `front/src/**` | TypeScript 固有規約（type/interface・型/定数の配置・Zod 統一・any 禁止） |
 | jsdoc.md | `front/src/**` | JSDoc/コメント規約（関数に意図コメント・型は再掲しない） |
 | frontend.md | `front/src/{components,app,hooks,lib}/**` | Next.js フロント設計・アトミックデザイン・server/client 分離 |
 | api.md | `front/src/app/api/**` | Route Handlers 設計・Zod 検証・認可・HTTP ステータス |
