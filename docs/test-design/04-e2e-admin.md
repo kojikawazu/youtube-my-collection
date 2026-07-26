@@ -91,6 +91,7 @@ await page.addInitScript(() => {
 ## テスト構成
 
 ### E2E テスト（Playwright）
+
 - シナリオ: 管理者 CRUD フロー、認証フロー
 - 前提条件:
   - `/api/auth/admin` をルートモックで制御

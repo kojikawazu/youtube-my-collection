@@ -13,6 +13,7 @@
 - [OpenAPI / Swagger UI](#openapi--swagger-ui)
 
 ## 前提
+
 - Next.js Route Handlers (`app/api/*`)
 - 公開はGETのみ
 - 管理操作はSupabase Authで管理者チェック必須
@@ -21,6 +22,7 @@
 ## エンドポイント一覧
 
 ### 公開
+
 - GET /api/videos
   - 用途: 一覧取得
   - クエリ:
@@ -45,6 +47,7 @@
   - 用途: 詳細取得
 
 ### 管理者のみ
+
 - 認証/認可エラー（`requireAdmin`）:
   - `Authorization` ヘッダー欠如・空トークン → `401 { error: "Unauthorized" }`
   - トークン無効・`ADMIN_EMAIL` 不一致 → `403 { error: "Forbidden" }`
@@ -76,6 +79,7 @@
   - 用途: 削除
 
 ### 認証
+
 - GET /api/auth/admin
   - 用途: 管理者判定
   - ヘッダー: `Authorization: Bearer <token>` が必要
@@ -87,6 +91,7 @@
     - トークン欠如・無効、または `getUser` 失敗時は `401 { isAdmin: false }`
 
 ## レスポンス(共通)
+
 - video:
   - id
   - youtubeUrl

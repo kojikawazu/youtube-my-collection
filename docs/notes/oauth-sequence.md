@@ -27,7 +27,7 @@ Google OAuth認証 → Supabase Auth → 管理者判定までの全体フロー
 
 ## シーケンス図
 
-```
+```text
  ブラウザ(React)          Next.js Server         Supabase Auth          Google OAuth
       │                        │                       │                      │
       │  ① ログイン開始         │                       │                      │

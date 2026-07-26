@@ -1,15 +1,18 @@
 # タスク03: Supabase Auth（Google OAuth + allowlist）
 
 ## 目的
+
 Google OAuth2とallowlistで管理者のみ操作可能にする。
 
 ## 範囲
+
 - Supabase AuthのGoogleプロバイダ設定
 - ログイン/ログアウト実装
 - 管理者メールallowlistの判定
 - APIルートの保護
 
 ## 手順
+
 - SupabaseでGoogle OAuthを設定
 - `front/` にAuthクライアントを追加
 - ログイン/ログアウトの導線を実装
@@ -18,11 +21,14 @@ Google OAuth2とallowlistで管理者のみ操作可能にする。
 - API側でも管理者チェックを実施
 
 ## 注意
+
 - UIだけの制御に頼らない
 - サーバー側で必ず権限チェック
 
 ## 進捗
+
 - 完了
 
 ## 残り
+
 - なし

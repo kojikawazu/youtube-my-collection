@@ -59,6 +59,7 @@
 ## テスト構成
 
 ### ユニットテスト
+
 - 対象ファイル: `front/src/lib/validation.ts`
 - テストファイル: `front/src/lib/__tests__/validation.test.ts`
 - モック対象: なし（純粋関数のため外部依存ゼロ）

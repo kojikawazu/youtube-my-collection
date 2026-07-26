@@ -39,7 +39,7 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/li
 
 **依存は上位から下位への一方向のみ**。下位レイヤが上位レイヤを import してはならない。
 
-```
+```text
 app  →  components  →  hooks  →  lib（サーバー関数・API 呼び出し）  →  types / constants
 （ルーティング・合成）（表示） （ロジック）        （通信・永続化）              （最下層）
 ```

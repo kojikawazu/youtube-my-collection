@@ -36,7 +36,7 @@ API の検証・型・ドキュメントを **Zod スキーマを単一の真実
 - `test-design/01-unit-validation.md` のユニットテストが**パリティの保証**になる（テストは実装に合わせず、実装をテストへ通す）。
 - 同じ Zod スキーマが OpenAPI 生成のソースを兼ねる。
 
-```
+```text
 Zod スキーマ（単一の真実）
   ├─ validateVideoInput（アダプタ経由でランタイム検証）← 公開契約は不変
   ├─ OpenAPI(JSON) 自動生成 ──→ Swagger UI

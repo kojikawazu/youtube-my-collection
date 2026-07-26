@@ -13,7 +13,7 @@ globs: "front/src/app/api/**"
 
 ## ディレクトリ構成
 
-```
+```text
 front/src/app/api/
 ├── auth/admin/route.ts   # 管理者判定
 ├── videos/route.ts       # 一覧取得（公開）/ 作成（管理者）

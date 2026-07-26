@@ -172,6 +172,7 @@
 ## テスト構成
 
 ### ユニットテスト
+
 - テストランナー: **Vitest** + `@testing-library/react` (renderHook)
 - モック対象:
   - `fetch` → `vi.stubGlobal("fetch", vi.fn())`
