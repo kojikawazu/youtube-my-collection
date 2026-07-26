@@ -21,12 +21,42 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/li
 - **server-first** を基本とする。データ取得・SEO はサーバーコンポーネントで行う。
 - server/client 境界を明確にするためファイルを分離する:
   - `page.tsx` — サーバーコンポーネント（データ取得・SEO・props 受け渡し）
-  - `client.tsx` — クライアントコンポーネント（インタラクション・状態管理）
+  - `client.tsx` / `XxxClient.tsx` — クライアントコンポーネント（インタラクション・状態管理）
+- **`page.tsx` にビジネスロジックを置かない。** データ取得と合成の場であり、「薄く」する必要はないが、ドメイン処理は `lib/` のサーバー関数へ出す。
+
+### 例外: pages 層のシェルとしての `page.tsx`
+
+**責務を持たないシェル**である場合に限り、`page.tsx` を Client Component にしてよい。
+
+- 条件は「**フック 1 つとテンプレート 1 つを接続するだけ**」であること。`app/page.tsx` の `<HomeTemplate {...useHomeScreen()} />` が該当する（経緯は [`docs/notes/atomic-design-plan.md`](../../docs/notes/atomic-design-plan.md)）。
+- **`"use client"` を付ければ何を書いてもよい、という意味ではない。** 状態・副作用・分岐・データ整形が `page.tsx` に現れた時点で例外から外れ、`client.tsx` へ分離する。上記の「ビジネスロジックを置かない」は例外時も適用される。
+- **`metadata` を export する画面は分離必須。** Client Component は `metadata` を export できないため、サーバー側のページラッパー + クライアント本体に分ける（`app/docs/page.tsx` + `DocsClient.tsx` が実例）。
 
 ## ロジック分離
 
-- **クライアントコンポーネント**のロジックは**カスタムフック**（`hooks/`）に切り出す。コンポーネントは UI 描画に専念する。
+- **クライアントコンポーネント**のロジック（状態・副作用・データ取得・ドメイン処理）は**カスタムフック**（`hooks/`）に切り出す。コンポーネントは UI 描画に専念する。
 - **サーバーコンポーネント**のデータ取得は `page.tsx` や `lib/` 内のサーバー関数で行う（hooks は使用しない）。
+- **カスタムフックの戻り値は型を先に定義し、各メンバーにコメントを付ける**（戻り値を推論任せにしない）。フックの戻り値は**定義ファイルを開かずに使われる**ため、コメントが唯一の説明になる。詳細は [`jsdoc.md`](./jsdoc.md)「状態・ロジック層のコメント」に従う。
+- コンポーネント内に閉じた `useState`・ハンドラ関数は一律コメント必須にしない（「なぜ」が非自明なときのみ）。
+
+### 状態の種類で手段を分ける
+
+| 状態の種類 | 手段 |
+|---|---|
+| **サーバー状態**（API から取得したデータ） | React Query / SWR |
+| **クライアント状態**（UI 状態） | ローカル state。複数コンポーネントに跨り複雑なら Zustand 等 |
+
+> 現在は React Query / SWR / Zustand のいずれも未導入で、`useVideos` が `fetch` + `useState` で自前実装している（キャッシュ無効化・デバウンスを含む）。**導入を検討する際の判断基準**として記載する。
+
+## 状態管理・Context
+
+> 現在 Context は未使用。**導入を検討する際の判断基準**として記載する。
+
+- **Context は cross-cutting かつ低頻度変更**の関心事に限定する: 認証/セッション、テーマ、i18n、feature flag。
+- **頻繁に変わる状態・サーバー状態を Context に載せない**（購読している全コンポーネントが再レンダリングされる）。→ React Query / Zustand へ。
+- Context は関心事ごとに分割し、provider の value は memo 化する。
+- **Next.js 固有**: provider は Client Component（`"use client"`）必須。Server Component は Context を参照できないため、**provider は必要な client 境界に置き、ツリー全体を包まない**（包むとページ全体がクライアント化し server-first が崩れる）。
+- **Context value の各メンバーは型を先に定義してコメントを付ける**（カスタムフックの戻り値と同じ理由。[`jsdoc.md`](./jsdoc.md)）。
 
 ## 型定義
 
@@ -95,6 +125,35 @@ app  →  components  →  hooks  →  lib（サーバー関数・API 呼び出�
 - **スキーマを単一の真実とする**。フォームの型は `z.infer<typeof schema>` で導出し、同じ形を手書きしない。
 - **クライアント検証は UX のためのものであり、セキュリティ担保ではない**。Route Handler でも必ず検証する（信頼境界が違うため、この重複は必要 — [`duplication.md`](./duplication.md)）。
 - 同じ入力ルールなら、**Route Handler と同じ Zod スキーマ（`lib/schemas/`）を共有**する。制約値だけでも定数で共有する。
+
+## ディレクトリ構成
+
+```text
+front/src/
+├── app/                      # ルーティング（App Router）
+│   ├── page.tsx              # トップ（pages 層のシェル）
+│   ├── layout.tsx
+│   ├── api/                  # Route Handlers（api.md）
+│   │   ├── auth/admin/
+│   │   ├── videos/[id]/
+│   │   └── openapi.json/
+│   ├── auth/callback/        # OAuth コールバック
+│   └── docs/                 # page.tsx（サーバー）+ DocsClient.tsx（クライアント）
+├── components/               # アトミックデザイン（下位ほど汎用）
+│   ├── templates/            # 画面全体のレイアウト
+│   ├── organisms/            # 機能単位のまとまり
+│   ├── molecules/            # 複数 atoms の組み合わせ
+│   └── atoms/                # 最小単位
+├── hooks/                    # クライアントロジック（useXxx）
+├── lib/                      # サーバー関数・ユーティリティ
+│   ├── schemas/              # Zod スキーマ（検証・型・OpenAPI の単一ソース）
+│   └── supabase/             # Supabase クライアント
+├── constants/                # 共通定数（環境変数は置かない）
+└── types/                    # 型定義
+```
+
+- テストは `__tests__/` に**コロケーション**する（`src/` 外に集約しない）。E2E のみ `front/tests/e2e/` に置く。
+- `stores/` `contexts/` は現在存在しない。導入する場合は本ファイルの `globs` に追加する。
 
 ## インポート
 
