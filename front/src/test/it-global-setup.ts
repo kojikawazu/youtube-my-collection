@@ -5,6 +5,8 @@ import { IT_DATABASE_URL } from "./it-db";
  * IT 全体の前処理。テスト用 Postgres へ Prisma マイグレーションを適用してスキーマを揃える。
  * Postgres 未起動（docker compose 未 up）なら分かりやすく失敗させる。
  * @returns Vitest の globalSetup 契約に沿う（後処理不要のため teardown は返さない）
+ * @throws {Error} マイグレーション適用に失敗した場合（テスト用 Postgres 未起動が主因）。
+ *   起動コマンドと接続先をメッセージに含めて即座に原因が分かるようにしている
  */
 export default function setup() {
   process.env.DATABASE_URL = IT_DATABASE_URL;
