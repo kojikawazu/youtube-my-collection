@@ -110,11 +110,20 @@ CDN キャッシュ / スケルトン UI / Vercel Cron ウォームアップ等�
 ## デプロイ（Vercel）と Ignored Build Step
 
 - 本番は `main` ブランチ。`main` への push で常にビルド・デプロイする（`front/vercel.json` に `ignoreCommand` は置かない）。
-- **過去の不具合（撤去済み）**: `ignoreCommand` で「`front/` に変更がなければスキップ」しようとしていたが、Vercel は
-  - マージコミットで `HEAD^` を第2親（feature 側）に解決して `front/` 差分が空になる、
-  - `VERCEL_GIT_PREVIOUS_SHA` を直近ビルド成功した feature プレビュー（`front/` がマージ先と同一）に解決する、
+- **過去の不具合（撤去済み）**: `ignoreCommand` で「`front/` に変更がなければスキップ」しようとして、**本番デプロイを誤スキップ**した（2026-04 導入、以降 `main` マージが連続スキップされ本番が凍結。2026-06 に撤去）。
 
-  といった挙動を取り、**本番デプロイを誤スキップ**した（2026-04 以降 `main` マージが連続スキップされ本番が凍結）。`ignoreCommand` をマージ親や前回 SHA に依存させる方式は本ワークフローでは信頼できないため**撤去**し、常時ビルドに統一した。
+  ```jsonc
+  // 初版（2026-04）
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- front/"
+  // 修正版（2026-06）— 同じ pathspec の誤りを引き継いでいた
+  "ignoreCommand": "test -n \"$VERCEL_GIT_PREVIOUS_SHA\" && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- front/"
+  ```
+
+  **主因は pathspec の基準ディレクトリ**である。`ignoreCommand` は Vercel の Root Directory（本プロジェクトでは `front/`）を**カレントディレクトリとして実行される**ため、`-- front/` は `front/front/` を指し**何にもマッチしない**。結果、差分は常に空と判定され `exit 0`（＝スキップ）が返り続けた。**アプリコードを変更してもスキップされる**状態だったため、本番が完全に凍結した。
+
+  > リポジトリルート基準で指定するには Git の pathspec マジック `':(top)front/'` が必要だった。当時の調査では「マージコミットで `HEAD^` が第 2 親に解決される」ことを原因と記録していたが、**これは誤診**である（`HEAD^` は第一親を指す）。修正版で比較基準を `VERCEL_GIT_PREVIOUS_SHA` に替えても直らなかったのは、pathspec の誤りが残っていたため。
+
+- **再導入の判断**: 現状のビルドは 1〜2 分でボトルネックではなく、ビルドスキップの失敗は「デプロイは緑のまま本番だけ古い」形で潜伏するため、**入れない**方針とした。条件と最低要件は [`.claude/rules/vercel.md`](../.claude/rules/vercel.md) に記載。
 - docs のみの変更でもビルドが走るが、アプリが小規模なため許容する（スキップ最適化が必要になった場合は、誤スキップしない方式を別途設計する）。
 
 ## API ドキュメント生成（Zod 単一ソース）
