@@ -3,36 +3,7 @@ import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-server";
-
-/**
- * Prisma の VideoEntry を API レスポンス形（日付を ISO 文字列化、`createdAt`→`addedDate`）へ変換する。
- * @returns API レスポンス形の動画オブジェクト
- */
-const toVideoItem = (video: {
-  id: string;
-  youtubeUrl: string;
-  title: string;
-  thumbnailUrl: string;
-  tags: string[];
-  category: string;
-  goodPoints: string;
-  memo: string;
-  rating: number;
-  publishDate: Date | null;
-  createdAt: Date;
-}) => ({
-  id: video.id,
-  youtubeUrl: video.youtubeUrl,
-  title: video.title,
-  thumbnailUrl: video.thumbnailUrl,
-  tags: video.tags,
-  category: video.category,
-  goodPoints: video.goodPoints,
-  memo: video.memo,
-  rating: video.rating,
-  publishDate: video.publishDate ? video.publishDate.toISOString() : null,
-  addedDate: video.createdAt.toISOString(),
-});
+import { toVideoItem } from "@/lib/videos";
 
 /**
  * クエリ文字列を整数へ変換する。未指定/不正値は `fallback`、範囲外は min/max にクランプする。
