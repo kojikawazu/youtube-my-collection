@@ -1,6 +1,6 @@
 ---
 description: Next.js (App Router) フロントエンド設計・コンポーネント規約
-globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/lib/**,front/src/types/**,front/src/constants/**"
+globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/repositories/**,front/src/lib/**,front/src/schemas/**,front/src/types/**,front/src/constants/**"
 ---
 
 # フロントエンドルール（Next.js App Router）
@@ -70,17 +70,27 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/li
 **依存は上位から下位への一方向のみ**。下位レイヤが上位レイヤを import してはならない。
 
 ```text
-app  →  components  →  hooks  →  lib（サーバー関数・API 呼び出し）  →  types / constants
-（ルーティング・合成）（表示） （ロジック）        （通信・永続化）              （最下層）
+app  →  components  →  hooks  →  repositories  →  lib / schemas  →  types / constants
+（ルーティング・合成）（表示） （ロジック） （API アクセス）（純粋関数・検証）    （最下層）
 ```
 
 | レイヤ | import してよい | import 禁止 |
 |---|---|---|
-| `app/` | `components/`, `hooks/`, `lib/`, `types/`, `constants/` | （なし。app は誰からも参照されない） |
-| `components/` | 下位の `components/`, `hooks/`, `types/`, `constants/` | **`app/`**（ページ固有の型・定数を含む） |
-| `hooks/` | `lib/`, `types/`, `constants/` | **`app/`**, **`components/`**（JSX を返さない） |
-| `lib/` | `types/`, `constants/` | **`app/`**, **`components/`**, **`hooks/`** |
+| `app/` | `components/`, `hooks/`, `repositories/`, `lib/`, `schemas/`, `types/`, `constants/` | （なし。app は誰からも参照されない） |
+| `components/` | 下位の `components/`, `hooks/`, `lib/`, `types/`, `constants/` | **`app/`**（ページ固有の型・定数を含む）, **`repositories/`**（通信は `hooks/` 経由） |
+| `hooks/` | `repositories/`, `lib/`, `schemas/`, `types/`, `constants/` | **`app/`**, **`components/`**（JSX を返さない） |
+| `repositories/` | `lib/`, `schemas/`, `types/`, `constants/` | **`app/`**, **`components/`**, **`hooks/`** |
+| `lib/` `schemas/` | `types/`, `constants/` | 上位レイヤすべて（**`lib/` は通信もしない**） |
 | `types/` `constants/` | （原則どこにも依存しない。例外は下記「スキーマからの型導出」のみ） | 上位レイヤすべて |
+
+### 通信は `repositories/` に閉じる
+
+- **`fetch` の呼び出しは `repositories/` にだけ書く。** コンポーネント・フック・`lib/` から直接 `fetch` しない。
+- `hooks/` は `repositories/` の関数を呼び、状態管理とエラーハンドリングに専念する。
+- **`lib/` は純粋関数の置き場で、通信しない。** URL 組み立てやレスポンス整形のような純粋処理は `lib/`、通信そのものは `repositories/`。
+- サーバーコンポーネントのデータ取得も `repositories/` の関数を呼ぶ（`page.tsx` に `fetch` を直書きしない）。
+
+> **現状との差異**: 現在 `repositories/` は無く、`fetch` は `hooks/useVideos`・`hooks/useVideoForm`・`hooks/useAuth`・`app/docs/DocsClient.tsx` に計 6 箇所ある。本規約への移行は段階的に行う。
 
 - **`components/` 内も一方向**にする。アトミックデザインの階層がそのまま依存の向きになる: `templates` → `organisms` → `molecules` → `atoms`。**`atoms` は `molecules` / `organisms` を import しない**（汎用度の高いものほど下位）。
 - **`app/api/`（Route Handlers）から `components/` や `hooks/` を import しない**。API はサーバー側の層であり、UI 層に依存してはならない（[`api.md`](./api.md) 参照）。
@@ -161,8 +171,9 @@ front/src/
 │   ├── molecules/            # 複数 atoms の組み合わせ
 │   └── atoms/                # 最小単位
 ├── hooks/                    # クライアントロジック（useXxx）
-├── lib/                      # サーバー関数・ユーティリティ
-│   ├── schemas/              # Zod スキーマ（検証・型・OpenAPI の単一ソース）
+├── repositories/             # API アクセス（fetch はここだけ）※未作成
+├── lib/                      # 純粋関数・サーバー専用処理（通信しない）
+│   ├── schemas/              # Zod スキーマ ※ src/schemas/ へ移行予定
 │   └── supabase/             # Supabase クライアント
 ├── constants/                # 共通定数（環境変数は置かない）
 └── types/                    # 型定義
@@ -170,6 +181,7 @@ front/src/
 
 - テストは `__tests__/` に**コロケーション**する（`src/` 外に集約しない）。E2E のみ `front/tests/e2e/` に置く。
 - `stores/` `contexts/` は現在存在しない。導入する場合は本ファイルの `globs` に追加する。
+- `repositories/` と `src/schemas/` は**規約としては定めているが未作成**（移行は段階的に行う）。`globs` には先行して含めてある。
 
 ## インポート
 

@@ -22,6 +22,18 @@ globs: "front/prisma/**,front/src/lib/**"
 | updatedAt | DateTime @updatedAt | 更新日時 |
 | deletedAt | DateTime? | 論理削除日時（要件に応じて） |
 
+## 監査列
+
+監査列（`createdAt` / `updatedAt` / `deletedAt`）は **Prisma の機構で自動設定する**。アプリケーションコードで値を組み立てない。
+
+- **手動代入を禁止**する。`data: { updatedAt: new Date() }` のように Route Handler や `lib/` のヘルパーで監査列へ値を書かない（`updatedAt` の手動指定は `@updatedAt` の自動更新を上書きしてしまう）。
+- 日時は**スキーマ側で宣言**する: `createdAt DateTime @default(now())` / `updatedAt DateTime @updatedAt`。
+- **`createdAt` は更新しない。** 更新系の `data` に `createdAt` を含めない。
+- 論理削除を採用する場合、`deletedAt` も削除ヘルパー（middleware / extension）経由で設定する。呼び出し側で `deletedAt: new Date()` を書かない。
+- **例外**: シードデータ・テストで日時を固定したい場合のみ明示指定を許容する（IT の `seedVideo` が `createdAt` を上書きして並び替えを検証している）。この場合も本番コードパスには持ち込まない。
+
+> 操作ユーザー（`createdBy` / `updatedBy`）は現在のスキーマに無い。追加する場合は各ユースケースで個別に詰めず、Prisma Client Extension（`$extends` の query フック）でリクエストコンテキストから自動注入する。
+
 ## 論理削除
 
 - 論理削除を採用する場合: `deletedAt` フィールドを追加。
