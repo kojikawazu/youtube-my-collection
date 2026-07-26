@@ -2,42 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/lib/validation";
 import { requireAdmin } from "@/lib/auth-server";
+import { toVideoItem } from "@/lib/videos";
 
 type RouteParams = {
   params: Promise<{
     id: string;
   }>;
 };
-
-/**
- * Prisma の VideoEntry を API レスポンス形（日付を ISO 文字列化、`createdAt`→`addedDate`）へ変換する。
- * @returns API レスポンス形の動画オブジェクト
- */
-const toVideoItem = (video: {
-  id: string;
-  youtubeUrl: string;
-  title: string;
-  thumbnailUrl: string;
-  tags: string[];
-  category: string;
-  goodPoints: string;
-  memo: string;
-  rating: number;
-  publishDate: Date | null;
-  createdAt: Date;
-}) => ({
-  id: video.id,
-  youtubeUrl: video.youtubeUrl,
-  title: video.title,
-  thumbnailUrl: video.thumbnailUrl,
-  tags: video.tags,
-  category: video.category,
-  goodPoints: video.goodPoints,
-  memo: video.memo,
-  rating: video.rating,
-  publishDate: video.publishDate ? video.publishDate.toISOString() : null,
-  addedDate: video.createdAt.toISOString(),
-});
 
 /**
  * 動画 1 件を ID で返す（公開・認証不要）。存在しなければ 404。
