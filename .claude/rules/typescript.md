@@ -54,12 +54,23 @@ type OnSelect = (id: string) => void;
 
 - **理由**: レイヤごとに検証ライブラリが変わると、同じ入力ルールを別の書き方で二重に定義することになる。Zod なら**スキーマそのものを共有でき**、片方から他方を導出できる。
 - **スキーマの単一ソースは `front/src/lib/schemas/`**（[`api.md`](./api.md)）。同じ入力ルールを Route Handler とフォームで二重定義しない（[`duplication.md`](./duplication.md)）。
-  - このため **`types/` から `lib/schemas/` への参照は認められている**（[`frontend.md`](./frontend.md)「例外: スキーマからの型導出」）。レイヤ上は `types/` が最下層だが、型導出に限りこの 1 方向だけ例外とする。`lib/` の他モジュールへの参照は不可。
+  - このため **`types/` から `lib/schemas/` への参照は暫定的に認められている**（[`frontend.md`](./frontend.md)「例外: スキーマからの型導出」）。型導出に限りこの 1 方向だけ例外とし、`lib/` の他モジュールへの参照は不可。
+  - **この例外はスキーマを `src/schemas/` へ移す移行が完了した時点で不要になる**（上記「スキーマの配置」）。移行後は導出型を `schemas/` から直接 `export` し、`types/` を経由しない。
 - **型はスキーマから導出する**。`z.infer<typeof schema>` を使い、**同じ形を手書きで二重定義しない**。**スキーマが単一の真実**であり、型はその影である。
 - 外部入力（API レスポンス・`JSON.parse`・フォーム入力・環境変数）は `unknown` で受け、**Zod で `parse` してからドメインに入れる**。
 - 信頼境界が違うため、クライアント側の入力チェックがあっても**サーバー側の検証は必ず行う**（[`security.md`](./security.md)）。
 - **フォームライブラリを導入する場合はアダプタ経由で既存スキーマを再利用する**（`react-hook-form` なら `zodResolver`）。スキーマを書き直さない。**アダプタは変わってもスキーマは変わらない**のが Zod に統一する利点。
   - 現在フォームライブラリは未導入で、`hooks/useVideoForm` が `lib/validation`（Zod スキーマの薄いアダプタ）を直接呼んでいる。導入時もこの構図（スキーマが単一ソース）を崩さない。
+
+## スキーマの配置（`schemas/` 集約）
+
+- スキーマは**ソースルート直下の `schemas/` ディレクトリ**（`front/src/schemas/`）に集約する。
+- **`lib/validation.ts` のような単一ファイルにまとめない。** ディレクトリを切り、ドメイン単位でファイルを分ける（`schemas/video.ts`）。**`lib/` の下に置かない**（`lib/` は「関数の置き場」、`schemas/` は「検証の置き場」）。
+- **スキーマから導出した型を `types/` に再定義しない。** `z.infer<typeof videoItemSchema>` を `schemas/video.ts` から `export` し、利用側はそれを参照する（手書きの二重定義は [`duplication.md`](./duplication.md) 違反）。
+- **検証を伴わない純粋な型は `schemas/` に置かない**（`types/` へ）。`schemas/` に置くのは「実行時に `parse` するもの」だけ。
+- barrel（`schemas/index.ts`）は作らない（理由は型・定数と同じ）。
+
+> **現状との差異**: 現在スキーマは `front/src/lib/schemas/video.ts` にあり、`VideoItem` は `types/index.ts` で `z.infer` して再 export している。本規約への移行は段階的に行う（移行が完了すると下記「型導出の例外」も不要になる）。
 
 ## 型定義の配置（コロケーション / `types/` 集約）
 
