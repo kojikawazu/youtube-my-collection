@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     settings: { jsdoc: { mode: "typescript" } },
     rules: {
       // 型の再掲を禁止（TS シグネチャが型の唯一の真実）。
+      // 対象は @param / @returns。@throws は対象外で、そちらは型を明記する規約
+      // （TS に throws 句が無く、例外の型はシグネチャに現れないため再掲に当たらない）。
       "jsdoc/no-types": "error",
       // JSDoc ブロックを持つ関数は全引数を @param で説明する。
       // 分割代入 props は型（XxxProps）が真実なので props.x 単位には展開しない。
