@@ -1,8 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
-import type { Screen, VideoItem, SortOption } from "@/types";
-import { ValidationErrors } from "@/lib/validation";
+import type { HomeTemplateProps } from "@/types/home-template";
 import { Modal } from "@/components/Modal";
 import { Toast } from "@/components/molecules/Toast";
 import { Header } from "@/components/organisms/Header";
@@ -18,60 +17,6 @@ import { Footer } from "@/components/organisms/Footer";
  * `currentScreen` に応じて表示する画面を切り替えるだけの presentational コンポーネント。
  * 状態・データ取得・遷移ロジックは持たず、すべて props（pages 層＝page.tsx）から注入される。
  */
-export type HomeTemplateProps = {
-  // --- 画面状態 ---
-  currentScreen: Screen;
-  selectedVideo: VideoItem | null;
-  isAdmin: boolean;
-
-  // --- ナビゲーション/認証（Header・戻り導線） ---
-  onNavigateList: () => void;
-  onLogin: () => void;
-  onLogout: () => void;
-  onGoogleLogin: () => void;
-
-  // --- 一覧（VideoList） ---
-  videos: VideoItem[];
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
-  sortOption: SortOption;
-  onSortChange: (value: SortOption) => void;
-  isLoading: boolean;
-  loadError: string | null;
-  totalCount: number;
-  currentPage: number;
-  totalPages: number;
-  visiblePageNumbers: number[];
-  onPageChange: (page: number) => void;
-  onVideoClick: (video: VideoItem) => void;
-  onVideoDelete: (id: string, title: string, e?: React.MouseEvent) => void;
-
-  // --- 詳細（VideoDetail） ---
-  onVideoEdit: (video: VideoItem) => void;
-
-  // --- 追加/編集フォーム（VideoForm） ---
-  formData: Partial<VideoItem>;
-  formErrors: ValidationErrors;
-  onFormChange: (data: Partial<VideoItem>) => void;
-  onErrorClear: (field: keyof ValidationErrors) => void;
-  onFormSave: () => void;
-  onFormCancel: () => void;
-
-  // --- 追加 FAB ---
-  onAddClick: () => void;
-
-  // --- 確認モーダル ---
-  modalOpen: boolean;
-  modalTitle: string;
-  modalMessage: string;
-  modalVariant: "danger" | "info";
-  onModalConfirm: () => void | Promise<void>;
-  onModalClose: () => void;
-
-  // --- トースト ---
-  toastMessage: string | null;
-};
-
 export const HomeTemplate: React.FC<HomeTemplateProps> = ({
   currentScreen,
   selectedVideo,
