@@ -78,7 +78,15 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 
 ## CI（GitHub Actions）
 
-`.github/workflows/ci.yml` が、`main` / `feature/**` / `chore/**` への push と PR（`front/**` 変更時）で以下を実行する。
+ワークフローは**発火条件ごとに分割**している（変更内容に関係のあるジョブだけを動かす）。
+
+| ワークフロー | 発火条件 | 内容 |
+|---|---|---|
+| `ci.yml` | `front/**` 変更時（`main` への push / PR） | 下記のテスト一式 |
+| `docs.yml` | `docs/**` / `tasks/**` / `.claude/**` / `**/*.md` 変更時 | 相対リンク切れ・CLAUDE.md ルールテーブルの同期検査 |
+| `workflows-lint.yml` | `.github/workflows/**` 変更時 | actionlint |
+
+`.github/workflows/ci.yml` は以下を実行する。
 
 1. `pnpm install --frozen-lockfile`（Node 20 / pnpm 10.7.0）
 2. `pnpm run format:check` / `pnpm run lint` / `pnpm run typecheck`

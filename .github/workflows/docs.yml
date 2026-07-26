@@ -1,0 +1,88 @@
+name: Docs
+
+# ドキュメント（Markdown）のみを対象とする軽量チェック。
+# テスト・ビルド・デプロイは回さない（.claude/rules/github-actions.md「変更内容と実行対象」）。
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "tasks/**"
+      - ".claude/**"
+      - "**/*.md"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "tasks/**"
+      - ".claude/**"
+      - "**/*.md"
+      - ".github/workflows/docs.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  docs-check:
+    name: Docs check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # リポジトリ内の相対リンク切れのみを検査する。
+      # 外部 URL は検査しない（先方都合で落ちると CI が不安定になり、
+      # 「落ちても無視してよい CI」が常態化するため）。
+      - name: Check relative links
+        run: |
+          set -uo pipefail
+          status=0
+          # base/ は別プロジェクトの参考実装のため対象外。
+          while IFS= read -r f; do
+            dir=$(dirname "$f")
+            # grep の「該当なし」は正常なので || true で吸収する。
+            links=$(grep -oE '\]\([^)]+\)' "$f" | sed -E 's/^\]\(//; s/\)$//' || true)
+            [ -z "$links" ] && continue
+            while IFS= read -r link; do
+              # 外部 URL・mailto・ページ内アンカーは対象外。
+              case "$link" in
+                http://* | https://* | mailto:* | '#'*) continue ;;
+              esac
+              # 末尾のアンカー（file.md#section）を落としてから実体を確認する。
+              path=${link%%#*}
+              [ -z "$path" ] && continue
+              if [ ! -e "$dir/$path" ]; then
+                echo "::error file=$f::broken relative link: $link"
+                status=1
+              fi
+            done <<<"$links"
+          done < <(git ls-files '*.md' | grep -v '^base/')
+          if [ "$status" -ne 0 ]; then
+            echo "リンク切れが見つかりました。"
+            exit 1
+          fi
+          echo "相対リンクはすべて解決しました。"
+
+      # ルールテーブルの drift 防止: .claude/rules/ のファイルが
+      # CLAUDE.md のテーブルに載っているかを検査する
+      # （.claude/rules/documentation.md の影響マップ「.claude/rules/ の規約変更 → CLAUDE.md」）。
+      - name: Check CLAUDE.md rules table is in sync
+        run: |
+          set -uo pipefail
+          status=0
+          for f in .claude/rules/*.md; do
+            name=$(basename "$f")
+            if ! grep -q "| $name |" CLAUDE.md; then
+              echo "::error file=CLAUDE.md::$name が Rules テーブルに載っていません"
+              status=1
+            fi
+          done
+          exit "$status"

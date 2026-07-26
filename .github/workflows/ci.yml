@@ -1,18 +1,31 @@
 name: CI
 
+# アプリケーションコードの検査のみを担当する。
+# ドキュメントは docs.yml、ワークフロー自体の検査は workflows-lint.yml が担当する
+# （発火条件が違うものを同居させない — .claude/rules/github-actions.md）。
 on:
+  # push は main のみ。作業ブランチは PR で回れば十分（二重実行を避ける）。
   push:
     branches:
       - main
-      - "feature/**"
-      - "chore/**"
     paths:
       - "front/**"
       - ".github/workflows/ci.yml"
   pull_request:
+    branches:
+      - main
     paths:
       - "front/**"
       - ".github/workflows/ci.yml"
+
+# 同一 PR への連続 push で古い実行をキャンセルする。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# 最小権限。チェックアウト以外に必要な権限はない。
+permissions:
+  contents: read
 
 jobs:
   lint-and-test:
