@@ -29,7 +29,40 @@ const eslintConfig = defineConfig([
       // 書いた JSDoc の体裁を整える。
       "jsdoc/check-alignment": "warn",
       "jsdoc/no-multi-asterisks": "warn",
-      // require-jsdoc は // 行コメントを誤検知するため未採用。ブロックの有無・質はレビューで確認する。
+      // require-jsdoc は // 行コメントを誤検知するため、関数に対しては未採用。
+      // ブロックの有無・質はレビューで確認する。型定義に限った強制は後続ブロックを参照。
+    },
+  },
+  {
+    // 型定義のコメント必須（.claude/rules/jsdoc.md「型定義のコメント（型本体 + メンバー）」）を機械強制する。
+    //
+    // 対象を src/types/** に絞る理由:
+    // src/** 全体に適用すると 205 件検出され、その大半は関数シグネチャ内の
+    // インラインオブジェクト型（例: `(opts: { force?: boolean })`）という誤検知だった。
+    // 「書くことがない項目に埋め草コメントを付けない」方針とも衝突する。
+    // 複数箇所から参照される型は types/ へ集約する規約（typescript.md「型定義の配置」）があるため、
+    // types/ を強制対象にすれば「ファイルを越えて使われる型」という必須ラインを実質的にカバーできる。
+    //
+    // 重大度は error。static-analysis.md の「守れないルールは有効にしない（error か無効かの二択）」に従い、
+    // warn を恒常状態にしない。
+    files: ["src/types/**/*.ts"],
+    plugins: { jsdoc },
+    rules: {
+      "jsdoc/require-jsdoc": [
+        "error",
+        {
+          // 関数系は対象外（誤検知の原因。従来どおりレビューで担保する）。
+          require: {
+            FunctionDeclaration: false,
+            MethodDefinition: false,
+            ClassDeclaration: false,
+            ArrowFunctionExpression: false,
+            FunctionExpression: false,
+          },
+          // 型本体（type / interface）と型メンバー（プロパティ）を対象にする。
+          contexts: ["TSTypeAliasDeclaration", "TSInterfaceDeclaration", "TSPropertySignature"],
+        },
+      ],
     },
   },
   {
