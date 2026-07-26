@@ -110,6 +110,60 @@ describe("GET /api/videos (公開・実 DB)", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("x-limit")).toBe("100");
   });
+
+  it("limit=0 は min=1 にクランプして 1 件だけ返す", async () => {
+    await seedVideo({ title: "a" });
+    await seedVideo({ title: "b" });
+    const res = await GET(getReq("?limit=0"));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toHaveLength(1);
+  });
+
+  it("limit が数値でなければ既定値 10 を使う", async () => {
+    await seedVideo({ title: "only" });
+    const res = await GET(getReq("?limit=abc"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-limit")).toBe("10");
+  });
+
+  it("offset が総件数を超えても 200 で空配列を返す（総件数は維持）", async () => {
+    await seedVideo({ title: "only" });
+    const res = await GET(getReq("?offset=100"));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual([]);
+    expect(res.headers.get("x-total-count")).toBe("1");
+  });
+
+  it("offset が負値なら min=0 にクランプして先頭から返す", async () => {
+    await seedVideo({ title: "only" });
+    const res = await GET(getReq("?offset=-5"));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toHaveLength(1);
+  });
+
+  it("未知の sort 値は既定（追加日順）にフォールバックする", async () => {
+    await seedVideo({ title: "古い", createdAt: new Date("2024-01-01T00:00:00.000Z") });
+    await seedVideo({ title: "新しい", createdAt: new Date("2024-06-01T00:00:00.000Z") });
+    const res = await GET(getReq("?sort=unknown&order=desc"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body[0].title).toBe("新しい");
+  });
+
+  it("該当のないカテゴリ絞り込みでは空配列を返す", async () => {
+    await seedVideo({ category: "プログラミング" });
+    const res = await GET(getReq("?category=存在しない"));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual([]);
+  });
+
+  it("該当のないキーワードでは空配列と x-total-count=0 を返す", async () => {
+    await seedVideo({ title: "TypeScript 入門" });
+    const res = await GET(getReq("?q=該当なし"));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual([]);
+    expect(res.headers.get("x-total-count")).toBe("0");
+  });
 });
 
 describe("POST /api/videos (管理者・実 DB)", () => {
@@ -142,6 +196,72 @@ describe("POST /api/videos (管理者・実 DB)", () => {
     });
     const res = await POST(postReq(validBody, { authorization: "Bearer valid" }));
     expect(res.status).toBe(403);
+    expect(await prisma.videoEntry.count()).toBe(0);
+  });
+
+  it("ADMIN_EMAIL 未設定なら誰であっても 403 で作成しない（設定ミス時に安全側へ倒す）", async () => {
+    authAsAdmin();
+    process.env.ADMIN_EMAIL = "";
+    const res = await POST(postReq(validBody, { authorization: "Bearer ok" }));
+    expect(res.status).toBe(403);
+    expect(await prisma.videoEntry.count()).toBe(0);
+  });
+
+  it("トークンが無効（Supabase が検証エラー）なら 403 で作成しない", async () => {
+    // 期限切れ・改ざんトークンの想定。未認証（401）ではなく権限なし（403）に切り分けられる。
+    getUserMock.mockResolvedValue({ data: { user: null }, error: { message: "invalid JWT" } });
+    const res = await POST(postReq(validBody, { authorization: "Bearer expired" }));
+    expect(res.status).toBe(403);
+    expect(await prisma.videoEntry.count()).toBe(0);
+  });
+
+  it("タグが 1 件でも上限文字数を超えると 400 で作成しない（境界値）", async () => {
+    authAsAdmin();
+    const res = await POST(
+      postReq({ ...validBody, tags: ["ok", "あ".repeat(11)] }, { authorization: "Bearer ok" }),
+    );
+    expect(res.status).toBe(400);
+    expect(await prisma.videoEntry.count()).toBe(0);
+  });
+
+  it("カテゴリが上限文字数を超えると 400 で作成しない（境界値）", async () => {
+    authAsAdmin();
+    const res = await POST(
+      postReq({ ...validBody, category: "あ".repeat(11) }, { authorization: "Bearer ok" }),
+    );
+    expect(res.status).toBe(400);
+    expect(await prisma.videoEntry.count()).toBe(0);
+  });
+
+  it("youtubeUrl が空文字なら 400 で作成しない", async () => {
+    authAsAdmin();
+    const res = await POST(
+      postReq({ ...validBody, youtubeUrl: "" }, { authorization: "Bearer ok" }),
+    );
+    expect(res.status).toBe(400);
+    expect(await prisma.videoEntry.count()).toBe(0);
+  });
+
+  it("評価が上限 5 なら作成できる（境界値）", async () => {
+    authAsAdmin();
+    const res = await POST(postReq({ ...validBody, rating: 5 }, { authorization: "Bearer ok" }));
+    expect(res.status).toBe(201);
+    expect((await prisma.videoEntry.findFirstOrThrow()).rating).toBe(5);
+  });
+
+  it("評価が上限を 1 超える 6 なら 400 で作成しない（境界値）", async () => {
+    authAsAdmin();
+    const res = await POST(postReq({ ...validBody, rating: 6 }, { authorization: "Bearer ok" }));
+    expect(res.status).toBe(400);
+    expect(await prisma.videoEntry.count()).toBe(0);
+  });
+
+  it("メモが上限を 1 超えると 400 で作成しない（境界値）", async () => {
+    authAsAdmin();
+    const res = await POST(
+      postReq({ ...validBody, memo: "あ".repeat(2001) }, { authorization: "Bearer ok" }),
+    );
+    expect(res.status).toBe(400);
     expect(await prisma.videoEntry.count()).toBe(0);
   });
 

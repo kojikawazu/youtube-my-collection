@@ -68,7 +68,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         ...(hasDataField(data, "goodPoints") ? { goodPoints: data.goodPoints } : {}),
         ...(hasDataField(data, "memo") ? { memo: data.memo } : {}),
         ...(hasDataField(data, "rating") ? { rating: data.rating } : {}),
-        ...(hasDataField(data, "publishDate") ? { publishDate: data.publishDate ?? null } : {}),
+        // publishDate は「明示的な null（未設定にする）」と「undefined（未送信・無効値）」を
+        // 区別する（lib/schemas/video.ts の parsePublishDate 参照）。
+        // undefined を null に丸めると、不正な日付を送っただけで既存の公開日が消えてしまう。
+        ...(hasDataField(data, "publishDate") && data.publishDate !== undefined
+          ? { publishDate: data.publishDate }
+          : {}),
       },
     });
 
@@ -107,7 +112,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Delete failed", error);
-    const message = error instanceof Error ? error.message : "Delete failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const code = typeof error === "object" && error !== null && "code" in error ? error.code : null;
+    // 対象が存在しない場合は PATCH と同様に 404 を返す（サーバー側の異常ではないため 500 にしない）。
+    if (code === "P2025") {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    // 内部メッセージをそのまま返さない（error-handling.md: センシティブ情報を漏らさない）。
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }
