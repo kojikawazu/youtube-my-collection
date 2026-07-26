@@ -54,9 +54,12 @@ type OnSelect = (id: string) => void;
 
 - **理由**: レイヤごとに検証ライブラリが変わると、同じ入力ルールを別の書き方で二重に定義することになる。Zod なら**スキーマそのものを共有でき**、片方から他方を導出できる。
 - **スキーマの単一ソースは `front/src/lib/schemas/`**（[`api.md`](./api.md)）。同じ入力ルールを Route Handler とフォームで二重定義しない（[`duplication.md`](./duplication.md)）。
+  - このため **`types/` から `lib/schemas/` への参照は認められている**（[`frontend.md`](./frontend.md)「例外: スキーマからの型導出」）。レイヤ上は `types/` が最下層だが、型導出に限りこの 1 方向だけ例外とする。`lib/` の他モジュールへの参照は不可。
 - **型はスキーマから導出する**。`z.infer<typeof schema>` を使い、**同じ形を手書きで二重定義しない**。**スキーマが単一の真実**であり、型はその影である。
 - 外部入力（API レスポンス・`JSON.parse`・フォーム入力・環境変数）は `unknown` で受け、**Zod で `parse` してからドメインに入れる**。
 - 信頼境界が違うため、クライアント側の入力チェックがあっても**サーバー側の検証は必ず行う**（[`security.md`](./security.md)）。
+- **フォームライブラリを導入する場合はアダプタ経由で既存スキーマを再利用する**（`react-hook-form` なら `zodResolver`）。スキーマを書き直さない。**アダプタは変わってもスキーマは変わらない**のが Zod に統一する利点。
+  - 現在フォームライブラリは未導入で、`hooks/useVideoForm` が `lib/validation`（Zod スキーマの薄いアダプタ）を直接呼んでいる。導入時もこの構図（スキーマが単一ソース）を崩さない。
 
 ## 型定義の配置（コロケーション / `types/` 集約）
 
@@ -139,7 +142,9 @@ export const VIDEO_PAGE_SIZE = 20;
 
 ## any 禁止・unknown 優先
 
-- **暗黙・明示を問わず `any` を禁止**する（`@typescript-eslint/no-explicit-any`: error）。
+- **暗黙・明示を問わず `any` を禁止**する。担保元が異なる点に注意する。
+  - **明示的な `any`** → `@typescript-eslint/no-explicit-any`（error）
+  - **暗黙の `any`** → TypeScript の **`noImplicitAny`**（`strict: true` に含まれる）。ESLint では検出できない
 - 外部入力（API レスポンス・`JSON.parse`・ユーザー入力）は **`unknown` で受け**、型ガード・Zod 検証で**ナローイング**してから使う。
 - どうしても `any` が必要な箇所は `// eslint-disable-next-line` ＋ 根拠コメントを残す（「as / ! 抑制」節参照）。
 

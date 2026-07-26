@@ -80,12 +80,27 @@ app  →  components  →  hooks  →  lib（サーバー関数・API 呼び出�
 | `components/` | 下位の `components/`, `hooks/`, `types/`, `constants/` | **`app/`**（ページ固有の型・定数を含む） |
 | `hooks/` | `lib/`, `types/`, `constants/` | **`app/`**, **`components/`**（JSX を返さない） |
 | `lib/` | `types/`, `constants/` | **`app/`**, **`components/`**, **`hooks/`** |
-| `types/` `constants/` | （原則どこにも依存しない） | 上位レイヤすべて |
+| `types/` `constants/` | （原則どこにも依存しない。例外は下記「スキーマからの型導出」のみ） | 上位レイヤすべて |
 
 - **`components/` 内も一方向**にする。アトミックデザインの階層がそのまま依存の向きになる: `templates` → `organisms` → `molecules` → `atoms`。**`atoms` は `molecules` / `organisms` を import しない**（汎用度の高いものほど下位）。
 - **`app/api/`（Route Handlers）から `components/` や `hooks/` を import しない**。API はサーバー側の層であり、UI 層に依存してはならない（[`api.md`](./api.md) 参照）。
 - **サーバー専用モジュール（`lib/db.ts` / `lib/auth-server.ts` などシークレット・DB を触る処理）を Client Component から import しない**。`server-only` パッケージで境界を機械的に守る。**混入するとシークレットがクライアントバンドルに乗る**（[`security.md`](./security.md)）。
 - **`hooks/` は JSX を返さない**。返したくなったらそれはコンポーネントであり、`components/` に置く。
+
+### 例外: スキーマからの型導出（`types/` → `lib/schemas/`）
+
+**`types/` が `lib/schemas/` を参照することだけは認める。** `z.infer<typeof schema>` で型を導出する用途に限る。
+
+```ts
+// types/index.ts — 認める
+import type { videoItemSchema } from "@/lib/schemas/video";
+export type VideoItem = z.infer<typeof videoItemSchema>;
+```
+
+- **理由**: [`typescript.md`](./typescript.md)「スキーマバリデーションは Zod に統一する」が**型はスキーマから導出する（手書きで二重定義しない）**と定めており、スキーマが `lib/schemas/` にある以上この参照は避けられない。禁止すると型を手書きすることになり、より重い規約違反（同じ形の二重管理）を招く。
+- **`lib/schemas/` は実質的に最下層**である。`zod` と `constants/` にしか依存せず、上位レイヤを一切参照しない。ディレクトリの位置が `lib/` 配下なだけで、依存の向きは壊れていない。
+- **例外はここまで。** `types/` から `lib/` の**他のモジュール**（`db` / `auth-server` / `validation` / `youtube` 等）を参照してはならない。参照したくなったら、その型は `types/` ではなく利用側に置くべきか、参照先の型を `types/` へ移すべきかを検討する。
+- 同じ理由で `constants/` も同様に扱う（現状は該当なし）。
 
 禁止例:
 
@@ -125,6 +140,7 @@ app  →  components  →  hooks  →  lib（サーバー関数・API 呼び出�
 - **スキーマを単一の真実とする**。フォームの型は `z.infer<typeof schema>` で導出し、同じ形を手書きしない。
 - **クライアント検証は UX のためのものであり、セキュリティ担保ではない**。Route Handler でも必ず検証する（信頼境界が違うため、この重複は必要 — [`duplication.md`](./duplication.md)）。
 - 同じ入力ルールなら、**Route Handler と同じ Zod スキーマ（`lib/schemas/`）を共有**する。制約値だけでも定数で共有する。
+- **フォームライブラリを導入する場合はアダプタ経由で既存スキーマを再利用する**（`react-hook-form` なら `zodResolver`）。スキーマを書き直さない（[`typescript.md`](./typescript.md)）。現在は未導入で、`hooks/useVideoForm` が `lib/validation` を直接呼んでいる。
 
 ## ディレクトリ構成
 
