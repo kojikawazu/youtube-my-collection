@@ -24,6 +24,6 @@ YouTubeで良かった動画を後から見返せる公開コレクションの�
 | github-actions.md | `.github/workflows/**` | CI 発火ルール（関係あるジョブだけ動かす・必須チェックと paths の併用禁止） |
 | typescript.md | `front/src/**` | TypeScript 固有規約（type/interface・型/定数の配置・Zod 統一・any 禁止） |
 | jsdoc.md | `front/src/**` | JSDoc/コメント規約（関数に意図コメント・型は再掲しない） |
-| frontend.md | `front/src/{components,app,hooks,lib}/**` | Next.js フロント設計・アトミックデザイン・server/client 分離 |
+| frontend.md | `front/src/{components,app,hooks,lib,types,constants}/**` | Next.js フロント設計・アトミックデザイン・server/client 分離・レイヤ一方向依存 |
 | api.md | `front/src/app/api/**` | Route Handlers 設計・Zod 検証・認可・HTTP ステータス |
 | database.md | `front/prisma/**`, `front/src/lib/**` | Prisma 命名規約・マイグレーション・クエリ規約 |
