@@ -93,6 +93,7 @@ export function useVideos() {
   /**
    * 動画を削除し、削除後の件数に合わせたページへ移動して一覧を更新する。
    * 最終ページの最後の 1 件を消した場合に空ページに残らないよう、遷移先ページを補正する。
+   * @throws {Error} 削除 API が 2xx を返さなかった場合。呼び出し側で捕捉してトースト表示する
    */
   const deleteVideo = useCallback(
     async (id: string, accessToken: string | null) => {

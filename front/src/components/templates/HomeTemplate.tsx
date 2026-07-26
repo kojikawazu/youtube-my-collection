@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
-import { Screen, VideoItem, SortOption } from "@/types";
+import type { Screen, VideoItem, SortOption } from "@/types";
 import { ValidationErrors } from "@/lib/validation";
 import { Modal } from "@/components/Modal";
 import { Toast } from "@/components/molecules/Toast";
@@ -121,7 +121,7 @@ export const HomeTemplate: React.FC<HomeTemplateProps> = ({
 
       <main className="flex-1 overflow-x-hidden">
         <AnimatePresence mode="wait">
-          {currentScreen === Screen.List && (
+          {currentScreen === "list" && (
             <motion.div
               key="list"
               initial={{ opacity: 0, y: 10 }}
@@ -148,7 +148,7 @@ export const HomeTemplate: React.FC<HomeTemplateProps> = ({
             </motion.div>
           )}
 
-          {currentScreen === Screen.Detail && selectedVideo && (
+          {currentScreen === "detail" && selectedVideo && (
             <motion.div
               key="detail"
               initial={{ opacity: 0, x: 20 }}
@@ -165,7 +165,7 @@ export const HomeTemplate: React.FC<HomeTemplateProps> = ({
             </motion.div>
           )}
 
-          {(currentScreen === Screen.Add || currentScreen === Screen.Edit) && (
+          {(currentScreen === "add" || currentScreen === "edit") && (
             <motion.div
               key="editor"
               initial={{ opacity: 0, scale: 0.98 }}
@@ -173,7 +173,7 @@ export const HomeTemplate: React.FC<HomeTemplateProps> = ({
               exit={{ opacity: 0, scale: 0.98 }}
             >
               <VideoForm
-                mode={currentScreen === Screen.Add ? "add" : "edit"}
+                mode={currentScreen === "add" ? "add" : "edit"}
                 formData={formData}
                 formErrors={formErrors}
                 onFormChange={onFormChange}
@@ -184,7 +184,7 @@ export const HomeTemplate: React.FC<HomeTemplateProps> = ({
             </motion.div>
           )}
 
-          {currentScreen === Screen.Login && (
+          {currentScreen === "login" && (
             <motion.div
               key="login"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -209,7 +209,7 @@ export const HomeTemplate: React.FC<HomeTemplateProps> = ({
 
       <Toast message={toastMessage} />
 
-      {isAdmin && currentScreen === Screen.List && (
+      {isAdmin && currentScreen === "list" && (
         <motion.button
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}

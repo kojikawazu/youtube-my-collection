@@ -88,8 +88,13 @@ export function useVideoForm({
       return { action: async () => null, valid: false };
     }
 
-    // 実際の送信処理。add は POST → 1 ページ目を再取得、edit は PATCH → 現在ページを再取得。
-    // サムネ URL は YouTube URL から都度導出する。
+    /**
+     * 実際の送信処理。add は POST → 1 ページ目を再取得、edit は PATCH → 現在ページを再取得。
+     * サムネ URL は YouTube URL から都度導出する。
+     * @returns 作成・更新後の動画。edit で対象が見つからない等の失敗時は throw する
+     * @throws {Error} 送信 API が 2xx を返さなかった場合、または edit で更新対象の ID が無い場合。
+     *   いずれも呼び出し側で捕捉してトースト表示する
+     */
     const action = async (): Promise<VideoItem | null> => {
       if (mode === "add") {
         const response = await fetch("/api/videos", {

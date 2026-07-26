@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Screen, VideoItem } from "@/types";
+import type { Screen, VideoItem } from "@/types";
 import type { HomeTemplateProps } from "@/components/templates/HomeTemplate";
 import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,14 +15,14 @@ import { useConfirmModal } from "@/hooks/useConfirmModal";
  * @returns `HomeTemplate` に渡す props（画面状態・一覧/フォーム/モーダルの値と全ハンドラ）
  */
 export function useHomeScreen(): HomeTemplateProps {
-  const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.List);
+  const [currentScreen, setCurrentScreen] = useState<Screen>("list");
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
 
   const { toastMessage, showToast } = useToast();
 
   const { isAdmin, accessToken, login, logout } = useAuth({
     showToast,
-    onNonAdminRejected: () => setCurrentScreen(Screen.List),
+    onNonAdminRejected: () => setCurrentScreen("list"),
   });
 
   const {
@@ -56,7 +56,7 @@ export function useHomeScreen(): HomeTemplateProps {
 
   /** 一覧へ戻る。詳細の選択を解除し、先頭までスクロールする。 */
   const navigateToList = () => {
-    setCurrentScreen(Screen.List);
+    setCurrentScreen("list");
     setSelectedVideo(null);
     window.scrollTo(0, 0);
   };
@@ -67,14 +67,14 @@ export function useHomeScreen(): HomeTemplateProps {
    */
   const navigateToDetail = (video: VideoItem) => {
     setSelectedVideo(video);
-    setCurrentScreen(Screen.Detail);
+    setCurrentScreen("detail");
     window.scrollTo(0, 0);
   };
 
   /** 追加画面へ遷移する。遷移前に form.initAdd() で入力欄を初期化する。 */
   const navigateToAdd = () => {
     form.initAdd();
-    setCurrentScreen(Screen.Add);
+    setCurrentScreen("add");
     window.scrollTo(0, 0);
   };
 
@@ -84,7 +84,7 @@ export function useHomeScreen(): HomeTemplateProps {
    */
   const navigateToEdit = (video: VideoItem) => {
     form.initEdit(video);
-    setCurrentScreen(Screen.Edit);
+    setCurrentScreen("edit");
     window.scrollTo(0, 0);
   };
 
@@ -119,7 +119,7 @@ export function useHomeScreen(): HomeTemplateProps {
    * 追加は成功で一覧へ、編集は成功で更新後の詳細へ遷移する。
    */
   const handleSaveRequest = () => {
-    const mode = currentScreen === Screen.Add ? "add" : "edit";
+    const mode = currentScreen === "add" ? "add" : "edit";
     const { action, valid } = form.handleSave(mode, selectedVideo?.id);
     if (!valid) return;
 
@@ -131,7 +131,7 @@ export function useHomeScreen(): HomeTemplateProps {
         } else {
           const updated = await action();
           if (updated) setSelectedVideo(updated);
-          setCurrentScreen(Screen.Detail);
+          setCurrentScreen("detail");
         }
       } catch (error) {
         console.error(error);
@@ -148,7 +148,7 @@ export function useHomeScreen(): HomeTemplateProps {
   // 追加はキャンセルで一覧へ、編集はキャンセルで元の詳細へ戻す。
   // 編集時は selectedVideo が必ず存在するため非 null を明示（追加時はこの分岐に入らない）。
   const handleFormCancel = () =>
-    currentScreen === Screen.Add ? navigateToList() : navigateToDetail(selectedVideo!);
+    currentScreen === "add" ? navigateToList() : navigateToDetail(selectedVideo!);
 
   // ログアウト後は一覧画面へ戻す（管理者専用画面に留まらせない）。
   const handleLogout = async () => {
@@ -161,7 +161,7 @@ export function useHomeScreen(): HomeTemplateProps {
     selectedVideo,
     isAdmin,
     onNavigateList: navigateToList,
-    onLogin: () => setCurrentScreen(Screen.Login),
+    onLogin: () => setCurrentScreen("login"),
     onLogout: handleLogout,
     onGoogleLogin: login,
     videos,
