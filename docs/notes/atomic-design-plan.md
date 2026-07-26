@@ -65,7 +65,7 @@ export default function Page() {
 
 ## ディレクトリ構成（最終形）
 
-```
+```text
 front/src/
 ├── app/
 │   └── page.tsx                  ← pages 層の薄いシェル（<HomeTemplate {...useHomeScreen()} /> の1行）
@@ -121,7 +121,7 @@ front/src/
 
 ### 依存関係
 
-```
+```text
 useToast          ← 依存なし
 useAuth           ← showToast, onNonAdminRejected を受け取る
 useVideos         ← 依存なし（deleteVideo は accessToken を引数で受け取る）

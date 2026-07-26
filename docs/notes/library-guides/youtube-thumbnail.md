@@ -56,7 +56,7 @@ export const getYoutubeThumbnail = (url: string): string => {
 
 YouTube は動画ごとにサムネイル画像を以下の URL で公開している。API キーは不要。
 
-```
+```text
 https://img.youtube.com/vi/{動画ID}/{品質}.jpg
 ```
 

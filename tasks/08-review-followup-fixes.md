@@ -1,10 +1,12 @@
 # タスク08: レビュー指摘フォロー対応
 
 ## 背景
+
 - ページング実装のレビューで、優先度高の不具合が指摘された。
 - 対象Issue: https://github.com/kojikawazu/youtube-my-collection/issues/33
 
 ## 対応範囲
+
 - `Modal` の非同期確定処理を完了待ちに変更
 - `Modal` の body `overflow` 復元漏れを解消
 - `PATCH /api/videos/:id` で空配列タグ更新が反映されない不具合を修正
@@ -12,6 +14,7 @@
 - クライアント側 DELETE の不要 `body` を削除
 
 ## 実装内容
+
 - `front/src/components/Modal.tsx`
   - `onConfirm` を `Promise` 対応
   - 確定ボタン押下時に `await onConfirm()` 後のみ `onClose()` を実行
@@ -29,10 +32,12 @@
   - 保存/削除失敗時に `onConfirm` で例外を再送出し、モーダルを閉じない
 
 ## 検証
+
 - `npm run lint`（成功、既存の `img` 警告のみ）
 - `npm run build`（成功）
 
 ## 非対象
+
 - Markdown実装の統合（`Markdown.tsx` / `MarkdownRenderer.tsx`）
 - 未使用ファイル整理（`sample-videos.ts`, `supabase/server.ts`）
 - API共通化リファクタ（`toVideoItem` 等）

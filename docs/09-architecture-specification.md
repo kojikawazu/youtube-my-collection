@@ -55,20 +55,26 @@
 2. **Supabase プロジェクト作成**: [supabase.com](https://supabase.com) でプロジェクトを作成し、`Project URL` と `anon key`、DB パスワードを控える。
 3. **Google OAuth 設定**（管理者ログインを試す場合）: Supabase の Authentication → Providers で Google を有効化。Google Cloud Console 側のリダイレクト URI に `https://<PROJECT_REF>.supabase.co/auth/v1/callback` を登録。詳細は [`notes/oauth-sequence.md`](./notes/oauth-sequence.md) / [`notes/auth-troubleshooting.md`](./notes/auth-troubleshooting.md)。
 4. **env 設定**:
+
    ```bash
    cd front
    cp .env.example .env.local   # 控えた値を記入。ADMIN_EMAIL は自分の Google アカウント
    ```
+
 5. **依存インストール & Prisma 生成**:
+
    ```bash
    pnpm install
    pnpm exec prisma db pull     # 既存スキーマを取り込み
    pnpm exec prisma generate
    ```
+
 6. **起動**:
+
    ```bash
    pnpm dev                     # http://localhost:3000
    ```
+
 7. **データ投入**: 現状 seed スクリプトはないため、管理者でログイン後に UI から追加するか、Supabase 上で直接 `VideoEntry` に行を追加する。
 8. **テスト**: `pnpm test`（ユニット）/ `pnpm test:e2e`（E2E、初回は `pnpm exec playwright install`）。
 

@@ -53,7 +53,7 @@ import remarkGfm from "remark-gfm";
 
 react-markdown のパイプラインは以下の流れ:
 
-```
+```text
 Markdown テキスト
   ↓ remark（パーサー）
 AST（抽象構文木）

@@ -46,7 +46,7 @@ pnpm dev                     # http://localhost:3000
 | `pnpm test:e2e` | E2E（Playwright） |
 
 > リポジトリルートからは `make <target>`（例: `make dev` / `make test` / `make test-it`）でも同等の操作ができる（内部で `front/` に降りて実行）。一覧は `make help`。
-
+>
 > IT / E2E はテスト DB を使う。先に `docker compose -f front/docker-compose.test.yml up -d` で PostgreSQL を起動する（既定 `DATABASE_URL` は `postgresql://postgres:postgres@localhost:5432/ymc_test?schema=public`）。
 
 API ドキュメント（OpenAPI / Swagger UI）は開発サーバー起動後 [`http://localhost:3000/docs`](http://localhost:3000/docs) で閲覧できる（OpenAPI JSON は `/api/openapi.json`）。**管理者限定**で、管理者ログインしていない場合はログイン誘導が表示される。Zod スキーマから自動生成され、設計の経緯は [`docs/notes/openapi-zod-plan.md`](docs/notes/openapi-zod-plan.md) を参照。
@@ -61,7 +61,7 @@ API ドキュメント（OpenAPI / Swagger UI）は開発サーバー起動後 [
 
 ## プロジェクト構成
 
-```
+```text
 front/   Next.js (App Router) + TypeScript + Tailwind のフロント実装
 docs/    要件・仕様・設計ドキュメント（上記）
 tasks/   個別タスクの作業メモ

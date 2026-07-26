@@ -26,7 +26,7 @@
 
 GET /api/videos のレスポンスに以下のヘッダーを追加:
 
-```
+```text
 Cache-Control: public, s-maxage=30, stale-while-revalidate=59
 ```
 

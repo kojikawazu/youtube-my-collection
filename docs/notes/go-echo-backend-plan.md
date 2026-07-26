@@ -54,7 +54,7 @@ Go + Echo の共通バックエンド API に集約し、スキーマ変更時�
 
 ## 現在のアーキテクチャ
 
-```
+```text
 ┌──────────── 同一オリジン（Vercel）────────────┐
 │                                                │
 │  ブラウザ (React)       Next.js Server          │
@@ -79,7 +79,7 @@ Go + Echo の共通バックエンド API に集約し、スキーマ変更時�
 
 ## 移行後のアーキテクチャ
 
-```
+```text
 ┌── Vercel (Next.js) ──┐       ┌── Go + Echo (別オリジン) ──────────┐
 │                       │       │                                     │
 │ ブラウザ (React)      │       │  [CORS Middleware]                  │
@@ -130,7 +130,7 @@ Go + Echo の共通バックエンド API に集約し、スキーマ変更時�
 
 Supabase には Go 公式 SDK がないため、REST API を直接呼び出してトークンを検証する。
 
-```
+```text
 Go バックエンド → GET https://<ref>.supabase.co/auth/v1/user
                   Headers:
                     Authorization: Bearer <access_token>

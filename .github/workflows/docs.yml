@@ -38,6 +38,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 設定は .markdownlint-cli2.jsonc（無効化ルールの理由もそこに記載）。
+      # バージョンを固定し、上流の新ルール追加で CI が突然落ちないようにする。
+      - name: Markdown lint
+        run: npx -y markdownlint-cli2@0.23.1
+
       # リポジトリ内の相対リンク切れのみを検査する。
       # 外部 URL は検査しない（先方都合で落ちると CI が不安定になり、
       # 「落ちても無視してよい CI」が常態化するため）。
