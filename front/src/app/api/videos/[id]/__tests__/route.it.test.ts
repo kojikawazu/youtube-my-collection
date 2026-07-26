@@ -40,6 +40,11 @@ describe("GET /api/videos/[id] (公開・実 DB)", () => {
     expect((await res.json()).title).toBe("対象");
   });
 
+  it("UUID 形式でない ID でも 500 にせず 404 を返す", async () => {
+    const res = await GET(req("GET"), ctx("not-a-uuid"));
+    expect(res.status).toBe(404);
+  });
+
   it("存在しない ID なら 404", async () => {
     const res = await GET(req("GET"), ctx("00000000-0000-0000-0000-000000000000"));
     expect(res.status).toBe(404);
@@ -83,6 +88,40 @@ describe("PATCH /api/videos/[id] (管理者・実 DB)", () => {
     expect(res.status).toBe(404);
   });
 
+  it("空ボディの更新は 200 で何も変更しない", async () => {
+    authAsAdmin();
+    const v = await seedVideo({ title: "不変", rating: 3 });
+    const res = await PATCH(req("PATCH", {}, { authorization: "Bearer ok" }), ctx(v.id));
+    expect(res.status).toBe(200);
+    const after = await prisma.videoEntry.findUniqueOrThrow({ where: { id: v.id } });
+    expect(after.title).toBe("不変");
+    expect(after.rating).toBe(3);
+  });
+
+  it("管理者メールと不一致なら 403 で更新しない", async () => {
+    // 認証は通るが allowlist 外。requireAdmin が 401 と 403 を切り分けている。
+    getUserMock.mockResolvedValue({ data: { user: { email: "other@example.com" } }, error: null });
+    const v = await seedVideo({ title: "元" });
+    const res = await PATCH(
+      req("PATCH", { title: "改" }, { authorization: "Bearer ok" }),
+      ctx(v.id),
+    );
+    expect(res.status).toBe(403);
+    expect((await prisma.videoEntry.findUniqueOrThrow({ where: { id: v.id } })).title).toBe("元");
+  });
+
+  it("publishDate に不正な日付文字列を送ると未送信扱いで既存値を維持する", async () => {
+    authAsAdmin();
+    const v = await seedVideo({ title: "元", publishDate: new Date("2024-01-01T00:00:00.000Z") });
+    const res = await PATCH(
+      req("PATCH", { publishDate: "not-a-date" }, { authorization: "Bearer ok" }),
+      ctx(v.id),
+    );
+    expect(res.status).toBe(200);
+    const after = await prisma.videoEntry.findUniqueOrThrow({ where: { id: v.id } });
+    expect(after.publishDate?.toISOString()).toBe("2024-01-01T00:00:00.000Z");
+  });
+
   it("検証エラー（評価が範囲外）なら 400 で更新しない", async () => {
     authAsAdmin();
     const v = await seedVideo({ rating: 3 });
@@ -110,5 +149,41 @@ describe("DELETE /api/videos/[id] (管理者・実 DB)", () => {
     const res = await DELETE(req("DELETE", {}), ctx(v.id));
     expect(res.status).toBe(401);
     expect(await prisma.videoEntry.count()).toBe(1);
+  });
+
+  it("管理者メールと不一致なら 403 で削除しない", async () => {
+    // 認証は通るが allowlist 外。401（未認証）ではなく 403（権限なし）に切り分けられる。
+    getUserMock.mockResolvedValue({ data: { user: { email: "other@example.com" } }, error: null });
+    const v = await seedVideo({ title: "残す" });
+    const res = await DELETE(req("DELETE", {}, { authorization: "Bearer ok" }), ctx(v.id));
+    expect(res.status).toBe(403);
+    expect(await prisma.videoEntry.count()).toBe(1);
+  });
+
+  it("ADMIN_EMAIL 未設定なら誰であっても 403 で削除しない（設定ミス時に安全側へ倒す）", async () => {
+    authAsAdmin();
+    process.env.ADMIN_EMAIL = "";
+    const v = await seedVideo({ title: "残す" });
+    const res = await DELETE(req("DELETE", {}, { authorization: "Bearer ok" }), ctx(v.id));
+    expect(res.status).toBe(403);
+    expect(await prisma.videoEntry.count()).toBe(1);
+  });
+
+  it("トークンが無効（Supabase が検証エラー）なら 403 で削除しない", async () => {
+    // 期限切れ・改ざんトークンの想定。未認証（401）ではなく権限なし（403）に切り分けられる。
+    getUserMock.mockResolvedValue({ data: { user: null }, error: { message: "invalid JWT" } });
+    const v = await seedVideo({ title: "残す" });
+    const res = await DELETE(req("DELETE", {}, { authorization: "Bearer expired" }), ctx(v.id));
+    expect(res.status).toBe(403);
+    expect(await prisma.videoEntry.count()).toBe(1);
+  });
+
+  it("存在しない ID の削除は Prisma P2025 を 404 に変換する", async () => {
+    authAsAdmin();
+    const res = await DELETE(
+      req("DELETE", {}, { authorization: "Bearer ok" }),
+      ctx("00000000-0000-0000-0000-000000000000"),
+    );
+    expect(res.status).toBe(404);
   });
 });
