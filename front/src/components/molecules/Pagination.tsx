@@ -15,7 +15,10 @@ export const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
 }) => {
   return (
-    <div className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+    <nav
+      aria-label="ページ送り"
+      className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3"
+    >
       <button
         type="button"
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
@@ -31,6 +34,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             key={page}
             type="button"
             onClick={() => onPageChange(page)}
+            aria-current={page === currentPage ? "page" : undefined}
             className={`h-9 min-w-9 rounded-xl border px-3 text-xs font-bold transition ${
               page === currentPage
                 ? "border-red-500 bg-red-500 text-white shadow-lg shadow-red-200"
@@ -54,6 +58,6 @@ export const Pagination: React.FC<PaginationProps> = ({
       >
         次へ
       </button>
-    </div>
+    </nav>
   );
 };

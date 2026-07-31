@@ -20,6 +20,12 @@ describe("Pagination", () => {
     expect(screen.getByText("3 / 5")).toBeInTheDocument();
   });
 
+  it("現在ページのボタンだけに aria-current='page' を付ける", () => {
+    render(<Pagination {...base} onPageChange={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "3" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "4" })).not.toHaveAttribute("aria-current");
+  });
+
   it("ページ番号クリックで onPageChange にその番号を渡す", () => {
     const onPageChange = vi.fn();
     render(<Pagination {...base} onPageChange={onPageChange} />);

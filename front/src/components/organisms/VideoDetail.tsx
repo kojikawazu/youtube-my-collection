@@ -65,6 +65,7 @@ export const VideoDetail: React.FC<VideoDetailProps> = ({
             href={video.youtubeUrl}
             target="_blank"
             rel="noreferrer"
+            aria-label={`${video.title} を YouTube で再生（新しいタブ）`}
             className="group absolute inset-0 flex items-center justify-center bg-red-950/20 transition-all hover:bg-red-950/40"
           >
             <div className="flex h-20 w-20 transform items-center justify-center rounded-full bg-white/95 shadow-2xl transition-transform group-hover:scale-110">

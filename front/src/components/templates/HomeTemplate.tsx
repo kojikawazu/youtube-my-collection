@@ -158,7 +158,9 @@ export const HomeTemplate: React.FC<HomeTemplateProps> = ({
         <motion.button
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
+          type="button"
           onClick={onAddClick}
+          aria-label="動画を追加"
           className="fixed right-10 bottom-10 z-40 flex h-16 w-16 items-center justify-center rounded-[2rem] bg-red-500 text-white shadow-2xl shadow-red-500/40 transition-all hover:scale-110 hover:bg-red-600"
         >
           <Plus className="h-8 w-8" />

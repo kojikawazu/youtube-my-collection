@@ -80,7 +80,7 @@ test.describe("admin: normal flows", () => {
 
     await expect(page.getByText("管理者")).toBeVisible();
     // FAB: Plus button (fixed bottom-right)
-    await expect(page.locator("button.fixed")).toBeVisible();
+    await expect(page.getByRole("button", { name: "動画を追加" })).toBeVisible();
   });
 
   test("N-2: add video shows toast '追加しました。'", async ({ page }) => {
@@ -107,7 +107,7 @@ test.describe("admin: normal flows", () => {
     await page.goto("/");
 
     // Open add form via FAB
-    await page.locator("button.fixed").click();
+    await page.getByRole("button", { name: "動画を追加" }).click();
 
     // Fill in required fields
     await page.getByPlaceholder("https://...").fill("https://youtube.com/watch?v=new1");
@@ -142,7 +142,7 @@ test.describe("admin: normal flows", () => {
     await page.goto("/");
 
     // Navigate to detail
-    await page.getByRole("heading", { name: "React 2024 完全ガイド" }).click();
+    await page.getByRole("button", { name: "React 2024 完全ガイド" }).click();
     await expect(
       page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 }),
     ).toBeVisible();
@@ -193,7 +193,7 @@ test.describe("admin: normal flows", () => {
     await page.goto("/");
 
     // Navigate to detail — wait for detail heading to confirm transition completed
-    await page.getByRole("heading", { name: "React 2024 完全ガイド" }).click();
+    await page.getByRole("button", { name: "React 2024 完全ガイド" }).click();
     await expect(
       page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 }),
     ).toBeVisible();
@@ -216,7 +216,7 @@ test.describe("admin: normal flows", () => {
     await page.getByRole("button", { name: "ログアウト" }).click();
 
     await expect(page.getByText("管理者")).toHaveCount(0);
-    await expect(page.locator("button.fixed")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "動画を追加" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "コレクション" })).toBeVisible();
   });
 });
@@ -253,7 +253,7 @@ test.describe("admin: semi-normal flows", () => {
     await page.goto("/");
 
     // Open add form
-    await page.locator("button.fixed").click();
+    await page.getByRole("button", { name: "動画を追加" }).click();
 
     // Click save without filling required fields
     await page.getByRole("button", { name: "保存して更新" }).click();
@@ -278,7 +278,7 @@ test.describe("admin: semi-normal flows", () => {
 
     await page.goto("/");
 
-    await page.locator("button.fixed").click();
+    await page.getByRole("button", { name: "動画を追加" }).click();
     await page.getByPlaceholder("https://...").fill("https://youtube.com/watch?v=fail");
     await page.getByPlaceholder("印象的なタイトルを...").fill("失敗テスト");
     await page.getByRole("button", { name: "保存して更新" }).click();
@@ -308,7 +308,7 @@ test.describe("admin: semi-normal flows", () => {
 
     await page.goto("/");
 
-    await page.getByRole("heading", { name: "React 2024 完全ガイド" }).click();
+    await page.getByRole("button", { name: "React 2024 完全ガイド" }).click();
     await expect(
       page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 }),
     ).toBeVisible();
@@ -376,7 +376,7 @@ test.describe("admin: semi-normal flows", () => {
 
     await page.goto("/");
 
-    await page.locator("button.fixed").click();
+    await page.getByRole("button", { name: "動画を追加" }).click();
     await page.getByPlaceholder("https://...").fill("https://youtube.com/watch?v=double");
     await page.getByPlaceholder("印象的なタイトルを...").fill("二重送信テスト");
     await page.getByRole("button", { name: "保存して更新" }).click();

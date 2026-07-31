@@ -130,7 +130,8 @@ describe("Page（FE 統合）", () => {
       expect(screen.getByRole("heading", { name: "React入門" })).toBeInTheDocument(),
     );
 
-    fireEvent.click(screen.getByRole("heading", { name: "React入門" }));
+    // カードの遷移操作は見出し内の button（キーボード操作可能）が担う。
+    fireEvent.click(screen.getByRole("button", { name: "React入門" }));
 
     // VideoDetail へ遷移（level 1 見出し + YouTube リンク）
     expect(screen.getByRole("heading", { name: "React入門", level: 1 })).toBeInTheDocument();

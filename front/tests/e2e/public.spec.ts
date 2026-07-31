@@ -1,6 +1,17 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { baseVideos, type MockVideo } from "./helpers";
 import { seedVideos, disconnectDb } from "./db";
+
+/**
+ * ページャ内のボタンだけを指す locator を返す。
+ * カードのタイトルも button になったため、ページ番号をページ全体から引くと
+ * 「ページング動画 2」のようなタイトルと部分一致して strict mode 違反になる。
+ * @param page Playwright のページ
+ * @param name ボタンのアクセシブル名（ページ番号 / 前へ / 次へ）
+ * @returns ページ送りナビゲーション内に限定した button locator
+ */
+const pagerButton = (page: Page, name: string) =>
+  page.getByRole("navigation", { name: "ページ送り" }).getByRole("button", { name, exact: true });
 
 // 公開フローは実テスト DB を seed し、ブラウザ → 実 route → Prisma → Postgres を通して検証する。
 // 500 / timeout の FE エラーテストのみ、意図的に壊れた応答を作るため network をモックする。
@@ -20,7 +31,7 @@ test.describe("normal flows", () => {
     await expect(page.getByRole("heading", { name: "コレクション" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "React 2024 完全ガイド" })).toBeVisible();
 
-    await page.getByRole("heading", { name: "React 2024 完全ガイド" }).click();
+    await page.getByRole("button", { name: "React 2024 完全ガイド" }).click();
 
     await expect(
       page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 }),
@@ -32,6 +43,30 @@ test.describe("normal flows", () => {
 
     await page.getByRole("button", { name: "コレクションへ" }).click();
     await expect(page.getByRole("heading", { name: "コレクション" })).toBeVisible();
+  });
+
+  test("navigates to detail with keyboard only", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "コレクション" })).toBeVisible();
+
+    // マウスを使わず、カードのタイトル button へ Tab で到達して Enter で開けることを検証する。
+    const card = page.getByRole("button", { name: "React 2024 完全ガイド" });
+    await card.focus();
+    await expect(card).toBeFocused();
+    await page.keyboard.press("Enter");
+
+    await expect(
+      page.getByRole("heading", { name: "React 2024 完全ガイド", level: 1 }),
+    ).toBeVisible();
+  });
+
+  test("exposes accessible names for list controls", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.getByRole("searchbox", { name: "キーワード検索" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "並び替え" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "ページ送り" })).toBeVisible();
+    await expect(page.locator('[aria-current="page"]')).toHaveText("1");
   });
 
   test("filters videos by search", async ({ page }) => {
@@ -80,9 +115,9 @@ test("supports pagination with 10 items per page", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.locator("h3")).toHaveCount(10);
-  await expect(page.getByRole("button", { name: "2" })).toBeVisible();
+  await expect(pagerButton(page, "2")).toBeVisible();
 
-  await page.getByRole("button", { name: "2" }).click();
+  await pagerButton(page, "2").click();
 
   await expect(page.getByText("2 / 2")).toBeVisible();
   await expect(page.locator("h3")).toHaveCount(1);
@@ -107,16 +142,16 @@ test("shows at most five page number buttons", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByText("1 / 7")).toBeVisible();
-  await expect(page.getByRole("button", { name: "1" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "5" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "6" })).toHaveCount(0);
+  await expect(pagerButton(page, "1")).toBeVisible();
+  await expect(pagerButton(page, "5")).toBeVisible();
+  await expect(pagerButton(page, "6")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "5" }).click();
+  await pagerButton(page, "5").click();
 
   await expect(page.getByText("5 / 7")).toBeVisible();
-  await expect(page.getByRole("button", { name: "3" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "7" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "2" })).toHaveCount(0);
+  await expect(pagerButton(page, "3")).toBeVisible();
+  await expect(pagerButton(page, "7")).toBeVisible();
+  await expect(pagerButton(page, "2")).toHaveCount(0);
 });
 
 test("resets to first page when sort option changes", async ({ page }) => {
@@ -137,7 +172,7 @@ test("resets to first page when sort option changes", async ({ page }) => {
   await seedVideos(paginationVideos);
   await page.goto("/");
 
-  await page.getByRole("button", { name: "2" }).click();
+  await pagerButton(page, "2").click();
   await expect(page.getByText("2 / 2")).toBeVisible();
   await expect(page.locator("h3")).toHaveCount(1);
 

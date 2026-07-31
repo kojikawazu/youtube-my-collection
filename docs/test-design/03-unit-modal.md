@@ -7,6 +7,7 @@
   - [正常系](#正常系)
   - [準正常系](#準正常系)
   - [異常系](#異常系)
+  - [アクセシビリティ（キーボード / ARIA）](#アクセシビリティキーボード--aria)
 - [テスト構成](#テスト構成)
   - [ユニットテスト](#ユニットテスト)
 - [対象外コンポーネントについて](#対象外コンポーネントについて)
@@ -48,6 +49,18 @@
 |---|---|---|---|---|---|
 | A-1 | onConfirm が例外 → isSubmitting が false に戻る（再操作可能） | onConfirm が throw | `isSubmitting` が false に戻り、確認ボタンが再び有効 | Unit | High |
 
+### アクセシビリティ（キーボード / ARIA）
+
+| # | テストケース | 入力 | 期待結果 | テスト種別 | 優先度 |
+|---|---|---|---|---|---|
+| Y-1 | dialog として公開され、title/message が名前・説明になる | `isOpen=true` | `role="dialog"` / `aria-modal="true"`、アクセシブル名 = title、説明 = message | Unit | High |
+| Y-2 | 開いたらダイアログ内へフォーカスが移る | `isOpen=true` | 確認ボタンがフォーカスされる | Unit | High |
+| Y-3 | 閉じたら開く前の要素へフォーカスが戻る | open → close | 直前にフォーカスしていた要素が再びフォーカスされる | Unit | High |
+| Y-4 | Escape で閉じる | Escape キー | `onClose` が 1 回呼ばれる | Unit | High |
+| Y-5 | Tab が末尾から先頭へ循環する | キャンセルにフォーカス → Tab | 確認ボタンへフォーカスが移る | Unit | High |
+| Y-6 | Shift+Tab が先頭から末尾へ循環する | 確認にフォーカス → Shift+Tab | キャンセルボタンへフォーカスが移る | Unit | High |
+| Y-7 | 送信中の Escape では閉じない | onConfirm が pending 中に Escape | `onClose` は呼ばれない | Unit | Medium |
+
 ## テスト構成
 
 ### ユニットテスト
@@ -59,6 +72,8 @@
   - `lucide-react` → モック不要（SVG として描画される）
 
 ## 対象外コンポーネントについて
+
+> 補足: `VideoCard.tsx` / `Pagination.tsx` の UT は現在 [`06-unit-organisms.md`](./06-unit-organisms.md) で設計している。以下は本ファイル作成時点（06 追加前）の判断の記録。
 
 `VideoCard.tsx`、`Pagination.tsx` はデータ表示のみのシンプルな props → JSX マッピングであり、
 複雑なロジック（副作用・状態管理・外部 I/O）がない。

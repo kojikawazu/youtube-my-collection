@@ -12,7 +12,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
     <div className="group relative">
       <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-red-300 transition-colors group-focus-within:text-red-500" />
       <input
-        type="text"
+        type="search"
+        aria-label="キーワード検索"
         placeholder="キーワードを検索..."
         value={value}
         onChange={(e) => onChange(e.target.value)}

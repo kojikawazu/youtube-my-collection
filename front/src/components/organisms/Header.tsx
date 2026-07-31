@@ -12,12 +12,16 @@ type HeaderProps = {
 export const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLogin, onLogoClick }) => {
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-red-50 bg-white/70 px-6 py-4 backdrop-blur-xl">
-      <div onClick={onLogoClick} className="group flex cursor-pointer items-center gap-2">
+      <button
+        type="button"
+        onClick={onLogoClick}
+        className="group flex cursor-pointer items-center gap-2"
+      >
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500 shadow-lg shadow-red-200 transition-transform group-hover:scale-110">
           <Youtube className="h-5 w-5 text-white" />
         </div>
         <span className="text-xl font-bold tracking-tight text-red-950">MyYouTubeHub</span>
-      </div>
+      </button>
 
       <div className="flex items-center gap-4">
         {isAdmin ? (
