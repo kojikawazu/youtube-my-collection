@@ -25,6 +25,17 @@ const postReq = (body: unknown, headers: Record<string, string> = {}) =>
     body: JSON.stringify(body),
   });
 
+// 同値データの並び順検証用に固定した id（昇順）。挿入順と期待順（id 降順）を意図的に逆にするため、
+// ランダムな uuid ではなく固定値を使う。
+const SAME_VALUE_IDS = [
+  "00000000-0000-4000-8000-000000000001",
+  "00000000-0000-4000-8000-000000000002",
+  "00000000-0000-4000-8000-000000000003",
+  "00000000-0000-4000-8000-000000000004",
+  "00000000-0000-4000-8000-000000000005",
+  "00000000-0000-4000-8000-000000000006",
+];
+
 const validBody = {
   youtubeUrl: "https://youtu.be/newvideo",
   title: "新しい動画",
@@ -82,6 +93,119 @@ describe("GET /api/videos (公開・実 DB)", () => {
     const res = await GET(getReq("?sort=rating&order=desc"));
     const body = await res.json();
     expect(body.map((v: { rating: number }) => v.rating)).toEqual([5, 3, 1]);
+  });
+
+  it("同じ rating が並んでもページ 1・2 が id 降順の全順序どおりで、重複・欠落が起きない", async () => {
+    // 全件を同一 rating・同一 createdAt にして、タイブレーカーが無いと順序が定まらない状態を作る。
+    // id は固定値を昇順で挿入する。挿入順と期待順（id 降順）が逆になるため、
+    // タイブレーカーが無い実装（挿入順で返る）ではこのテストが落ちる。
+    const sameTime = new Date("2024-03-01T00:00:00.000Z");
+    for (let i = 0; i < 6; i++) {
+      await seedVideo({
+        id: SAME_VALUE_IDS[i],
+        title: `同値 ${i}`,
+        rating: 3,
+        createdAt: sameTime,
+      });
+    }
+
+    const firstIds = (
+      await (await GET(getReq("?sort=rating&order=desc&limit=3&offset=0"))).json()
+    ).map((v: { id: string }) => v.id);
+    const secondIds = (
+      await (await GET(getReq("?sort=rating&order=desc&limit=3&offset=3"))).json()
+    ).map((v: { id: string }) => v.id);
+
+    const expected = [...SAME_VALUE_IDS].reverse();
+    expect(firstIds).toEqual(expected.slice(0, 3));
+    expect(secondIds).toEqual(expected.slice(3));
+    // 重複なし かつ 合計 6 件＝欠落なし
+    expect(new Set([...firstIds, ...secondIds]).size).toBe(6);
+  });
+
+  it("同値データでも同じリクエストを繰り返すと同じ順序になる", async () => {
+    const sameTime = new Date("2024-03-01T00:00:00.000Z");
+    for (let i = 0; i < 5; i++) {
+      await seedVideo({
+        id: SAME_VALUE_IDS[i],
+        title: `再現性 ${i}`,
+        rating: 4,
+        createdAt: sameTime,
+      });
+    }
+
+    const query = "?sort=rating&order=desc";
+    const firstIds = (await (await GET(getReq(query))).json()).map((v: { id: string }) => v.id);
+    const secondIds = (await (await GET(getReq(query))).json()).map((v: { id: string }) => v.id);
+    const thirdIds = (await (await GET(getReq(query))).json()).map((v: { id: string }) => v.id);
+
+    expect(secondIds).toEqual(firstIds);
+    expect(thirdIds).toEqual(firstIds);
+  });
+
+  it("sort=published では publishDate 未設定（null）が order に関わらず末尾に並ぶ", async () => {
+    await seedVideo({ title: "未設定", publishDate: null });
+    await seedVideo({ title: "古い公開", publishDate: new Date("2024-01-01T00:00:00.000Z") });
+    await seedVideo({ title: "新しい公開", publishDate: new Date("2024-06-01T00:00:00.000Z") });
+
+    const desc = await (await GET(getReq("?sort=published&order=desc"))).json();
+    expect(desc.map((v: { title: string }) => v.title)).toEqual([
+      "新しい公開",
+      "古い公開",
+      "未設定",
+    ]);
+
+    const asc = await (await GET(getReq("?sort=published&order=asc"))).json();
+    expect(asc.map((v: { title: string }) => v.title)).toEqual([
+      "古い公開",
+      "新しい公開",
+      "未設定",
+    ]);
+  });
+
+  it("publishDate が全件 null でもページ境界が id 降順で確定し、重複・欠落が起きない", async () => {
+    const sameTime = new Date("2024-03-01T00:00:00.000Z");
+    for (let i = 0; i < 4; i++) {
+      await seedVideo({
+        id: SAME_VALUE_IDS[i],
+        title: `null 公開日 ${i}`,
+        publishDate: null,
+        createdAt: sameTime,
+      });
+    }
+
+    const ids = [
+      ...(await (await GET(getReq("?sort=published&order=desc&limit=2&offset=0"))).json()).map(
+        (v: { id: string }) => v.id,
+      ),
+      ...(await (await GET(getReq("?sort=published&order=desc&limit=2&offset=2"))).json()).map(
+        (v: { id: string }) => v.id,
+      ),
+    ];
+
+    expect(ids).toEqual([...SAME_VALUE_IDS.slice(0, 4)].reverse());
+    expect(new Set(ids).size).toBe(4);
+  });
+
+  it("order を反転すると同値データでも並びが完全な逆順になる", async () => {
+    const sameTime = new Date("2024-03-01T00:00:00.000Z");
+    for (let i = 0; i < 4; i++) {
+      await seedVideo({
+        id: SAME_VALUE_IDS[i],
+        title: `逆順 ${i}`,
+        rating: 2,
+        createdAt: sameTime,
+      });
+    }
+
+    const descIds = (await (await GET(getReq("?sort=rating&order=desc"))).json()).map(
+      (v: { id: string }) => v.id,
+    );
+    const ascIds = (await (await GET(getReq("?sort=rating&order=asc"))).json()).map(
+      (v: { id: string }) => v.id,
+    );
+
+    expect(ascIds).toEqual([...descIds].reverse());
   });
 
   it("q でタイトル部分一致（大文字小文字を無視）する", async () => {
