@@ -19,7 +19,6 @@ export const VideoCard: React.FC<VideoCardProps> = ({ video, isAdmin, onClick, o
     <motion.div
       layout
       key={video.id}
-      onClick={() => onClick(video)}
       className="group relative flex cursor-pointer flex-col overflow-hidden rounded-[2rem] border border-red-50/50 bg-white shadow-sm transition-all hover:border-red-100 hover:shadow-2xl hover:shadow-red-500/10"
     >
       <div className="relative aspect-video overflow-hidden">
@@ -45,8 +44,19 @@ export const VideoCard: React.FC<VideoCardProps> = ({ video, isAdmin, onClick, o
         )}
       </div>
       <div className="flex flex-1 flex-col p-6">
-        <h3 className="mb-3 line-clamp-2 text-lg leading-tight font-bold text-red-950 transition-colors group-hover:text-red-500">
-          {video.title}
+        <h3 className="mb-3 text-lg leading-tight font-bold text-red-950 transition-colors group-hover:text-red-500">
+          {/*
+            カード全体を button にすると削除ボタンが入れ子インタラクティブ要素になり不正な DOM になる。
+            そのためタイトルのみを button とし、疑似要素 after でカード全面へ当たり判定を広げる
+            （stretched link パターン）。削除ボタンは z-10 のため疑似要素より上に残る。
+          */}
+          <button
+            type="button"
+            onClick={() => onClick(video)}
+            className="line-clamp-2 text-left after:absolute after:inset-0 after:rounded-[2rem] after:content-[''] focus-visible:outline-none focus-visible:after:ring-4 focus-visible:after:ring-red-200"
+          >
+            {video.title}
+          </button>
         </h3>
         <div className="mb-4">
           <TagList tags={video.tags} size="sm" />

@@ -130,4 +130,70 @@ describe("Modal", () => {
     });
     expect(screen.getByRole("button", { name: "実行" })).not.toBeDisabled();
   });
+
+  // --- アクセシビリティ（キーボード / ARIA） ---
+
+  it("should expose dialog semantics labelled by title and described by message", () => {
+    render(<Modal {...defaultProps} />);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveAccessibleName("確認");
+    expect(dialog).toHaveAccessibleDescription("実行しますか？");
+  });
+
+  it("should move focus into the dialog when opened", () => {
+    render(<Modal {...defaultProps} />);
+    expect(screen.getByRole("button", { name: "実行" })).toHaveFocus();
+  });
+
+  it("should return focus to the previously focused element when closed", () => {
+    const trigger = document.createElement("button");
+    document.body.appendChild(trigger);
+    trigger.focus();
+
+    const { rerender } = render(<Modal {...defaultProps} />);
+    expect(trigger).not.toHaveFocus();
+    rerender(<Modal {...defaultProps} isOpen={false} />);
+    expect(trigger).toHaveFocus();
+
+    trigger.remove();
+  });
+
+  it("should call onClose when Escape is pressed", () => {
+    const onClose = vi.fn();
+    render(<Modal {...defaultProps} onClose={onClose} />);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("should wrap focus from the last element to the first on Tab", () => {
+    render(<Modal {...defaultProps} />);
+    const cancel = screen.getByRole("button", { name: "キャンセル" });
+    cancel.focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(screen.getByRole("button", { name: "実行" })).toHaveFocus();
+  });
+
+  it("should wrap focus from the first element to the last on Shift+Tab", () => {
+    render(<Modal {...defaultProps} />);
+    screen.getByRole("button", { name: "実行" }).focus();
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(screen.getByRole("button", { name: "キャンセル" })).toHaveFocus();
+  });
+
+  it("should not call onClose on Escape while submitting", async () => {
+    let resolveConfirm!: () => void;
+    const onConfirm = vi.fn().mockReturnValue(
+      new Promise<void>((res) => {
+        resolveConfirm = res;
+      }),
+    );
+    const onClose = vi.fn();
+    render(<Modal {...defaultProps} onConfirm={onConfirm} onClose={onClose} />);
+    fireEvent.click(screen.getByRole("button", { name: "実行" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "処理中..." })).toBeDisabled());
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+    resolveConfirm();
+  });
 });

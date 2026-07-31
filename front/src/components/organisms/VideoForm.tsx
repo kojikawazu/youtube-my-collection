@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import { Tag } from "lucide-react";
 import type { VideoItem, Category } from "@/types";
 import type { ValidationErrors } from "@/types/validation";
@@ -24,6 +24,21 @@ export const VideoForm: React.FC<VideoFormProps> = ({
   onSave,
   onCancel,
 }) => {
+  // 同一ページに複数フォームが並んでも id が衝突しないよう、React が発行する一意な接頭辞を使う。
+  const formId = useId();
+  /**
+   * フィールドの入力欄 id を組み立てる。label の htmlFor と対で使う。
+   * @param key フィールドを識別するキー（VideoItem のプロパティ名）
+   * @returns 入力欄に付与する一意な id
+   */
+  const fieldId = (key: string) => `${formId}-${key}`;
+  /**
+   * フィールドのエラー文 id を組み立てる。入力欄の aria-describedby と対で使う。
+   * @param key フィールドを識別するキー（VideoItem のプロパティ名）
+   * @returns エラー文に付与する一意な id
+   */
+  const errorId = (key: string) => `${formId}-${key}-error`;
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-10 text-center">
@@ -39,11 +54,19 @@ export const VideoForm: React.FC<VideoFormProps> = ({
           { label: "YouTube URL", key: "youtubeUrl", placeholder: "https://...", type: "text" },
         ].map((field) => (
           <div key={field.key} className="space-y-2.5">
-            <label className="ml-1 text-[10px] font-black tracking-widest text-red-800 uppercase">
+            <label
+              htmlFor={fieldId(field.key)}
+              className="ml-1 block text-[10px] font-black tracking-widest text-red-800 uppercase"
+            >
               {field.label}
             </label>
             <input
+              id={fieldId(field.key)}
               type={field.type}
+              aria-invalid={Boolean(formErrors[field.key as keyof ValidationErrors])}
+              aria-describedby={
+                formErrors[field.key as keyof ValidationErrors] ? errorId(field.key) : undefined
+              }
               value={(formData[field.key as keyof VideoItem] as string) || ""}
               onChange={(e) => {
                 onFormChange({ ...formData, [field.key]: e.target.value });
@@ -59,7 +82,11 @@ export const VideoForm: React.FC<VideoFormProps> = ({
               }`}
             />
             {formErrors[field.key as keyof ValidationErrors] && (
-              <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30">
+              <p
+                id={errorId(field.key)}
+                role="alert"
+                className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30"
+              >
                 {formErrors[field.key as keyof ValidationErrors]}
               </p>
             )}
@@ -68,10 +95,16 @@ export const VideoForm: React.FC<VideoFormProps> = ({
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
           <div className="space-y-2.5">
-            <label className="ml-1 text-[10px] font-black tracking-widest text-red-800 uppercase">
+            <label
+              htmlFor={fieldId("category")}
+              className="ml-1 block text-[10px] font-black tracking-widest text-red-800 uppercase"
+            >
               カテゴリー
             </label>
             <select
+              id={fieldId("category")}
+              aria-invalid={Boolean(formErrors.category)}
+              aria-describedby={formErrors.category ? errorId("category") : undefined}
               value={formData.category}
               onChange={(e) => {
                 onFormChange({ ...formData, category: e.target.value as Category });
@@ -92,19 +125,35 @@ export const VideoForm: React.FC<VideoFormProps> = ({
               ))}
             </select>
             {formErrors.category && (
-              <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30">
+              <p
+                id={errorId("category")}
+                role="alert"
+                className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30"
+              >
                 {formErrors.category}
               </p>
             )}
           </div>
           <div className="space-y-2.5">
-            <label className="ml-1 text-[10px] font-black tracking-widest text-red-800 uppercase">
+            {/* 評価は input ではなくボタン群のため、label ではなく role="group" でまとめて名前を与える。 */}
+            <span
+              id={fieldId("rating")}
+              className="ml-1 block text-[10px] font-black tracking-widest text-red-800 uppercase"
+            >
               評価
-            </label>
-            <div className="flex h-[60px] items-center gap-3">
+            </span>
+            <div
+              role="group"
+              aria-labelledby={fieldId("rating")}
+              aria-describedby={formErrors.rating ? errorId("rating") : undefined}
+              className="flex h-[60px] items-center gap-3"
+            >
               {[1, 2, 3, 4, 5].map((num) => (
                 <button
                   key={num}
+                  type="button"
+                  aria-label={`評価 ${num}`}
+                  aria-pressed={formData.rating === num}
                   onClick={() => {
                     onFormChange({ ...formData, rating: num });
                     if (formErrors.rating) {
@@ -122,7 +171,11 @@ export const VideoForm: React.FC<VideoFormProps> = ({
               ))}
             </div>
             {formErrors.rating && (
-              <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30">
+              <p
+                id={errorId("rating")}
+                role="alert"
+                className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30"
+              >
                 {formErrors.rating}
               </p>
             )}
@@ -130,13 +183,22 @@ export const VideoForm: React.FC<VideoFormProps> = ({
         </div>
 
         <div className="space-y-2.5">
-          <label className="ml-1 text-[10px] font-black tracking-widest text-red-800 uppercase">
+          <label
+            htmlFor={fieldId("tags")}
+            className="ml-1 block text-[10px] font-black tracking-widest text-red-800 uppercase"
+          >
             タグ (カンマ区切り)
           </label>
           <div className="relative">
-            <Tag className="absolute top-1/2 left-5 h-4 w-4 -translate-y-1/2 text-red-200" />
+            <Tag
+              aria-hidden="true"
+              className="absolute top-1/2 left-5 h-4 w-4 -translate-y-1/2 text-red-200"
+            />
             <input
+              id={fieldId("tags")}
               type="text"
+              aria-invalid={Boolean(formErrors.tags)}
+              aria-describedby={formErrors.tags ? errorId("tags") : undefined}
               value={formData.tags?.join(", ") || ""}
               onChange={(e) => {
                 onFormChange({
@@ -159,7 +221,11 @@ export const VideoForm: React.FC<VideoFormProps> = ({
             />
           </div>
           {formErrors.tags && (
-            <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30">
+            <p
+              id={errorId("tags")}
+              role="alert"
+              className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30"
+            >
               {formErrors.tags}
             </p>
           )}
@@ -167,10 +233,18 @@ export const VideoForm: React.FC<VideoFormProps> = ({
 
         {["goodPoints", "memo"].map((key) => (
           <div key={key} className="space-y-2.5">
-            <label className="ml-1 text-[10px] font-black tracking-widest text-red-800 uppercase">
+            <label
+              htmlFor={fieldId(key)}
+              className="ml-1 block text-[10px] font-black tracking-widest text-red-800 uppercase"
+            >
               {key === "goodPoints" ? "良かったポイント" : "メモ"}
             </label>
             <textarea
+              id={fieldId(key)}
+              aria-invalid={Boolean(formErrors[key as keyof ValidationErrors])}
+              aria-describedby={
+                formErrors[key as keyof ValidationErrors] ? errorId(key) : undefined
+              }
               rows={key === "goodPoints" ? 4 : 3}
               value={(formData[key as keyof VideoItem] as string) || ""}
               onChange={(e) => {
@@ -191,12 +265,20 @@ export const VideoForm: React.FC<VideoFormProps> = ({
               }`}
             />
             {key === "goodPoints" && formErrors.goodPoints && (
-              <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30">
+              <p
+                id={errorId("goodPoints")}
+                role="alert"
+                className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30"
+              >
                 {formErrors.goodPoints}
               </p>
             )}
             {key === "memo" && formErrors.memo && (
-              <p className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30">
+              <p
+                id={errorId("memo")}
+                role="alert"
+                className="mt-3 rounded-xl border border-red-400 bg-red-200 px-4 py-2 text-sm font-black text-red-900 shadow-md shadow-red-300/30"
+              >
                 {formErrors.memo}
               </p>
             )}
@@ -205,12 +287,14 @@ export const VideoForm: React.FC<VideoFormProps> = ({
 
         <div className="flex flex-col gap-4 pt-10 sm:flex-row">
           <button
+            type="button"
             onClick={onSave}
             className="flex-1 rounded-[2rem] bg-red-950 py-5 font-bold text-white shadow-2xl shadow-red-950/20 transition-all hover:-translate-y-1 hover:bg-black"
           >
             保存して更新
           </button>
           <button
+            type="button"
             onClick={onCancel}
             className="flex-1 rounded-[2rem] border border-red-100 bg-white py-5 font-bold text-red-400 transition-all hover:bg-red-50"
           >

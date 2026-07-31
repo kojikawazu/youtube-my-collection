@@ -10,6 +10,7 @@ type SortSelectProps = {
 export const SortSelect: React.FC<SortSelectProps> = ({ value, onChange }) => {
   return (
     <select
+      aria-label="並び替え"
       value={value}
       onChange={(e) => onChange(e.target.value as SortOption)}
       className="rounded-2xl border border-red-100 bg-white px-4 py-2.5 text-sm font-medium text-red-900 shadow-sm outline-none focus:ring-4 focus:ring-red-50"

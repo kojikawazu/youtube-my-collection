@@ -71,6 +71,7 @@
 - サムネ中心のカード UI で視認性を重視
 - 薄赤のライトテーマで目に優しい体験
 - モバイル/デスクトップ両対応
+- **キーボードと支援技術だけでも全操作を完結できる**（操作要素は native `button` / `a`、モーダルは dialog セマンティクス + フォーカストラップ）。詳細は [`04-non-functional-specification.md`](./04-non-functional-specification.md) の「アクセシビリティ要件」
 
 ### ビジュアルトーン
 

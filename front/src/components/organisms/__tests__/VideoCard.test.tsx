@@ -68,6 +68,17 @@ describe("VideoCard", () => {
     expect(onDelete).toHaveBeenCalledWith("v1", "テスト動画", expect.anything());
   });
 
+  it("タイトルは button として公開され、キーボード操作で onClick を呼べる", () => {
+    const onClick = vi.fn();
+    render(<VideoCard video={video} isAdmin={false} onClick={onClick} onDelete={vi.fn()} />);
+    const trigger = screen.getByRole("button", { name: "テスト動画" });
+    trigger.focus();
+    expect(trigger).toHaveFocus();
+    // button は Enter/Space が click に変換されるため、click 発火で keyboard 操作可能性を検証する。
+    fireEvent.click(trigger);
+    expect(onClick).toHaveBeenCalledWith(video);
+  });
+
   // --- 準正常系 ---
 
   it("非管理者では削除ボタンを表示しない", () => {

@@ -48,7 +48,7 @@ describe("VideoForm", () => {
   it("評価ボタンで onFormChange に rating を渡す", () => {
     const onFormChange = vi.fn();
     render(<VideoForm {...baseProps} onFormChange={onFormChange} />);
-    fireEvent.click(screen.getByRole("button", { name: "5" }));
+    fireEvent.click(screen.getByRole("button", { name: "評価 5" }));
     expect(onFormChange).toHaveBeenCalledWith(expect.objectContaining({ rating: 5 }));
   });
 
@@ -76,5 +76,39 @@ describe("VideoForm", () => {
       target: { value: "x" },
     });
     expect(onErrorClear).toHaveBeenCalledWith("title");
+  });
+
+  // --- アクセシビリティ（ラベル / ARIA） ---
+
+  it("すべての入力コントロールにラベルを関連付ける", () => {
+    render(<VideoForm {...baseProps} />);
+    expect(screen.getByLabelText("タイトル")).toBeInTheDocument();
+    expect(screen.getByLabelText("YouTube URL")).toBeInTheDocument();
+    expect(screen.getByLabelText("カテゴリー")).toBeInTheDocument();
+    expect(screen.getByLabelText("タグ (カンマ区切り)")).toBeInTheDocument();
+    expect(screen.getByLabelText("良かったポイント")).toBeInTheDocument();
+    expect(screen.getByLabelText("メモ")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "評価" })).toBeInTheDocument();
+  });
+
+  it("エラー時は入力欄に aria-invalid とエラー文の説明を関連付ける", () => {
+    render(<VideoForm {...baseProps} formErrors={{ title: "タイトルは必須です。" }} />);
+    const input = screen.getByLabelText("タイトル");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAccessibleDescription("タイトルは必須です。");
+    expect(screen.getByRole("alert")).toHaveTextContent("タイトルは必須です。");
+  });
+
+  it("エラーが無いときは aria-invalid を false にし説明を関連付けない", () => {
+    render(<VideoForm {...baseProps} />);
+    const input = screen.getByLabelText("タイトル");
+    expect(input).toHaveAttribute("aria-invalid", "false");
+    expect(input).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("選択中の評価ボタンだけ aria-pressed が true になる", () => {
+    render(<VideoForm {...baseProps} />);
+    expect(screen.getByRole("button", { name: "評価 3" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "評価 4" })).toHaveAttribute("aria-pressed", "false");
   });
 });
