@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/lib/validation";
 import type { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-server";
-import { toVideoItem } from "@/lib/videos";
+import { buildVideoOrderBy, toVideoItem } from "@/lib/videos";
 
 /**
  * クエリ文字列を整数へ変換する。未指定/不正値は `fallback`、範囲外は min/max にクランプする。
@@ -45,12 +45,7 @@ export async function GET(request: NextRequest) {
   const offset = parseNumber(searchParams.get("offset"), 0, { min: 0 });
 
   const sortOrder: Prisma.SortOrder = order === "asc" ? "asc" : "desc";
-  const orderBy =
-    sort === "rating"
-      ? { rating: sortOrder }
-      : sort === "published"
-        ? { publishDate: sortOrder }
-        : { createdAt: sortOrder };
+  const orderBy = buildVideoOrderBy(sort, sortOrder);
 
   const where: Prisma.VideoEntryWhereInput = {
     ...(tag ? { tags: { has: tag } } : {}),

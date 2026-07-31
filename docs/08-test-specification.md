@@ -16,7 +16,7 @@
 
 | レイヤー | ツール | 対象 |
 |----------|--------|------|
-| ユニット | Vitest + @testing-library/react | `lib/validation.ts`、各フック、主要コンポーネント（atoms/molecules/organisms）、Route Handler の認可単体（`auth/admin`・`openapi.json`） |
+| ユニット | Vitest + @testing-library/react | `lib/validation.ts`、`lib/videos.ts`（並び順の組み立て）、各フック、主要コンポーネント（atoms/molecules/organisms）、Route Handler の認可単体（`auth/admin`・`openapi.json`） |
 | FE 統合 | Vitest（jsdom）+ @testing-library/react | `app/page.tsx` の画面遷移・フック→コンポーネント配線（I/O のみモック、実フック＋実コンポーネント） |
 | 結合（IT） | Vitest（node）+ 実 Prisma + PostgreSQL | `api/videos*` の Route Handler を実 DB で実行（認可・ページング・検索・部分更新・DB マッピング） |
 | E2E | Playwright | 公開フロー（`public.spec.ts`）、管理者フロー（`admin.spec.ts`） |
@@ -77,6 +77,7 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 - カスタムフック: [`test-design/02-unit-hooks.md`](./test-design/02-unit-hooks.md)
 - Modal コンポーネント: [`test-design/03-unit-modal.md`](./test-design/03-unit-modal.md)
 - 主要コンポーネント（atoms/molecules/organisms）: [`test-design/06-unit-organisms.md`](./test-design/06-unit-organisms.md)
+- 一覧の並び順組み立て（`lib/videos.ts` の `buildVideoOrderBy`）: `front/src/lib/__tests__/videos.test.ts`。sort ごとの ORDER BY・`order` のタイブレーカーへの伝播・`publishDate` の NULL 位置・末尾が必ず主キー `id` になることを検証する（仕様は [`07-api-specification.md`](./07-api-specification.md)）
 
 ## CI（GitHub Actions）
 

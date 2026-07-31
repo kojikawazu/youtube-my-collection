@@ -39,6 +39,19 @@
     - `x-total-count`: 検索条件に一致した総件数
     - `x-limit`: 実際に適用した `limit`
     - `x-offset`: 実際に適用した `offset`
+  - 並び順（**offset ページングのため一意に確定させる**）:
+
+    | sort | ORDER BY |
+    |---|---|
+    | `rating` | `rating` → `createdAt` → `id` |
+    | `published` | `publishDate`（**NULL は常に末尾**） → `createdAt` → `id` |
+    | `added`（既定・未知の値） | `createdAt` → `id` |
+
+    - **タイブレーカー（`createdAt` / `id`）は必ず付ける。** ORDER BY が一意でないと、同値行の順序が実行ごとに変わり、`limit`/`offset` のページ間で**重複・欠落**が起きる。`id` は主キーのため、これを最後に置くことで順序が一意に確定する。
+    - タイブレーカーも `order` と同じ方向に並べる。したがって **`order` を反転させると結果は完全な逆順**になる。
+    - `publishDate` は未設定（`null`）を取り得る。Postgres の既定は `ASC` で末尾・`DESC` で先頭と向きによって変わるため、**`nulls: "last"` を明示して「未設定は常に末尾」で固定**する。
+    - 実装は `front/src/lib/videos.ts` の `buildVideoOrderBy`（Route Handler では組み立てない）。
+
   - 備考:
     - レスポンス本文は後方互換のため `VideoItem[]` を維持
     - `x-total-count` は同一条件の件数クエリで算出する

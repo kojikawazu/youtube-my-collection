@@ -73,6 +73,7 @@
 ## 将来課題（Step B）
 
 - Prisma `select` で一覧取得から `goodPoints` / `memo` を除外
+- 一覧の並び順は一意化のため複合キー（例: `rating` → `createdAt` → `id`）になっている（[`07-api-specification.md`](./07-api-specification.md)）。現在の単一列インデックスでは後半のキーがインデックスで解決されないため、**件数が増えてソートが遅くなった場合は複合インデックスの追加を検討する**
 - 詳細遷移時に `GET /api/videos/:id` を個別 fetch（データフロー変更が必要）
 
 > タスク管理は [`11-tasks.md`](./11-tasks.md) を参照。
