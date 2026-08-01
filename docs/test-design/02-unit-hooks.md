@@ -12,6 +12,7 @@
   - [正常系](#正常系-2)
   - [準正常系](#準正常系-1)
   - [異常系](#異常系)
+  - [競合状態（レスポンスの到着順が逆転するケース）](#競合状態レスポンスの到着順が逆転するケース)
 - [useVideoForm](#usevideoform)
   - [正常系](#正常系-3)
   - [準正常系](#準正常系-2)
@@ -105,6 +106,18 @@
 | A-1 | fetch がネットワーク例外 → loadError セット | fetch が throw | `loadError === "データの取得に失敗しました。"` | High |
 | A-2 | deleteVideo API 失敗 → エラーをスロー | DELETE fetch モック（500） | `deleteVideo` が throw する | High |
 
+### 競合状態（レスポンスの到着順が逆転するケース）
+
+完了タイミングをテストから制御できる fetch モック（`controlledFetch`）で、意図的に到着順を逆転させる。
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| R-1 | 古いリクエストが後から完了しても最新結果を上書きしない | 2 件目を先に resolve → 1 件目を後から resolve | `videos` / `totalCount` は 2 件目の結果のまま | High |
+| R-2 | 古いリクエストの完了で最新のローディングを解除しない | 1 件目だけ resolve | `isLoading === true` を維持し、2 件目の完了で false | High |
+| R-3 | 中止された古いリクエストの失敗を利用者向けエラーにしない | 1 件目を AbortError で reject | `loadError === null` | High |
+| R-4 | 新しいリクエスト開始時に進行中の通信を中止する | `setCurrentPage(2)` | 1 件目の `AbortSignal.aborted === true` | Medium |
+| R-5 | アンマウント時に進行中の通信を中止する | `unmount()` | `AbortSignal.aborted === true` | Medium |
+
 ---
 
 ## useVideoForm
@@ -179,6 +192,7 @@
   - `supabase` → `vi.mock("@/lib/supabase/client")`
   - `@/lib/auth` (signInWithGoogle, signOut) → `vi.mock("@/lib/auth")`
 - タイマー: `vi.useFakeTimers()` で useToast / useVideos のデバウンス制御
+- 完了順の制御: `controlledFetch()` が「呼ばれるたびに未解決の Promise を返す」fetch を差し替える。テストから任意の順で resolve / reject し、レスポンスの到着順逆転を再現する
 
 ## モック方針
 

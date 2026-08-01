@@ -30,6 +30,52 @@ const mockFetch = (body: VideoItem[], totalCount: number, status = 200) => {
   );
 };
 
+/** テスト側が完了タイミングを制御できる 1 リクエスト分のハンドル。 */
+type PendingRequest = {
+  /** 成功として完了させる。 */
+  resolve: (payload: { body: VideoItem[]; totalCount: number }) => void;
+  /** 失敗として完了させる。 */
+  reject: (error: unknown) => void;
+};
+
+/**
+ * fetch を「呼ばれるたびに未解決の Promise を返す」形に差し替え、完了順をテストから操作できるようにする。
+ * レスポンスの到着順を意図的に逆転させて競合状態を再現するために使う。
+ * @returns 呼び出し順に積まれるリクエストハンドルの配列
+ */
+const controlledFetch = (): PendingRequest[] => {
+  const pending: PendingRequest[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      () =>
+        new Promise((resolve, reject) => {
+          pending.push({
+            resolve: ({ body, totalCount }) =>
+              resolve({
+                ok: true,
+                status: 200,
+                headers: {
+                  get: (key: string) => (key === "x-total-count" ? String(totalCount) : null),
+                },
+                json: async () => body,
+              }),
+            reject,
+          });
+        }),
+    ),
+  );
+  return pending;
+};
+
+/** 保留中の Promise チェーンを進め、state 更新を React に反映させる。 */
+const flush = async () => {
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+};
+
 describe("useVideos", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -225,6 +271,112 @@ describe("useVideos", () => {
     const { result } = renderHook(() => useVideos());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.loadError).toBe("データの取得に失敗しました。");
+  });
+
+  // --- 競合状態（レスポンスの到着順が逆転するケース） ---
+
+  it("should keep the newest result when an older request resolves later", async () => {
+    const pending = controlledFetch();
+    const { result } = renderHook(() => useVideos());
+    await waitFor(() => expect(pending).toHaveLength(1));
+
+    // 1 件目が未完了のまま 2 件目のリクエストを開始する。
+    act(() => {
+      result.current.setCurrentPage(2);
+    });
+    await waitFor(() => expect(pending).toHaveLength(2));
+
+    // 新しい方（2 件目）を先に完了させる。
+    act(() => {
+      pending[1].resolve({ body: [makeVideo("new")], totalCount: 20 });
+    });
+    await waitFor(() => expect(result.current.videos).toHaveLength(1));
+    expect(result.current.videos[0].id).toBe("new");
+
+    // 古い方（1 件目）が後から完了しても、最新の結果を上書きしない。
+    act(() => {
+      pending[0].resolve({ body: [makeVideo("old-a"), makeVideo("old-b")], totalCount: 99 });
+    });
+    await flush();
+
+    expect(result.current.videos.map((v) => v.id)).toEqual(["new"]);
+    expect(result.current.totalCount).toBe(20);
+  });
+
+  it("should keep isLoading true when only the older request has finished", async () => {
+    const pending = controlledFetch();
+    const { result } = renderHook(() => useVideos());
+    await waitFor(() => expect(pending).toHaveLength(1));
+
+    act(() => {
+      result.current.setCurrentPage(2);
+    });
+    await waitFor(() => expect(pending).toHaveLength(2));
+
+    // 古い方だけが完了した状態。最新リクエストは進行中なのでローディングは解除されない。
+    act(() => {
+      pending[0].resolve({ body: [makeVideo("old")], totalCount: 99 });
+    });
+    await flush();
+    expect(result.current.isLoading).toBe(true);
+
+    act(() => {
+      pending[1].resolve({ body: [makeVideo("new")], totalCount: 20 });
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.videos.map((v) => v.id)).toEqual(["new"]);
+  });
+
+  it("should not surface an error when an older request is aborted", async () => {
+    const pending = controlledFetch();
+    const { result } = renderHook(() => useVideos());
+    await waitFor(() => expect(pending).toHaveLength(1));
+
+    act(() => {
+      result.current.setCurrentPage(2);
+    });
+    await waitFor(() => expect(pending).toHaveLength(2));
+
+    // 中止された古いリクエストは AbortError で失敗する。利用者向けエラーにはしない。
+    act(() => {
+      pending[0].reject(new DOMException("The operation was aborted.", "AbortError"));
+    });
+    await flush();
+    expect(result.current.loadError).toBeNull();
+
+    act(() => {
+      pending[1].resolve({ body: [makeVideo("new")], totalCount: 1 });
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.loadError).toBeNull();
+    expect(result.current.videos.map((v) => v.id)).toEqual(["new"]);
+  });
+
+  it("should abort the in-flight request when a newer one starts", async () => {
+    const pending = controlledFetch();
+    const { result } = renderHook(() => useVideos());
+    await waitFor(() => expect(pending).toHaveLength(1));
+
+    const firstSignal = (vi.mocked(fetch).mock.calls[0][1] as RequestInit).signal as AbortSignal;
+    expect(firstSignal.aborted).toBe(false);
+
+    act(() => {
+      result.current.setCurrentPage(2);
+    });
+    await waitFor(() => expect(pending).toHaveLength(2));
+
+    expect(firstSignal.aborted).toBe(true);
+  });
+
+  it("should abort the in-flight request on unmount", async () => {
+    const pending = controlledFetch();
+    const { unmount } = renderHook(() => useVideos());
+    await waitFor(() => expect(pending).toHaveLength(1));
+
+    const signal = (vi.mocked(fetch).mock.calls[0][1] as RequestInit).signal as AbortSignal;
+    unmount();
+
+    expect(signal.aborted).toBe(true);
   });
 
   it("should throw when deleteVideo API returns error", async () => {

@@ -20,14 +20,34 @@ export function useVideos() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const lastAppliedFiltersRef = useRef({ sortOption, debouncedSearchQuery });
   const bustCacheNextRef = useRef(false);
+  // 発行済みリクエストの連番。最新の値と一致するリクエストだけが state を更新してよい。
+  const requestIdRef = useRef(0);
+  // 進行中リクエストの中止用。検索条件・ページが変わったら前回の通信を打ち切る。
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   /**
    * 指定ページの動画を取得して state に反映する。
    * 並び替え・検索クエリを API パラメータに変換し、`x-total-count` ヘッダから総件数を取得する。
    * `bustCache` 指定時は `_t` を付与して CDN キャッシュを回避。失敗時は `loadError` を立てる。
+   *
+   * 検索・ページ変更で連続実行されるため、**最新のリクエストだけが state を更新する**。
+   * 前回の通信は `AbortController` で中止し、加えて連番 ID で「自分が最新か」を確認する
+   * （abort はネットワークを止めるだけで、既に応答を受け取り再開待ちの処理は止まらないため、
+   * ID による確認が無いと遅れて完了した古い結果が最新の表示を上書きする）。
+   * 中止は利用者の操作に伴う正常な打ち切りなので、`loadError` を立てない。
    */
   const loadVideos = useCallback(
     async (page: number, bustCache = false) => {
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      const requestId = ++requestIdRef.current;
+      /**
+       * このリクエストが最新か（後発のリクエストに追い越されていないか）。
+       * @returns 最新なら true
+       */
+      const isLatestRequest = () => requestId === requestIdRef.current;
+
       setIsLoading(true);
       setLoadError(null);
       try {
@@ -45,12 +65,16 @@ export function useVideos() {
           params.set("_t", String(Date.now()));
         }
 
-        const response = await fetch(`/api/videos?${params.toString()}`);
+        const response = await fetch(`/api/videos?${params.toString()}`, {
+          signal: controller.signal,
+        });
         if (!response.ok) {
           throw new Error("Failed to load videos");
         }
 
         const data = (await response.json()) as VideoItem[];
+        if (!isLatestRequest()) return;
+
         const totalCountHeader = response.headers.get("x-total-count");
         const parsedTotalCount = totalCountHeader ? Number(totalCountHeader) : NaN;
         setVideos(data);
@@ -60,10 +84,16 @@ export function useVideos() {
             : data.length,
         );
       } catch (error) {
+        // 中止・追い越されたリクエストの失敗は利用者向けエラーにしない（現在の表示は最新のもの）。
+        if (controller.signal.aborted || !isLatestRequest()) return;
+
         console.error(error);
         setLoadError("データの取得に失敗しました。");
       } finally {
-        setIsLoading(false);
+        // 古いリクエストの完了で、進行中の最新リクエストのローディング表示を解除しない。
+        if (isLatestRequest()) {
+          setIsLoading(false);
+        }
       }
     },
     [sortOption, debouncedSearchQuery],
@@ -114,6 +144,13 @@ export function useVideos() {
     },
     [totalCount, currentPage, refreshListPage],
   );
+
+  // アンマウント時に進行中の通信を打ち切る（破棄済みコンポーネントへの state 更新を残さない）。
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   // 検索入力を 300ms デバウンスして API 呼び出し回数を抑える。
   useEffect(() => {
