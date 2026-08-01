@@ -40,7 +40,8 @@
 
 | 変数 | 用途 | 参照箇所 |
 |------|------|----------|
-| `DATABASE_URL` | DB 接続（本番: Supabase Postgres / テスト: `docker-compose.test.yml` の PostgreSQL） | Prisma (`schema.prisma`) |
+| `DATABASE_URL` | DB 接続（本番: Supabase Postgres）。**テストは参照しない** | Prisma (`schema.prisma`) |
+| `TEST_DATABASE_URL` | IT / E2E のテスト DB 接続（未設定ならローカル既定。localhost 以外は拒否） | `front/src/test/database-url.ts` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL | クライアント SDK / トークン検証 |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key（`getUser` の apikey） | 同上 |
 | `ADMIN_EMAIL` | 管理者 allowlist（サーバーのみ） | `lib/auth-server.ts` / `api/auth/admin` |
