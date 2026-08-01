@@ -47,6 +47,8 @@ pnpm dev                     # http://localhost:3000
 
 > リポジトリルートからは `make <target>`（例: `make dev` / `make test` / `make test-it`）でも同等の操作ができる（内部で `front/` に降りて実行）。一覧は `make help`。
 >
+> E2E は専用ポート `3100` で Playwright が自前の dev サーバーを起動する（既存サーバーを再利用しないため、3000 が他アプリに占有されていても影響しない。3100 が埋まっている場合は明確なエラーで停止する）。
+>
 > IT / E2E はテスト DB を使う。先に `docker compose -f front/docker-compose.test.yml up -d` で PostgreSQL を起動する（既定 `postgresql://postgres:postgres@localhost:5432/ymc_test?schema=public`）。
 > テストは `.env` の `DATABASE_URL` を参照しない。上書きは `TEST_DATABASE_URL` で行い、localhost 以外を指定した場合は接続前に失敗する（本番 DB を破壊しないためのガード）。
 
