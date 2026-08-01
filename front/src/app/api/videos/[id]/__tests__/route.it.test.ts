@@ -25,6 +25,14 @@ const req = (method: string, body?: unknown, headers: Record<string, string> = {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
+// 壊れた JSON を送るため、シリアライズせず生の文字列をボディにする。
+const rawReq = (method: string, raw: string, headers: Record<string, string> = {}) =>
+  new NextRequest("http://localhost/api/videos/x", {
+    method,
+    headers: { "content-type": "application/json", ...headers },
+    body: raw,
+  });
+
 beforeEach(() => {
   getUserMock.mockReset();
   process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost";
@@ -70,6 +78,39 @@ describe("PATCH /api/videos/[id] (管理者・実 DB)", () => {
   });
 
   // --- 準正常系（認可・不存在・検証） ---
+
+  it("壊れた JSON ボディは 500 ではなく JSON 形式の 400 を返し、既存データを変更しない", async () => {
+    authAsAdmin();
+    const v = await seedVideo({ title: "変更前" });
+    const res = await PATCH(
+      rawReq("PATCH", "{壊れた JSON", { authorization: "Bearer ok" }),
+      ctx(v.id),
+    );
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Invalid JSON body" });
+
+    const row = await prisma.videoEntry.findUnique({ where: { id: v.id } });
+    expect(row?.title).toBe("変更前");
+  });
+
+  it("ボディ無し（空文字）も 400 を返す", async () => {
+    authAsAdmin();
+    const v = await seedVideo({ title: "変更前" });
+    const res = await PATCH(rawReq("PATCH", "", { authorization: "Bearer ok" }), ctx(v.id));
+    expect(res.status).toBe(400);
+  });
+
+  it("ボディが null（妥当な JSON）なら 500 にせず、何も更新しない 200 を返す", async () => {
+    // null は壊れた JSON ではないため 400 にはしない。空オブジェクトと同じ「更新対象なし」として扱う。
+    // ここで検証したいのは、null 参照で 500 にならず既存データも壊れないこと。
+    authAsAdmin();
+    const v = await seedVideo({ title: "変更前" });
+    const res = await PATCH(rawReq("PATCH", "null", { authorization: "Bearer ok" }), ctx(v.id));
+    expect(res.status).toBe(200);
+
+    const row = await prisma.videoEntry.findUnique({ where: { id: v.id } });
+    expect(row?.title).toBe("変更前");
+  });
 
   it("未認証なら 401 で更新しない", async () => {
     const v = await seedVideo({ title: "不変" });

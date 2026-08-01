@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/lib/validation";
 import type { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-server";
+import { readJsonBody } from "@/lib/request";
 import { buildVideoOrderBy, toVideoItem } from "@/lib/videos";
 
 /**
@@ -79,16 +80,18 @@ export async function GET(request: NextRequest) {
 
 /**
  * 動画を新規作成する（管理者限定）。
- * 認可 → バリデーション（失敗は 400）→ 作成し、201 で作成済みの動画を返す。
+ * 認可 → JSON 解析（失敗は 400）→ バリデーション（失敗は 400）→ 作成し、201 で作成済みの動画を返す。
  * @param request 作成リクエスト（Bearer 認可と JSON ボディを含む）
- * @returns 作成した動画の JSON（201）。認可・検証失敗は 400/401/403
+ * @returns 作成した動画の JSON（201）。JSON 解析・検証失敗は 400、認可失敗は 401/403
  */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request, "api/videos");
   if (!auth.ok) return auth.response;
 
-  const body = await request.json();
-  const { data, errors } = validateVideoInput(body);
+  const parsed = await readJsonBody(request);
+  if (!parsed.ok) return parsed.response;
+
+  const { data, errors } = validateVideoInput(parsed.body);
 
   if (Object.keys(errors).length > 0) {
     return NextResponse.json({ errors }, { status: 400 });

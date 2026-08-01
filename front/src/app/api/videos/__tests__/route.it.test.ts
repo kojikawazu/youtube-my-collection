@@ -25,6 +25,14 @@ const postReq = (body: unknown, headers: Record<string, string> = {}) =>
     body: JSON.stringify(body),
   });
 
+// 壊れた JSON を送るため、シリアライズせず生の文字列をボディにする。
+const rawPostReq = (raw: string, headers: Record<string, string> = {}) =>
+  new NextRequest("http://localhost/api/videos", {
+    method: "POST",
+    headers: { "content-type": "application/json", ...headers },
+    body: raw,
+  });
+
 // 同値データの並び順検証用に固定した id（昇順）。挿入順と期待順（id 降順）を意図的に逆にするため、
 // ランダムな uuid ではなく固定値を使う。
 const SAME_VALUE_IDS = [
@@ -306,6 +314,26 @@ describe("POST /api/videos (管理者・実 DB)", () => {
   });
 
   // --- 準正常系（認可・検証エラー） ---
+
+  it("壊れた JSON ボディは 500 ではなく JSON 形式の 400 を返す", async () => {
+    authAsAdmin();
+    const res = await POST(rawPostReq("{壊れた JSON", { authorization: "Bearer valid" }));
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Invalid JSON body" });
+    expect(await prisma.videoEntry.count()).toBe(0);
+  });
+
+  it("ボディ無し（空文字）も 400 を返す", async () => {
+    authAsAdmin();
+    const res = await POST(rawPostReq("", { authorization: "Bearer valid" }));
+    expect(res.status).toBe(400);
+    expect(await prisma.videoEntry.count()).toBe(0);
+  });
+
+  it("認可より先に JSON 解析させない（未認証の壊れた JSON は 401 のまま）", async () => {
+    const res = await POST(rawPostReq("{壊れた JSON"));
+    expect(res.status).toBe(401);
+  });
 
   it("Authorization ヘッダーが無ければ 401 で作成しない", async () => {
     const res = await POST(postReq(validBody));
