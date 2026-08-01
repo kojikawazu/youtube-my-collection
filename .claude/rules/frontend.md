@@ -190,4 +190,5 @@ front/src/
 ## テスト
 
 - E2E: Playwright（`tests/` ディレクトリ）
-- Base URL: `http://localhost:3000`
+- 開発サーバー: `http://localhost:3000`
+- **E2E は専用ポート `3100` を使い、既存サーバーを再利用しない**（`reuseExistingServer: false`）。3000 に別アプリが居座っていても影響を受けず、逆に「別アプリを黙ってテストする」事故も起きない（issue #176）
