@@ -21,7 +21,9 @@ Google OAuth認証 → Supabase Auth → 管理者判定までの全体フロー
 | ステップ | ファイル |
 |----------|---------|
 | ログイン起動 | `front/src/lib/auth.ts` (`signInWithGoogle`) |
-| コールバック | `front/src/app/auth/callback/route.ts` |
+| ブラウザ用クライアント | `front/src/lib/supabase/client.ts`（`flowType: "pkce"` / `detectSessionInUrl: false`） |
+| コールバック | `front/src/app/auth/callback/page.tsx` + `AuthCallbackClient.tsx` + `front/src/hooks/useAuthCallback.ts` |
+| 失敗表示 | `front/src/hooks/useAuthErrorToast.ts` / `front/src/constants/auth.ts` |
 | 管理者判定API | `front/src/app/api/auth/admin/route.ts` |
 | セッション管理 | `front/src/hooks/useAuth.ts` |
 
@@ -42,12 +44,15 @@ Google OAuth認証 → Supabase Auth → 管理者判定までの全体フロー
       │                        │                       │                      │
       │                        │                       │  PKCEコード生成       │
       │                        │                       │                      │
-      │  ③ コールバック          │                       │                      │
+      │  ③ コールバック(ブラウザで交換)                  │                      │
       │←──── /auth/callback?code=XXXX ─────────────────│                      │
       │──GET /auth/callback───→│                       │                      │
-      │                        │─exchangeCodeForSession→│                      │
-      │                        │←─セッション確立(token)─│                      │
-      │←─── 302 "/" リダイレクト─│                       │                      │
+      │←─ページ(JS)のみ返す─────│                       │                      │
+      │  useAuthCallback()     │                       │                      │
+      │──exchangeCodeForSession(code)────────────────→│                      │
+      │   (code verifier は同じブラウザ client の storage)                     │
+      │←──────セッション確立(token)────────────────────│                      │
+      │  location.replace("/") │                       │                      │
       │                        │                       │                      │
       │  ④ 管理者判定            │                       │                      │
       │  useEffect マウント     │                       │                      │
@@ -75,6 +80,7 @@ Google OAuth認証 → Supabase Auth → 管理者判定までの全体フロー
 - ユーザーがログイン画面で「Googleでログイン」をクリック
 - `signInWithGoogle()` → Supabase SDK `signInWithOAuth({ provider: "google" })`
 - リダイレクト先: `${NEXT_PUBLIC_SITE_URL}/auth/callback`
+- ブラウザクライアントは `flowType: "pkce"`。**このときブラウザの storage に code verifier が保存される**（③ の交換で必要）
 
 ### ② Google認証
 
@@ -86,9 +92,13 @@ Google OAuth認証 → Supabase Auth → 管理者判定までの全体フロー
 ### ③ コールバック（認証の確立）
 
 - Supabase が `/auth/callback?code=XXXX` へブラウザをリダイレクト
-- `callback/route.ts` が `exchangeCodeForSession(code)` でコード → セッション交換
-- PKCEコードは1回限りの使い捨て（再利用不可）
-- セッション確立後、トップページ `"/"` へ 302 リダイレクト
+- `/auth/callback` は **Route Handler ではなくクライアントページ**。`useAuthCallback` が `exchangeCodeForSession(code)` でコード → セッション交換する
+- **交換をブラウザで行う理由**: PKCE の code verifier は ① で**ログイン開始時のブラウザクライアントの storage**に保存される。サーバー側で新規生成した client からは参照できず、交換が必ず失敗する（issue #165）
+- PKCEコードは1回限りの使い捨て（再利用不可）。このため以下を守る
+  - `detectSessionInUrl: false`（既定 true のままだと client が勝手に交換を始め、明示的な交換とコードを奪い合う）。同時に implicit の `#access_token` 取り込みも塞がれる
+  - React StrictMode の effect 二重実行を ref でガードする
+- セッション確立後、トップページ `"/"` へ `location.replace`（履歴を残さず、戻るで使用済みコードの URL に戻らせない）
+- 失敗時は `"/?auth_error=<理由>"` へ遷移し、トップで `useAuthErrorToast` がトースト表示する（理由と文言の対応は `constants/auth.ts`）
 
 ### ④ 管理者判定（認可の判定）
 

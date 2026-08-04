@@ -104,7 +104,7 @@ Go + Echo の共通バックエンド API に集約し、スキーマ変更時�
 ### 設計方針
 
 - OAuth コールバック (`/auth/callback`) は **Next.js に残す**
-  - PKCE のコード交換をブラウザリダイレクト先で処理する必要がある
+  - PKCE のコード交換をブラウザリダイレクト先で処理する必要がある（code verifier はブラウザクライアントの storage にしか無いため、交換自体もブラウザで行う）
   - Google Cloud Console・Supabase のリダイレクト URL 設定変更が不要
 - データ API・管理者判定 API は **Go + Echo に移動**
 - フロントの hooks は fetch URL を環境変数ベースに変更するだけ
@@ -149,7 +149,7 @@ Go バックエンド → GET https://<ref>.supabase.co/auth/v1/user
 ### 認証フロー（変更なし）
 
 1. ブラウザ: Supabase SDK `signInWithOAuth()` → Google 認証
-2. Google → Supabase → Next.js `/auth/callback` → `exchangeCodeForSession`
+2. Google → Supabase → Next.js `/auth/callback`（クライアントページ）→ ブラウザで `exchangeCodeForSession`
 3. ブラウザ: `supabase.auth.getSession()` で access_token 取得（localStorage）
 4. ブラウザ: hooks から `Authorization: Bearer <token>` で Go バックエンドへリクエスト
 5. Go: Supabase Auth API でトークン検証 → email → ADMIN_EMAIL 照合
@@ -292,7 +292,7 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 | `lib/validation.ts` | フロント側バリデーションとして残す |
 | `lib/auth.ts` | Supabase SDK のログイン/ログアウト（変更なし） |
 | `lib/supabase/client.ts` | クライアント SDK（変更なし） |
-| `app/auth/callback/route.ts` | OAuth コールバック（Next.js に残す） |
+| `app/auth/callback/page.tsx` + `AuthCallbackClient.tsx` | OAuth コールバック（Next.js に残す。交換はブラウザ側） |
 
 ### 削除対象ファイル（移行完了後）
 

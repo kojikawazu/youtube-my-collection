@@ -100,7 +100,8 @@ npx prisma generate
 ## Auth 構成
 
 - Google OAuth2 (PKCE)
-- `/auth/callback` でコードをセッションへ交換
+- `/auth/callback`（**クライアントページ**）でコードをセッションへ交換。code verifier がログイン開始時のブラウザクライアントにしか無いため、サーバー側では交換できない
+- 交換失敗は `"/?auth_error=<理由>"` で画面へ伝え、トーストで表示する
 - `ADMIN_EMAIL` で allowlist 判定（サーバー側のみ）
 - 詳細シーケンスは [`notes/oauth-sequence.md`](./notes/oauth-sequence.md)
 
