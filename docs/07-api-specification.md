@@ -65,6 +65,12 @@
   - `Authorization` ヘッダー欠如・空トークン → `401 { error: "Unauthorized" }`
   - トークン無効・`ADMIN_EMAIL` 不一致 → `403 { error: "Forbidden" }`
 - バリデーションエラー → `400 { errors }`
+- **不正な JSON ボディ（壊れた JSON・空ボディ）→ `400 { error: "Invalid JSON body" }`**
+  - クライアントが直せる入力エラーであり、サーバー障害（5xx）ではない。4xx / 5xx を混ぜると監視のアラートが誤爆し、API クライアントも「リトライすべき障害」と誤判断する
+  - 実装は `front/src/lib/request.ts` の `readJsonBody`。**JSON 解析だけを狭く捕捉**する（広い `try/catch` の中で `request.json()` を呼ぶと DB 例外と区別できず 500 に丸まる）
+  - 内部例外（DB エラー等）は従来どおり 500
+  - `null` や `{}` のような**妥当な JSON** は 400 にしない。PATCH では「更新対象なし」として 200（no-op）
+  - **DELETE のみボディが任意**のため例外。ID はパスから解決できるので、解析できないボディは 400 にせず「ボディ無し」として扱う
 
 - POST /api/videos
   - 用途: 新規作成

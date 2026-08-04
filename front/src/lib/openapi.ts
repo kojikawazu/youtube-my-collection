@@ -30,6 +30,8 @@ const validationErrorSchema = z
   .object({ errors: z.record(z.string(), z.string()) })
   .openapi("ValidationError");
 const okSchema = z.object({ ok: z.boolean() }).openapi("Ok");
+// 400 は 2 形式ある。検証エラーは `{ errors }`、JSON 解析失敗は `{ error }`（lib/request.ts）。
+const badRequestSchema = z.union([validationErrorSchema, errorSchema]).openapi("BadRequest");
 const adminSchema = z.object({ isAdmin: z.boolean() }).openapi("AdminCheck");
 
 const idParam = z.object({
@@ -116,7 +118,7 @@ export function buildOpenApiDocument() {
     request: { body: { content: { "application/json": { schema: videoInputDoc } } } },
     responses: {
       201: { description: "作成成功", ...json(videoItemDoc) },
-      400: { description: "バリデーションエラー", ...json(validationErrorSchema) },
+      400: { description: "不正な JSON ボディ / バリデーションエラー", ...json(badRequestSchema) },
       401: { description: "未認証", ...json(errorSchema) },
       403: { description: "権限なし", ...json(errorSchema) },
     },
@@ -134,7 +136,7 @@ export function buildOpenApiDocument() {
     },
     responses: {
       200: { description: "更新成功", ...json(videoItemDoc) },
-      400: { description: "バリデーションエラー", ...json(validationErrorSchema) },
+      400: { description: "不正な JSON ボディ / バリデーションエラー", ...json(badRequestSchema) },
       401: { description: "未認証", ...json(errorSchema) },
       403: { description: "権限なし", ...json(errorSchema) },
       404: { description: "未検出", ...json(errorSchema) },
