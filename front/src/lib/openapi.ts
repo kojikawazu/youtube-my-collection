@@ -4,7 +4,13 @@ import {
   extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { videoInputSchema, videoItemSchema, MIN_RATING, MAX_RATING } from "@/lib/schemas/video";
+import {
+  videoInputSchema,
+  videoItemSchema,
+  MIN_RATING,
+  MAX_RATING,
+  DEFAULT_RATING,
+} from "@/lib/schemas/video";
 
 // OpenAPI 用メタデータ（.openapi()）はこのサーバー専用モジュールでのみ付与し、
 // クライアントバンドルに zod-to-openapi を持ち込まない。
@@ -13,10 +19,11 @@ extendZodWithOpenApi(z);
 // 検証スキーマの shape をそのまま再ラップして登録する（検証ロジックは単一ソースのまま）。
 // 登録時に呼ばれる .openapi() はサーバー側で生成した object インスタンスにのみ必要で、
 // 内部フィールドは構造的に解釈される。rating だけは integer/範囲を明示したいので上書きする。
+// .default() を付けることで required から外れ、生成クライアントにも「省略可・既定 3」が伝わる。
 const videoInputDoc = z
   .object({
     ...videoInputSchema.shape,
-    rating: z.number().int().min(MIN_RATING).max(MAX_RATING),
+    rating: z.number().int().min(MIN_RATING).max(MAX_RATING).default(DEFAULT_RATING),
   })
   .openapi("VideoInput");
 

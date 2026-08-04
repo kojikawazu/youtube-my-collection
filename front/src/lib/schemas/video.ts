@@ -10,6 +10,8 @@ export const MAX_CATEGORY_LENGTH = 10;
 export const MAX_TEXT_LENGTH = 2000;
 export const MIN_RATING = 1;
 export const MAX_RATING = 5;
+/** rating 省略時の既定値。5 段階の中央（＝評価未入力を「普通」として扱う）。 */
+export const DEFAULT_RATING = 3;
 
 /** カテゴリ enum 値（プリセット + フォールバック）。 */
 export const CATEGORY_VALUES = [...CATEGORIES, "未分類"] as const;
@@ -95,10 +97,12 @@ const ratingField = z
 const publishDateField = z.preprocess(parsePublishDate, z.date().nullable().optional()).optional();
 
 /**
- * 動画入力スキーマ（作成 / POST）。検証の正準。
- * - 公開契約の戻り値・メッセージは旧 validateVideoInput を完全踏襲。
+ * 動画フィールドの共通定義（作成・更新の土台）。
+ * ここには既定値を持たせない。PATCH は `.partial()` でこれを使うが、
+ * `.partial()` は `.default()` を打ち消さないため、土台に既定値を置くと
+ * 「rating 未送信の部分更新」が既定値で既存の評価を上書きしてしまう。
  */
-export const videoInputSchema = z.object({
+const videoFieldsSchema = z.object({
   youtubeUrl: requiredString("YouTube URLは必須です。"),
   title: requiredString("タイトルは必須です。"),
   thumbnailUrl: z.preprocess(toStringValue, z.string()).optional(),
@@ -110,8 +114,18 @@ export const videoInputSchema = z.object({
   publishDate: publishDateField,
 });
 
+/**
+ * 動画入力スキーマ（作成 / POST）。検証の正準。
+ * - 公開契約の戻り値・メッセージは旧 validateVideoInput を完全踏襲。
+ * - `rating` は省略可能で、未送信なら `DEFAULT_RATING` を補う（API 仕様の必須は youtubeUrl / title のみ）。
+ *   送信された場合は従来どおり 1〜5 の範囲検証を通す。
+ */
+export const videoInputSchema = videoFieldsSchema.extend({
+  rating: ratingField.default(DEFAULT_RATING),
+});
+
 /** 更新スキーマ（PATCH）。送信されたフィールドのみ検証（旧 partial: true 相当）。 */
-export const videoUpdateSchema = videoInputSchema.partial();
+export const videoUpdateSchema = videoFieldsSchema.partial();
 
 /** 正規化済みの動画データ（検証成功時の出力）。 */
 export type NormalizedVideo = Partial<z.infer<typeof videoInputSchema>>;

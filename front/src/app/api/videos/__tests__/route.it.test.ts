@@ -313,6 +313,21 @@ describe("POST /api/videos (管理者・実 DB)", () => {
     expect(rows[0].youtubeUrl).toBe("https://youtu.be/newvideo");
   });
 
+  it("youtubeUrl と title だけの最小リクエストが 201 になり rating は既定の 3 で保存される", async () => {
+    // API 仕様上 rating は省略可能。schema が必須にしていると、契約に適合する
+    // 最小リクエストが 400 になってしまう（issue #166）。
+    authAsAdmin();
+    const res = await POST(
+      postReq(
+        { youtubeUrl: "https://youtu.be/minimal", title: "最小構成" },
+        { authorization: "Bearer valid" },
+      ),
+    );
+    expect(res.status).toBe(201);
+    expect((await res.json()).rating).toBe(3);
+    expect((await prisma.videoEntry.findFirstOrThrow()).rating).toBe(3);
+  });
+
   // --- 準正常系（認可・検証エラー） ---
 
   it("壊れた JSON ボディは 500 ではなく JSON 形式の 400 を返す", async () => {
@@ -404,6 +419,13 @@ describe("POST /api/videos (管理者・実 DB)", () => {
   it("評価が上限を 1 超える 6 なら 400 で作成しない（境界値）", async () => {
     authAsAdmin();
     const res = await POST(postReq({ ...validBody, rating: 6 }, { authorization: "Bearer ok" }));
+    expect(res.status).toBe(400);
+    expect(await prisma.videoEntry.count()).toBe(0);
+  });
+
+  it("評価が下限を 1 下回る 0 なら 400 で作成しない（境界値）", async () => {
+    authAsAdmin();
+    const res = await POST(postReq({ ...validBody, rating: 0 }, { authorization: "Bearer ok" }));
     expect(res.status).toBe(400);
     expect(await prisma.videoEntry.count()).toBe(0);
   });

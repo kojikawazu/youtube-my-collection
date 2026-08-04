@@ -89,7 +89,7 @@ model VideoEntry {
 | category | 10 文字以内 |
 | goodPoints | 2000 文字以内 |
 | memo | 2000 文字以内 |
-| rating | 1-5 |
+| rating | 1-5（作成時は省略可。未送信なら既定値 3。部分更新では既定値を適用しない） |
 
 > 上記の制約は `front/src/lib/schemas/video.ts` の Zod スキーマを単一ソースとして検証する（`lib/validation.ts` はその薄いアダプタ）。OpenAPI もこのスキーマから生成される（[`07-api-specification.md`](./07-api-specification.md#openapi--swagger-ui)）。
 >
