@@ -5,6 +5,7 @@ import { validateVideoInput } from "@/lib/validation";
 import type { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-server";
 import { readJsonBody } from "@/lib/request";
+import { DEFAULT_RATING } from "@/lib/schemas/video";
 import { buildVideoOrderBy, toVideoItem } from "@/lib/videos";
 
 /**
@@ -106,7 +107,9 @@ export async function POST(request: NextRequest) {
       category: data.category ?? "未分類",
       goodPoints: data.goodPoints ?? "",
       memo: data.memo ?? "",
-      rating: data.rating ?? 3,
+      // 既定値の適用は Zod スキーマ側（rating の .default）が正。ここは
+      // NormalizedVideo が Partial であることに対する型上のフォールバック。
+      rating: data.rating ?? DEFAULT_RATING,
       publishDate: data.publishDate ?? null,
     },
   });

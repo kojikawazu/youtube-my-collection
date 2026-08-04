@@ -41,12 +41,15 @@ describe("buildOpenApiDocument", () => {
     );
   });
 
-  it("VideoInput の必須は youtubeUrl/title/rating、rating は 1-5 の integer", () => {
-    expect(schemas.VideoInput.required.sort()).toEqual(["rating", "title", "youtubeUrl"].sort());
+  it("VideoInput の必須は youtubeUrl/title のみ、rating は既定 3 の 1-5 integer", () => {
+    // rating は省略可能（未送信なら 3）。required に含めると、生成クライアントが
+    // 仕様上は通るはずの最小リクエストを送れなくなる（issue #166）。
+    expect(schemas.VideoInput.required.sort()).toEqual(["title", "youtubeUrl"].sort());
     expect(schemas.VideoInput.properties.rating).toMatchObject({
       type: "integer",
       minimum: 1,
       maximum: 5,
+      default: 3,
     });
   });
 

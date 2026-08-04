@@ -40,6 +40,21 @@ describe("validateVideoInput", () => {
     expect(data.publishDate).toBeNull();
   });
 
+  it("should default rating to 3 when omitted on create", () => {
+    const { youtubeUrl, title } = validInput;
+    const { data, errors } = validateVideoInput({ youtubeUrl, title });
+    expect(errors).toEqual({});
+    expect(data.rating).toBe(3);
+  });
+
+  it("should not inject the rating default in partial mode", () => {
+    // PATCH で未送信の rating に既定値が入ると、既存の評価を 3 で踏み潰してしまう。
+    // Route Handler はキーの有無で更新対象を決めるため、キー自体が生えないことを検証する。
+    const { data, errors } = validateVideoInput({ title: "更新後" }, { partial: true });
+    expect(errors).toEqual({});
+    expect("rating" in data).toBe(false);
+  });
+
   it("should skip missing fields in partial mode", () => {
     const { errors } = validateVideoInput(
       { youtubeUrl: "https://youtube.com/watch?v=x" },

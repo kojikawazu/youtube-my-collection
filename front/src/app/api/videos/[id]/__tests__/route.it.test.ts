@@ -64,7 +64,9 @@ describe("PATCH /api/videos/[id] (管理者・実 DB)", () => {
 
   it("送信したフィールドだけ更新し、未送信フィールドは維持する", async () => {
     authAsAdmin();
-    const v = await seedVideo({ title: "旧タイトル", rating: 3, memo: "元メモ" });
+    // rating は作成時の既定値（3）と異なる 5 を入れる。3 のままだと、部分更新に
+    // 既定値が漏れて上書きされても値が一致してしまい、回帰を検出できない。
+    const v = await seedVideo({ title: "旧タイトル", rating: 5, memo: "元メモ" });
     const res = await PATCH(
       req("PATCH", { title: "新タイトル" }, { authorization: "Bearer ok" }),
       ctx(v.id),
@@ -73,7 +75,7 @@ describe("PATCH /api/videos/[id] (管理者・実 DB)", () => {
 
     const after = await prisma.videoEntry.findUniqueOrThrow({ where: { id: v.id } });
     expect(after.title).toBe("新タイトル");
-    expect(after.rating).toBe(3); // 未送信なので不変
+    expect(after.rating).toBe(5); // 未送信なので不変
     expect(after.memo).toBe("元メモ");
   });
 

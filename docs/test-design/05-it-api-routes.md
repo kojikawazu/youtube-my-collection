@@ -52,6 +52,8 @@ Route Handler を実 Prisma + PostgreSQL で実行する結合テスト（IT）�
 | C-13 | 壊れた JSON ボディ → `400 { error: "Invalid JSON body" }`、作成しない | 準正常系 |
 | C-14 | ボディ無し（空文字）→ 400、作成しない | 準正常系 |
 | C-15 | 未認証 + 壊れた JSON → 401（認可を JSON 解析より先に判定する） | 準正常系 |
+| C-16 | `youtubeUrl` + `title` のみ → 201、`rating` は既定値 3 で保存 | 正常系 |
+| C-17 | 評価が 0 → 400、作成しない（境界値） | 準正常系 |
 
 ## `GET/PATCH/DELETE /api/videos/[id]`
 

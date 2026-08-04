@@ -82,11 +82,13 @@
     - category
     - goodPoints
     - memo
-    - rating
+    - rating（省略可。未送信なら **既定値 3** で保存。送信時は 1〜5）
     - publishDate
   - 処理:
     - タイトルはクライアントから送信された値を保存
     - サムネURLはクライアント側でYouTube URLから生成して送信
+    - **必須は `youtubeUrl` と `title` のみ**。`rating` の既定値適用は Zod スキーマ（`videoInputSchema` の `.default`）が単一ソース
+    - PATCH には既定値を波及させない（未送信の `rating` で既存の評価を上書きしないため、共通の土台スキーマには `.default` を置かない）
 
 - PATCH /api/videos/:id
   - 用途: 編集
