@@ -21,19 +21,28 @@
   - [正常系](#正常系-4)
   - [準正常系](#準正常系-3)
   - [異常系](#異常系-2)
+- [useAuthCallback](#useauthcallback)
+  - [正常系](#正常系-5)
+  - [準正常系](#準正常系-4)
+  - [異常系](#異常系-3)
+- [useAuthErrorToast](#useautherrortoast)
+  - [正常系](#正常系-6)
+  - [準正常系](#準正常系-5)
 - [テスト構成](#テスト構成)
   - [ユニットテスト](#ユニットテスト)
 - [モック方針](#モック方針)
 
 ## 対象
 
-- 対象機能: useToast / useConfirmModal / useVideos / useVideoForm / useAuth
+- 対象機能: useToast / useConfirmModal / useVideos / useVideoForm / useAuth / useAuthCallback / useAuthErrorToast
 - 対象ファイル:
   - `front/src/hooks/useToast.ts`
   - `front/src/hooks/useConfirmModal.ts`
   - `front/src/hooks/useVideos.ts`
   - `front/src/hooks/useVideoForm.ts`
   - `front/src/hooks/useAuth.ts`
+  - `front/src/hooks/useAuthCallback.ts`
+  - `front/src/hooks/useAuthErrorToast.ts`
 - スタック: Next.js / TypeScript / Vitest + @testing-library/react
 - テストファイル（予定）:
   - `front/src/hooks/__tests__/useToast.test.ts`
@@ -41,6 +50,8 @@
   - `front/src/hooks/__tests__/useVideos.test.ts`
   - `front/src/hooks/__tests__/useVideoForm.test.ts`
   - `front/src/hooks/__tests__/useAuth.test.ts`
+  - `front/src/hooks/__tests__/useAuthCallback.test.ts`
+  - `front/src/hooks/__tests__/useAuthErrorToast.test.ts`
 
 ---
 
@@ -182,6 +193,58 @@
 
 ---
 
+## useAuthCallback
+
+OAuth コールバック（`/auth/callback`）のブラウザ側処理。認可コードをセッションへ交換し、成否に関わらずトップへ置き換え遷移する。
+
+> **交換をブラウザで行う理由**: PKCE の code verifier はログイン開始時のブラウザクライアント storage にしか無く、サーバー側の client からは参照できない（issue #165）。
+
+### 正常系
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| N-1 | 認可コードを交換できたらトップへ遷移 | `?code=valid-code`、exchange 成功 | `location.replace("/")`、`exchangeOAuthCode("valid-code")` が呼ばれる | High |
+| N-2 | 交換は 1 度しか実行しない | 同上 + 再レンダー | `exchangeOAuthCode` の呼び出しは 1 回（認可コードは使い捨てのため、StrictMode の二重実行で必ず失敗する） | High |
+
+### 準正常系
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| S-1 | `code` が無い | クエリなし | 交換せず `"/?auth_error=missing_code"` | High |
+| S-2 | provider がエラーを返す | `?error=access_denied` | 交換せず `"/?auth_error=provider_denied"` | High |
+| S-3 | 交換がエラーを返す | `?code=expired-code`、exchange が error | `"/?auth_error=exchange_failed"` | High |
+| S-4 | Supabase 環境変数が欠落 | `NEXT_PUBLIC_SUPABASE_URL` が空 | 交換せず `"/?auth_error=auth_config_error"` | Medium |
+
+### 異常系
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| A-1 | 交換が reject | exchange が throw | `"/?auth_error=exchange_failed"`（握り潰すと「ログイン処理中」表示のまま固まる） | High |
+
+---
+
+## useAuthErrorToast
+
+`auth_error` クエリを表示メッセージへ解決してトースト表示し、URL から取り除く。
+
+### 正常系
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| N-1 | `auth_error` が無い | `/` | トーストを出さず URL も変えない | High |
+| N-2 | 既知のコードを文言へ解決 | `?auth_error=provider_denied` | `showToast("ログインがキャンセルされました。")` | High |
+| N-3 | 表示後にクエリを除去 | `?auth_error=exchange_failed` | `location.search === ""`（リロードで再表示させない） | High |
+| N-4 | 他のクエリは残す | `?page=2&auth_error=exchange_failed` | `location.search === "?page=2"` | Medium |
+
+### 準正常系
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| S-1 | 未知のコード | `?auth_error=something_new` | 既定文言を表示（無言で失敗させない） | Medium |
+| S-2 | 空文字 | `?auth_error=` | 何も表示しない | Medium |
+
+---
+
 ## テスト構成
 
 ### ユニットテスト
@@ -190,7 +253,9 @@
 - モック対象:
   - `fetch` → `vi.stubGlobal("fetch", vi.fn())`
   - `supabase` → `vi.mock("@/lib/supabase/client")`
-  - `@/lib/auth` (signInWithGoogle, signOut) → `vi.mock("@/lib/auth")`
+  - `@/lib/auth` (signInWithGoogle, signOut, exchangeOAuthCode) → `vi.mock("@/lib/auth")`
+  - `window.location` → `Object.defineProperty` で search / replace を差し替え（jsdom の location は読み取り専用）
+  - 環境変数 → `vi.stubEnv()`（`NEXT_PUBLIC_SUPABASE_*` の欠落再現）
 - タイマー: `vi.useFakeTimers()` で useToast / useVideos のデバウンス制御
 - 完了順の制御: `controlledFetch()` が「呼ばれるたびに未解決の Promise を返す」fetch を差し替える。テストから任意の順で resolve / reject し、レスポンスの到着順逆転を再現する
 

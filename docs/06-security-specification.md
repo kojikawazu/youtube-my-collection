@@ -17,7 +17,9 @@
 - Google OAuth2 ログイン
 - 許可メールアドレスのホワイトリスト(1 件)
 - 一般ユーザーは閲覧のみ、管理者のみ作成/編集/削除
-- Supabase の Auth Flow は PKCE を利用
+- Supabase の Auth Flow は PKCE を利用（`lib/supabase/client.ts` の `flowType: "pkce"`）
+  - 認可コードの交換は**ログイン開始と同じブラウザクライアント**で行う（code verifier がそこにしか無いため）。`/auth/callback` はサーバーの Route Handler ではなくクライアントページ
+  - `detectSessionInUrl: false` により、implicit flow の `#access_token` からセッションが確立されることはない（PKCE 以外の経路を塞ぐ）
 
 ## 権限制御（認可）
 

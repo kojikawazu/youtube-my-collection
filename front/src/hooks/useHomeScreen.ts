@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { Screen, VideoItem } from "@/types";
 import type { HomeTemplateProps } from "@/types/home-template";
 import { useToast } from "@/hooks/useToast";
+import { useAuthErrorToast } from "@/hooks/useAuthErrorToast";
 import { useAuth } from "@/hooks/useAuth";
 import { useVideos } from "@/hooks/useVideos";
 import { useVideoForm } from "@/hooks/useVideoForm";
@@ -20,6 +21,9 @@ export function useHomeScreen(): HomeTemplateProps {
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
 
   const { toastMessage, showToast } = useToast();
+
+  // OAuth コールバックが失敗して戻ってきた場合、その理由をトーストで伝える。
+  useAuthErrorToast(showToast);
 
   const { isAdmin, accessToken, login, logout } = useAuth({
     showToast,

@@ -43,6 +43,14 @@
 
 - Supabase側がImplicit Flow
 - PKCEに変更し、`/auth/callback?code=...` で戻る構成にする
+- アプリ側は `lib/supabase/client.ts` で `flowType: "pkce"` を指定済み。`detectSessionInUrl: false` のため、この形で戻ってきた場合はセッションが確立されず**ログインできないまま**になる（暗黙にフォールバックしないのが正しい挙動）
+
+### ログイン後にトップへ戻るがログインできていない
+
+- トップの URL に `?auth_error=<理由>` が付いていないか確認する（トーストにも理由が出る）
+- `exchange_failed`: 認可コードの交換に失敗。**code verifier の不一致**が主因。ログイン開始と交換が同じブラウザ・同じ storage で行われているか確認する（別ブラウザで開き直した、シークレットウィンドウを閉じた等で verifier が失われる）
+- `missing_code`: `/auth/callback` に `code` が付いていない。Supabase 側が Implicit Flow になっているか、`/auth/callback` へ直接アクセスした場合
+- `auth_config_error`: `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` の未設定
 
 ### provider is not enabled
 
