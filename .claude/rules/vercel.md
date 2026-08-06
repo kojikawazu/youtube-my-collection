@@ -42,6 +42,8 @@ globs: "front/vercel.json"
 - **`deploymentEnabled: false`（オブジェクトでなく真偽値）は全ブランチを止める**。本番デプロイ手段が失われるため使わない。
 - 設定変更後は**実際に作業ブランチを push して発火しないことを確認する**。誤った設定は「止まっているつもり」で気づけない。
 
+> **現状**: `front/vercel.json` に `deploymentEnabled` は**設定していない**（＝全ブランチで Preview デプロイが発火する）。UI 変更のレビューで実物を確認できることを、ビルド枠の節約より優先する判断（issue #164）。**この節は「止める場合の正しい書き方」を定めるものであり、止めること自体を義務づけるものではない。** 方針を変える際は本節と [`docs/09-architecture-specification.md`](../../docs/09-architecture-specification.md) を併せて更新する。
+
 ## ビルドスキップ（`ignoreCommand`）— 入れない
 
 **本プロジェクトでは `ignoreCommand` を設定しない。** docs のみの変更でもビルドが走るが、それを許容する。

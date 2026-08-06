@@ -112,6 +112,9 @@ CDN キャッシュ / スケルトン UI / Vercel Cron ウォームアップ等�
 ## デプロイ（Vercel）と Ignored Build Step
 
 - 本番は `main` ブランチ。`main` への push で常にビルド・デプロイする（`front/vercel.json` に `ignoreCommand` は置かない）。
+- **Preview デプロイは全ブランチで有効のまま残す**（`git.deploymentEnabled` を設定しない）。UI 変更のレビューで実物を確認できることを、ビルド枠の節約より優先する。E2E は CI で回っているが、見た目の確認はそれとは別の価値がある（issue #164）。
+  - 将来止める場合は、`deploymentEnabled` が**拒否リスト**であることに注意する（未列挙のブランチは既定でデプロイされるため、`{"main": true}` とだけ書いても何も止まらない）。書き方と落とし穴は [`.claude/rules/vercel.md`](../.claude/rules/vercel.md) を参照。
+- `front/vercel.json` の先頭に `$schema` を宣言し、エディタ補完とスキーマ検証を効かせる。設定キーのタイポは**デプロイ挙動の変化として現れず気づけない**ため、静的に検出できる状態を保つ。
 - **過去の不具合（撤去済み）**: `ignoreCommand` で「`front/` に変更がなければスキップ」しようとして、**本番デプロイを誤スキップ**した（2026-04 導入、以降 `main` マージが連続スキップされ本番が凍結。2026-06 に撤去）。
 
   ```jsonc
