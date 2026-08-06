@@ -89,7 +89,7 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 | ワークフロー | 発火条件 | 内容 |
 |---|---|---|
 | `ci.yml` | `front/**` 変更時（`main` への push / PR） | 下記のテスト一式 |
-| `docs.yml` | `docs/**` / `tasks/**` / `.claude/**` / `**/*.md` 変更時 | 相対リンク切れ・CLAUDE.md ルールテーブルの同期検査 |
+| `docs.yml` | `docs/**` / `tasks/**` / `.claude/**` / `**/*.md` / `scripts/**` 変更時 | Markdown lint・相対リンク切れ・**見出しアンカーの実在**・CLAUDE.md ルールテーブルの同期検査 |
 | `workflows-lint.yml` | `.github/workflows/**` 変更時 | actionlint |
 
 `.github/workflows/ci.yml` は以下を実行する。

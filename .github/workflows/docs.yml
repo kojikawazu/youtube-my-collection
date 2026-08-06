@@ -11,6 +11,7 @@ on:
       - "tasks/**"
       - ".claude/**"
       - "**/*.md"
+      - "scripts/**"
       - ".github/workflows/docs.yml"
   pull_request:
     branches:
@@ -20,6 +21,7 @@ on:
       - "tasks/**"
       - ".claude/**"
       - "**/*.md"
+      - "scripts/**"
       - ".github/workflows/docs.yml"
 
 concurrency:
@@ -80,6 +82,15 @@ jobs:
             exit 1
           fi
           echo "相対リンクはすべて解決しました。"
+
+      # 相対リンクチェックはファイルの実在しか見ないため、「ファイルはあるがアンカーが無い」
+      # 壊れ方（見出しのリネーム・目次の更新漏れ）を検出できない。それを補う（issue #137）。
+      # アンカー生成規則は自前実装するとズレるため github-slugger に委ねる。
+      # node_modules/ は .gitignore 済みなので --no-save でその場に入れる。
+      - name: Check heading anchors
+        run: |
+          npm install --no-save --no-package-lock --silent github-slugger@1.5.0
+          node scripts/check-md-anchors.cjs
 
       # ルールテーブルの drift 防止: .claude/rules/ のファイルが
       # CLAUDE.md のテーブルに載っているかを検査する
