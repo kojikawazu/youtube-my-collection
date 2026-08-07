@@ -14,7 +14,7 @@
 ## 対象
 
 - 対象機能: フォーム入力バリデーション
-- 対象ファイル: `front/src/lib/validation.ts`
+- 対象ファイル: `front/src/schemas/video.ts`
 - スタック: Next.js / TypeScript
 - テストファイル（予定）: `front/src/lib/__tests__/validation.test.ts`
 
@@ -60,7 +60,7 @@
 
 ### ユニットテスト
 
-- 対象ファイル: `front/src/lib/validation.ts`
+- 対象ファイル: `front/src/schemas/video.ts`
 - テストファイル: `front/src/lib/__tests__/validation.test.ts`
 - モック対象: なし（純粋関数のため外部依存ゼロ）
 

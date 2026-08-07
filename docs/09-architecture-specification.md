@@ -22,7 +22,7 @@
 | 認証 | Supabase Auth (Google OAuth2, PKCE) + `ADMIN_EMAIL` allowlist |
 | データベース | Supabase Postgres / ORM: Prisma |
 | API | Next.js Route Handlers (`app/api/*`) で DB アクセス |
-| バリデーション / API ドキュメント | Zod（`lib/schemas/`）を単一ソースに検証・型・OpenAPI を導出。`@asteasolutions/zod-to-openapi` で OpenAPI 生成、`/docs` に Swagger UI |
+| バリデーション / API ドキュメント | Zod（`schemas/`）を単一ソースに検証・型・OpenAPI を導出。`@asteasolutions/zod-to-openapi` で OpenAPI 生成、`/docs` に Swagger UI |
 | コード品質 | ESLint（`eslint-config-next` Flat Config）/ Prettier（`prettier-plugin-tailwindcss` で Tailwind クラス整列、`eslint-config-prettier` で競合回避） |
 | server/client 境界 | `server-only`。`lib/db.ts`（Prisma）と `lib/auth-server.ts`（`ADMIN_EMAIL`）に付与し、Client Component から引き込まれるとビルドが失敗する |
 | CI | GitHub Actions。発火条件ごとに分割: `ci.yml`（`front/**`: format チェック → Lint → 型 → **ビルド** → ユニット → 結合 → E2E）/ `docs.yml`（Markdown: リンク切れ・見出しアンカー実在・ルールテーブル同期）/ `workflows-lint.yml`（ワークフロー定義: actionlint） |
@@ -133,7 +133,7 @@ CDN キャッシュ / スケルトン UI / Vercel Cron ウォームアップ等�
 
 ## API ドキュメント生成（Zod 単一ソース）
 
-- `lib/schemas/video.ts` の Zod スキーマを「検証・TypeScript 型・OpenAPI」の単一ソースとする。
+- `schemas/video.ts` の Zod スキーマを「検証・TypeScript 型・OpenAPI」の単一ソースとする。
 - `lib/openapi.ts` が OpenAPI 3.0 を生成し、`GET /api/openapi.json` で配信。`/docs` が CDN の Swagger UI（SRI 付き）で表示する。
 - **API ドキュメントは管理者限定**: `/api/openapi.json` は `requireAdmin` で保護し、`/docs` はクライアントガードで管理者セッションが無ければログイン誘導を表示する（[`06-security-specification.md`](./06-security-specification.md) 参照）。
 - 詳細・将来の TypeSpec / Go 契約への発展は [`notes/openapi-zod-plan.md`](./notes/openapi-zod-plan.md) を参照。

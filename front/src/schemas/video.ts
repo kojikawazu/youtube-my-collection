@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CATEGORIES } from "@/constants";
+import type { ValidationErrors } from "@/types/validation";
 
 // このモジュールは「検証・型」の単一ソース。クライアントバンドルにも載るため、
 // サーバー専用の OpenAPI 生成（zod-to-openapi）には依存させない。
@@ -147,3 +148,50 @@ export const videoItemSchema = z.object({
   goodPoints: z.string(),
   memo: z.string(),
 });
+
+/** 動画 1 件のレスポンス型。上の Zod スキーマを単一ソースに導出する。 */
+export type VideoItem = z.infer<typeof videoItemSchema>;
+
+/** カテゴリの literal union（プリセット + フォールバック）。 */
+export type Category = VideoItem["category"];
+
+// --- 検証アダプタ ---
+
+/** `validateVideoInput` の動作切り替え。 */
+type ValidateOptions = {
+  /** true で更新用（PATCH）。送信されたフィールドのみ検証する */
+  partial?: boolean;
+};
+
+/**
+ * 動画入力を検証する。
+ *
+ * 内部エンジンは上記の Zod スキーマに一本化しているが、公開契約
+ * （シグネチャ・戻り値 `{ data, errors }`・エラーメッセージ）は従来実装と
+ * 完全に同一に保つ。これにより Route Handler / 既存テストは無変更で動作する。
+ * @param input 検証対象の生の入力（フォーム値や JSON ボディ）
+ * @param options partial=true で更新用（送信されたフィールドのみ検証）に切り替える
+ * @returns 正規化済みデータ `data` と、フィールド別の先頭エラー `errors`
+ */
+export const validateVideoInput = (
+  input: unknown,
+  options: ValidateOptions = {},
+): { data: NormalizedVideo; errors: ValidationErrors } => {
+  const schema = options.partial ? videoUpdateSchema : videoInputSchema;
+  const result = schema.safeParse(input ?? {});
+
+  if (result.success) {
+    return { data: result.data as NormalizedVideo, errors: {} };
+  }
+
+  // フィールドごとに先頭のメッセージだけを採用（旧実装は 1 フィールド 1 メッセージ）。
+  const errors: ValidationErrors = {};
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if (typeof key === "string" && !(key in errors)) {
+      (errors as Record<string, string>)[key] = issue.message;
+    }
+  }
+
+  return { data: {}, errors };
+};

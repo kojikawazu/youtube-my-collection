@@ -3,6 +3,14 @@
 API の検証・型・ドキュメントを **Zod スキーマを単一の真実のソース** に統合し、そこから OpenAPI を自動生成して Swagger UI で公開する計画。`docs/07-api-specification.md`（Markdown 仕様）と実装の手動同期を、構造的な自動生成へ寄せて乖離を防ぐ。
 
 > ステータス: **実装済み**（A1: 完全置換）。本メモは品質ゲート（設計→レビュー→実装）の設計成果物として作成し、実装完了後に追補した。
+>
+> **本文中のパスは執筆当時のもの**（設計経緯の記録として残す）。その後 issue #163 で配置が変わっている。
+>
+> | 当時 | 現在 |
+> |---|---|
+> | `front/src/lib/schemas/video.ts` | `front/src/schemas/video.ts` |
+> | `front/src/lib/validation.ts` | `front/src/schemas/video.ts` に統合（`validateVideoInput`） |
+> | `types/index.ts` で `VideoItem` を再 export | `schemas/video.ts` から直接 `export` |
 
 ## 目次
 
