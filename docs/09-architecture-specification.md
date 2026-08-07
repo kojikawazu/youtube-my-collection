@@ -25,7 +25,7 @@
 | バリデーション / API ドキュメント | Zod（`lib/schemas/`）を単一ソースに検証・型・OpenAPI を導出。`@asteasolutions/zod-to-openapi` で OpenAPI 生成、`/docs` に Swagger UI |
 | コード品質 | ESLint（`eslint-config-next` Flat Config）/ Prettier（`prettier-plugin-tailwindcss` で Tailwind クラス整列、`eslint-config-prettier` で競合回避） |
 | server/client 境界 | `server-only`。`lib/db.ts`（Prisma）と `lib/auth-server.ts`（`ADMIN_EMAIL`）に付与し、Client Component から引き込まれるとビルドが失敗する |
-| CI | GitHub Actions。発火条件ごとに分割: `ci.yml`（`front/**`: format チェック → Lint → 型 → **ビルド** → ユニット → 結合 → E2E）/ `docs.yml`（Markdown: リンク切れ・ルールテーブル同期）/ `workflows-lint.yml`（ワークフロー定義: actionlint） |
+| CI | GitHub Actions。発火条件ごとに分割: `ci.yml`（`front/**`: format チェック → Lint → 型 → **ビルド** → ユニット → 結合 → E2E）/ `docs.yml`（Markdown: リンク切れ・見出しアンカー実在・ルールテーブル同期）/ `workflows-lint.yml`（ワークフロー定義: actionlint） |
 | デプロイ | 本番: Vercel（`main` ブランチ、`front/` のみ） |
 
 ## 構成方針
