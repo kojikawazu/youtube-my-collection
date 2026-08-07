@@ -46,7 +46,7 @@
 | メモ | 2000 文字以内 |
 | 良かったレベル | 1-5 |
 
-- UI と API の両方でバリデーションを実施（実装: `front/src/lib/validation.ts`）
+- UI と API の両方でバリデーションを実施（実装: `front/src/schemas/video.ts` の `validateVideoInput`）
 - エラー時は入力欄の背景とメッセージで強調表示
 
 ## Markdown 安全性

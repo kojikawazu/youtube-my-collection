@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildOpenApiDocument } from "@/lib/openapi";
-import { CATEGORY_VALUES, videoInputSchema, videoItemSchema } from "@/lib/schemas/video";
+import { CATEGORY_VALUES, videoInputSchema, videoItemSchema } from "@/schemas/video";
 
 // 生成は決定的なので 1 回だけ実行して使い回す。
 const doc = buildOpenApiDocument();

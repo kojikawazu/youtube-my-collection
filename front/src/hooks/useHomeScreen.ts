@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
-import type { Screen, VideoItem } from "@/types";
+import type { Screen } from "@/types";
+import type { VideoItem } from "@/schemas/video";
 import type { HomeTemplateProps } from "@/types/home-template";
 import { useToast } from "@/hooks/useToast";
 import { useAuthErrorToast } from "@/hooks/useAuthErrorToast";

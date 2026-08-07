@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateVideoInput } from "../validation";
+import { validateVideoInput } from "../video";
 
 const validInput = {
   youtubeUrl: "https://youtube.com/watch?v=example",

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { VideoItem, SortOption } from "@/types";
+import type { SortOption } from "@/types";
+import type { VideoItem } from "@/schemas/video";
 
 const PAGE_SIZE = 10;
 const MAX_VISIBLE_PAGE_BUTTONS = 5;

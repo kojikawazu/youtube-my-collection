@@ -1,11 +1,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { validateVideoInput } from "@/lib/validation";
+import { validateVideoInput } from "@/schemas/video";
 import type { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-server";
 import { readJsonBody } from "@/lib/request";
-import { DEFAULT_RATING } from "@/lib/schemas/video";
+import { DEFAULT_RATING } from "@/schemas/video";
 import { buildVideoOrderBy, toVideoItem } from "@/lib/videos";
 
 /**

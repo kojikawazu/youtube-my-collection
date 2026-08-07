@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { validateVideoInput } from "@/lib/validation";
+import { validateVideoInput } from "@/schemas/video";
 import { requireAdmin } from "@/lib/auth-server";
 import { readJsonBody } from "@/lib/request";
 import { toVideoItem } from "@/lib/videos";
@@ -80,7 +80,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         ...(hasDataField(data, "memo") ? { memo: data.memo } : {}),
         ...(hasDataField(data, "rating") ? { rating: data.rating } : {}),
         // publishDate は「明示的な null（未設定にする）」と「undefined（未送信・無効値）」を
-        // 区別する（lib/schemas/video.ts の parsePublishDate 参照）。
+        // 区別する（schemas/video.ts の parsePublishDate 参照）。
         // undefined を null に丸めると、不正な日付を送っただけで既存の公開日が消えてしまう。
         ...(hasDataField(data, "publishDate") && data.publishDate !== undefined
           ? { publishDate: data.publishDate }

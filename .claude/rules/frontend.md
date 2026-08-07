@@ -77,11 +77,11 @@ app  →  components  →  hooks  →  repositories  →  lib / schemas  →  ty
 | レイヤ | import してよい | import 禁止 |
 |---|---|---|
 | `app/` | `components/`, `hooks/`, `repositories/`, `lib/`, `schemas/`, `types/`, `constants/` | （なし。app は誰からも参照されない） |
-| `components/` | 下位の `components/`, `hooks/`, `lib/`, `types/`, `constants/` | **`app/`**（ページ固有の型・定数を含む）, **`repositories/`**（通信は `hooks/` 経由） |
+| `components/` | 下位の `components/`, `hooks/`, `lib/`, `schemas/`, `types/`, `constants/` | **`app/`**（ページ固有の型・定数を含む）, **`repositories/`**（通信は `hooks/` 経由） |
 | `hooks/` | `repositories/`, `lib/`, `schemas/`, `types/`, `constants/` | **`app/`**, **`components/`**（JSX を返さない） |
 | `repositories/` | `lib/`, `schemas/`, `types/`, `constants/` | **`app/`**, **`components/`**, **`hooks/`** |
 | `lib/` `schemas/` | `types/`, `constants/` | 上位レイヤすべて（**`lib/` は通信もしない**） |
-| `types/` `constants/` | （原則どこにも依存しない。例外は下記「スキーマからの型導出」のみ） | 上位レイヤすべて |
+| `types/` `constants/` | （原則どこにも依存しない） | 上位レイヤすべて |
 
 ### 通信は `repositories/` に閉じる
 
@@ -97,20 +97,23 @@ app  →  components  →  hooks  →  repositories  →  lib / schemas  →  ty
 - **サーバー専用モジュール（`lib/db.ts` / `lib/auth-server.ts` などシークレット・DB を触る処理）を Client Component から import しない**。`server-only` パッケージで境界を機械的に守る。**混入するとシークレットがクライアントバンドルに乗る**（[`security.md`](./security.md)）。
 - **`hooks/` は JSX を返さない**。返したくなったらそれはコンポーネントであり、`components/` に置く。
 
-### 例外: スキーマからの型導出（`types/` → `lib/schemas/`）
+### スキーマから導出した型は `schemas/` に置く（`types/` を経由しない）
 
-**`types/` が `lib/schemas/` を参照することだけは認める。** `z.infer<typeof schema>` で型を導出する用途に限る。
+**`z.infer` で導出した型は、スキーマと同じファイルから `export` する。** 利用側はそこを直接 import する。
 
 ```ts
-// types/index.ts — 認める
-import type { videoItemSchema } from "@/lib/schemas/video";
+// schemas/video.ts — スキーマと導出型を同居させる
+export const videoItemSchema = z.object({ /* ... */ });
 export type VideoItem = z.infer<typeof videoItemSchema>;
+
+// 利用側
+import type { VideoItem } from "@/schemas/video";
 ```
 
-- **理由**: [`typescript.md`](./typescript.md)「スキーマバリデーションは Zod に統一する」が**型はスキーマから導出する（手書きで二重定義しない）**と定めており、スキーマが `lib/schemas/` にある以上この参照は避けられない。禁止すると型を手書きすることになり、より重い規約違反（同じ形の二重管理）を招く。
-- **`lib/schemas/` は実質的に最下層**である。`zod` と `constants/` にしか依存せず、上位レイヤを一切参照しない。ディレクトリの位置が `lib/` 配下なだけで、依存の向きは壊れていない。
-- **例外はここまで。** `types/` から `lib/` の**他のモジュール**（`db` / `auth-server` / `validation` / `youtube` 等）を参照してはならない。参照したくなったら、その型は `types/` ではなく利用側に置くべきか、参照先の型を `types/` へ移すべきかを検討する。
-- 同じ理由で `constants/` も同様に扱う（現状は該当なし）。
+- **`types/` に再定義しない。** 手書きで二重定義するのは [`duplication.md`](./duplication.md) 違反であり、`types/` で `z.infer` して再 export するのも**定義を 2 箇所に見せる**ため避ける（[`typescript.md`](./typescript.md)「スキーマの配置」）。
+- **`schemas/` は最下層**で、`zod` と `types/` `constants/` にしか依存しない。上の表のとおり `types/` から `schemas/` への参照は不要になるため、**レイヤの依存は一方向のまま**である。
+
+> **経緯**: スキーマが `lib/schemas/` にあった頃は `types/index.ts` が `lib/` を参照する必要があり、「`types/` → `lib/schemas/` のみ認める」例外条項を置いていた。`src/schemas/` への移行（issue #163）で参照そのものが消えたため、**例外条項は削除した**。例外を運用し続けるより、例外が要らない構造に寄せる方が安い。
 
 禁止例:
 
@@ -149,8 +152,8 @@ export type VideoItem = z.infer<typeof videoItemSchema>;
 - フォームバリデーションには **Zod** を使用する。[`typescript.md`](./typescript.md)「スキーマバリデーションは Zod に統一する」に従い、`yup` 等と**混在させない**。
 - **スキーマを単一の真実とする**。フォームの型は `z.infer<typeof schema>` で導出し、同じ形を手書きしない。
 - **クライアント検証は UX のためのものであり、セキュリティ担保ではない**。Route Handler でも必ず検証する（信頼境界が違うため、この重複は必要 — [`duplication.md`](./duplication.md)）。
-- 同じ入力ルールなら、**Route Handler と同じ Zod スキーマ（`lib/schemas/`）を共有**する。制約値だけでも定数で共有する。
-- **フォームライブラリを導入する場合はアダプタ経由で既存スキーマを再利用する**（`react-hook-form` なら `zodResolver`）。スキーマを書き直さない（[`typescript.md`](./typescript.md)）。現在は未導入で、`hooks/useVideoForm` が `lib/validation` を直接呼んでいる。
+- 同じ入力ルールなら、**Route Handler と同じ Zod スキーマ（`schemas/`）を共有**する。制約値だけでも定数で共有する。
+- **フォームライブラリを導入する場合はアダプタ経由で既存スキーマを再利用する**（`react-hook-form` なら `zodResolver`）。スキーマを書き直さない（[`typescript.md`](./typescript.md)）。現在は未導入で、`hooks/useVideoForm` が `schemas/video` の `validateVideoInput` を直接呼んでいる。
 
 ## ディレクトリ構成
 
@@ -172,16 +175,16 @@ front/src/
 │   └── atoms/                # 最小単位
 ├── hooks/                    # クライアントロジック（useXxx）
 ├── repositories/             # API アクセス（fetch はここだけ）※未作成
+├── schemas/                  # Zod スキーマ + 導出型 + 検証アダプタ
 ├── lib/                      # 純粋関数・サーバー専用処理（通信しない）
-│   ├── schemas/              # Zod スキーマ ※ src/schemas/ へ移行予定
 │   └── supabase/             # Supabase クライアント
 ├── constants/                # 共通定数（環境変数は置かない）
-└── types/                    # 型定義
+└── types/                    # 型定義（検証を伴わない純粋な型）
 ```
 
 - テストは `__tests__/` に**コロケーション**する（`src/` 外に集約しない）。E2E のみ `front/tests/e2e/` に置く。
 - `stores/` `contexts/` は現在存在しない。導入する場合は本ファイルの `globs` に追加する。
-- `repositories/` と `src/schemas/` は**規約としては定めているが未作成**（移行は段階的に行う）。`globs` には先行して含めてある。
+- `repositories/` は**規約としては定めているが未作成**（移行は段階的に行う。issue #163）。`globs` には先行して含めてある。
 
 ## インポート
 

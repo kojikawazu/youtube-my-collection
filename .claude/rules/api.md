@@ -44,7 +44,7 @@ front/src/app/api/
 
 | 検証の種類 | 担当 |
 |---|---|
-| **形式・構文**（必須・型・文字数・URL 形式） | Route Handler の **Zod スキーマ（`lib/schemas/`）** |
+| **形式・構文**（必須・型・文字数・URL 形式） | Route Handler の **Zod スキーマ（`schemas/`）** |
 | **業務ルール**（重複チェック・状態遷移の可否） | `lib/` のヘルパー |
 | **DB 制約**（一意制約・外部キー） | Prisma スキーマ（最後の砦。アプリ側検証の代わりにはしない） |
 
@@ -60,7 +60,7 @@ front/src/app/api/
 
 - RESTful 設計（リソース指向エンドポイント）
 - レスポンス形式: JSON（`NextResponse.json()`）
-- 入力バリデーションは Zod スキーマ（`lib/schemas/`）を単一ソースとする
+- 入力バリデーションは Zod スキーマ（`schemas/`）を単一ソースとする
 - 認可はサーバー側 allowlist で判定する（`lib/auth-server.ts` の `requireAdmin`）
 - エラー時は適切な HTTP ステータスコード（400/401/403/404/500）で返す
 - API 仕様の正準は [`docs/07-api-specification.md`](../../docs/07-api-specification.md)

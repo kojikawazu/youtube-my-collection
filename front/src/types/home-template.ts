@@ -1,5 +1,6 @@
 import type React from "react";
-import type { Screen, SortOption, VideoItem } from "@/types";
+import type { Screen, SortOption } from "@/types";
+import type { VideoItem } from "@/schemas/video";
 import type { ValidationErrors } from "@/types/validation";
 
 /**

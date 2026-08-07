@@ -289,7 +289,7 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 | `components/*` 全体 | hooks 経由でデータを受け取るだけ |
 | `lib/types.ts` | 型定義はそのまま |
 | `lib/youtube.ts` | クライアント側サムネ生成 |
-| `lib/validation.ts` | フロント側バリデーションとして残す |
+| `schemas/video.ts` | フロント側バリデーションとして残す |
 | `lib/auth.ts` | Supabase SDK のログイン/ログアウト（変更なし） |
 | `lib/supabase/client.ts` | クライアント SDK（変更なし） |
 | `app/auth/callback/page.tsx` + `AuthCallbackClient.tsx` | OAuth コールバック（Next.js に残す。交換はブラウザ側） |
@@ -336,7 +336,7 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 
 | 側 | 方針 |
 |----|------|
-| フロント | `lib/validation.ts` をそのまま維持（UX 用） |
+| フロント | `schemas/video.ts` をそのまま維持（UX 用） |
 | バックエンド | Go で同等のバリデーションを実装（セキュリティ用） |
 
 バリデーションルール（両方で適用）:
