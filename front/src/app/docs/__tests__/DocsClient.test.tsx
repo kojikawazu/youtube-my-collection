@@ -48,6 +48,7 @@ describe("DocsClient（管理者ガード）", () => {
       expect(screen.getByText(/管理者のみ閲覧できます/)).toBeInTheDocument();
     });
     expect(fetchMock).toHaveBeenCalledWith("/api/auth/admin", {
+      method: "GET",
       headers: { Authorization: "Bearer user-token" },
     });
   });

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
+import { fetchIsAdmin } from "@/repositories/auth";
 import { signInWithGoogle, signOut } from "@/lib/auth";
 import { supabase } from "@/lib/supabase/client";
 
@@ -26,26 +27,6 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
     showToastRef.current = showToast;
     onNonAdminRejectedRef.current = onNonAdminRejected;
   }, [showToast, onNonAdminRejected]);
-
-  /**
-   * サーバーの `/api/auth/admin` にトークンを渡し、管理者 allowlist 判定の可否を得る。失敗時は false。
-   * @param token 検証する Supabase アクセストークン
-   * @returns 管理者なら true、非管理者・通信失敗なら false
-   */
-  const verifyAdminSession = async (token: string) => {
-    try {
-      const response = await fetch("/api/auth/admin", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) return false;
-      const data = (await response.json()) as { isAdmin?: boolean };
-      return Boolean(data.isAdmin);
-    } catch (error) {
-      console.error(error);
-      return false;
-    }
-  };
 
   useEffect(() => {
     /** allowlist 外のログインを拒否する。サインアウト→状態クリア→通知を行う（多重実行を ref でガード）。 */
@@ -81,7 +62,7 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
       }
 
       const token = session.access_token;
-      const isAllowed = await verifyAdminSession(token);
+      const isAllowed = await fetchIsAdmin(token);
       if (isAllowed) {
         setAccessToken(token);
         setIsAdmin(true);

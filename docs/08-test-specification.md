@@ -16,7 +16,7 @@
 
 | レイヤー | ツール | 対象 |
 |----------|--------|------|
-| ユニット | Vitest + @testing-library/react | `schemas/video.ts`（検証）、`lib/videos.ts`（並び順の組み立て）、`lib/request.ts`（JSON ボディ解析）、`lib/supabase/client.ts`（PKCE 設定）、各フック、主要コンポーネント（atoms/molecules/organisms）、Route Handler の認可単体（`auth/admin`・`openapi.json`） |
+| ユニット | Vitest + @testing-library/react | `schemas/video.ts`（検証）、`repositories/video.ts`・`repositories/auth.ts`（API 契約の組み立てと応答の解釈）、`lib/videos.ts`（並び順の組み立て）、`lib/request.ts`（JSON ボディ解析）、`lib/supabase/client.ts`（PKCE 設定）、各フック、主要コンポーネント（atoms/molecules/organisms）、Route Handler の認可単体（`auth/admin`・`openapi.json`） |
 | FE 統合 | Vitest（jsdom）+ @testing-library/react | `app/page.tsx` の画面遷移・フック→コンポーネント配線（I/O のみモック、実フック＋実コンポーネント） |
 | 結合（IT） | Vitest（node）+ 実 Prisma + PostgreSQL | `api/videos*` の Route Handler を実 DB で実行（認可・ページング・検索・部分更新・DB マッピング） |
 | E2E | Playwright | 公開フロー（`public.spec.ts`）、管理者フロー（`admin.spec.ts`） |
