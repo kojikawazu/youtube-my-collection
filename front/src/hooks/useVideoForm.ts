@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { createVideo, updateVideo } from "@/repositories/video";
+import type { VideoPayload } from "@/repositories/video";
 import type { VideoItem } from "@/schemas/video";
 import { validateVideoInput } from "@/schemas/video";
 import type { ValidationErrors } from "@/types/validation";
@@ -97,31 +99,21 @@ export function useVideoForm({
      *   いずれも呼び出し側で捕捉してトースト表示する
      */
     const action = async (): Promise<VideoItem | null> => {
+      // 送信ボディの共通部分。publishDate だけ add / edit で扱いが違うため呼び出し側で足す。
+      const basePayload: Omit<VideoPayload, "publishDate"> = {
+        youtubeUrl: formData.youtubeUrl,
+        title: formData.title,
+        thumbnailUrl: getYoutubeThumbnail(formData.youtubeUrl ?? ""),
+        tags: formData.tags ?? [],
+        category: formData.category ?? "未分類",
+        rating: formData.rating ?? 3,
+        goodPoints: formData.goodPoints ?? "",
+        memo: formData.memo ?? "",
+      };
+
       if (mode === "add") {
-        const response = await fetch("/api/videos", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-          },
-          body: JSON.stringify({
-            youtubeUrl: formData.youtubeUrl,
-            title: formData.title,
-            thumbnailUrl: getYoutubeThumbnail(formData.youtubeUrl ?? ""),
-            tags: formData.tags ?? [],
-            category: formData.category ?? "未分類",
-            rating: formData.rating ?? 3,
-            goodPoints: formData.goodPoints ?? "",
-            memo: formData.memo ?? "",
-            publishDate: null,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to create video");
-        }
-
-        await response.json();
+        // 追加時は公開日を入力させないため常に null（未公開）で送る。
+        await createVideo({ ...basePayload, publishDate: null }, accessToken);
         await refreshListPage(1);
         showToast("追加しました。");
         return null;
@@ -131,31 +123,11 @@ export function useVideoForm({
           throw new Error("更新対象のIDが見つかりません。");
         }
 
-        const response = await fetch(`/api/videos/${targetId}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-          },
-          body: JSON.stringify({
-            id: targetId,
-            youtubeUrl: formData.youtubeUrl,
-            title: formData.title,
-            thumbnailUrl: getYoutubeThumbnail(formData.youtubeUrl ?? ""),
-            tags: formData.tags ?? [],
-            category: formData.category ?? "未分類",
-            rating: formData.rating ?? 3,
-            goodPoints: formData.goodPoints ?? "",
-            memo: formData.memo ?? "",
-            publishDate: formData.publishDate ?? null,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to update video");
-        }
-
-        const updated = (await response.json()) as VideoItem;
+        const updated = await updateVideo(
+          targetId,
+          { ...basePayload, publishDate: formData.publishDate ?? null },
+          accessToken,
+        );
         await refreshCurrentPage();
         showToast("更新しました。");
         return updated;

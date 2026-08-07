@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { deleteVideo as deleteVideoRequest, fetchVideos } from "@/repositories/video";
 import type { SortOption } from "@/types";
 import type { VideoItem } from "@/schemas/video";
 
@@ -52,38 +53,18 @@ export function useVideos() {
       setIsLoading(true);
       setLoadError(null);
       try {
-        const params = new URLSearchParams({
-          limit: String(PAGE_SIZE),
-          offset: String((page - 1) * PAGE_SIZE),
-          order: "desc",
-          sort:
-            sortOption === "future" ? "published" : sortOption === "rating" ? "rating" : "added",
-        });
-        if (debouncedSearchQuery) {
-          params.set("q", debouncedSearchQuery);
-        }
-        if (bustCache) {
-          params.set("_t", String(Date.now()));
-        }
-
-        const response = await fetch(`/api/videos?${params.toString()}`, {
+        const { videos: loadedVideos, totalCount: loadedTotalCount } = await fetchVideos({
+          page,
+          pageSize: PAGE_SIZE,
+          sortOption,
+          searchQuery: debouncedSearchQuery,
+          bustCache,
           signal: controller.signal,
         });
-        if (!response.ok) {
-          throw new Error("Failed to load videos");
-        }
-
-        const data = (await response.json()) as VideoItem[];
         if (!isLatestRequest()) return;
 
-        const totalCountHeader = response.headers.get("x-total-count");
-        const parsedTotalCount = totalCountHeader ? Number(totalCountHeader) : NaN;
-        setVideos(data);
-        setTotalCount(
-          Number.isFinite(parsedTotalCount) && parsedTotalCount >= 0
-            ? parsedTotalCount
-            : data.length,
-        );
+        setVideos(loadedVideos);
+        setTotalCount(loadedTotalCount);
       } catch (error) {
         // 中止・追い越されたリクエストの失敗は利用者向けエラーにしない（現在の表示は最新のもの）。
         if (controller.signal.aborted || !isLatestRequest()) return;
@@ -128,15 +109,7 @@ export function useVideos() {
    */
   const deleteVideo = useCallback(
     async (id: string, accessToken: string | null) => {
-      const response = await fetch(`/api/videos/${id}`, {
-        method: "DELETE",
-        headers: {
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Failed to delete");
-      }
+      await deleteVideoRequest(id, accessToken);
 
       const nextTotalCount = Math.max(totalCount - 1, 0);
       const nextTotalPages = Math.max(1, Math.ceil(nextTotalCount / PAGE_SIZE));

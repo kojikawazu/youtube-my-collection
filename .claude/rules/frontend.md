@@ -90,7 +90,9 @@ app  →  components  →  hooks  →  repositories  →  lib / schemas  →  ty
 - **`lib/` は純粋関数の置き場で、通信しない。** URL 組み立てやレスポンス整形のような純粋処理は `lib/`、通信そのものは `repositories/`。
 - サーバーコンポーネントのデータ取得も `repositories/` の関数を呼ぶ（`page.tsx` に `fetch` を直書きしない）。
 
-> **現状との差異**: 現在 `repositories/` は無く、`fetch` は `hooks/useVideos`・`hooks/useVideoForm`・`hooks/useAuth`・`app/docs/DocsClient.tsx` に計 6 箇所ある。本規約への移行は段階的に行う。
+> **移行済み**（issue #163）: `fetch` は `repositories/video.ts` と `repositories/auth.ts` にのみ存在する。
+> API 契約の知識（クエリパラメータ名・並び順の呼び名・`x-total-count` の解釈）も `repositories/` に閉じ、
+> フックは「ページ・検索語・並び順」という画面の言葉だけを扱う。**通信を移すだけでなく、API の形の知識ごと移す**のが要点。
 
 - **`components/` 内も一方向**にする。アトミックデザインの階層がそのまま依存の向きになる: `templates` → `organisms` → `molecules` → `atoms`。**`atoms` は `molecules` / `organisms` を import しない**（汎用度の高いものほど下位）。
 - **`app/api/`（Route Handlers）から `components/` や `hooks/` を import しない**。API はサーバー側の層であり、UI 層に依存してはならない（[`api.md`](./api.md) 参照）。
@@ -174,7 +176,7 @@ front/src/
 │   ├── molecules/            # 複数 atoms の組み合わせ
 │   └── atoms/                # 最小単位
 ├── hooks/                    # クライアントロジック（useXxx）
-├── repositories/             # API アクセス（fetch はここだけ）※未作成
+├── repositories/             # API アクセス（fetch はここだけ）
 ├── schemas/                  # Zod スキーマ + 導出型 + 検証アダプタ
 ├── lib/                      # 純粋関数・サーバー専用処理（通信しない）
 │   └── supabase/             # Supabase クライアント
@@ -184,7 +186,6 @@ front/src/
 
 - テストは `__tests__/` に**コロケーション**する（`src/` 外に集約しない）。E2E のみ `front/tests/e2e/` に置く。
 - `stores/` `contexts/` は現在存在しない。導入する場合は本ファイルの `globs` に追加する。
-- `repositories/` は**規約としては定めているが未作成**（移行は段階的に行う。issue #163）。`globs` には先行して含めてある。
 
 ## インポート
 
