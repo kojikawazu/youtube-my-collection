@@ -2,11 +2,12 @@
 
 YouTube My Collection の仕様・設計ドキュメント一覧。プロジェクト概要はリポジトリ直下の [`../README.md`](../README.md) を参照。
 
-ドキュメントは 3 層で構成している。
+ドキュメントは 4 層で構成している。
 
 - **標準仕様書（`01`〜`11`）** — 仕様の正準。番号順に読むと全体像をつかめる。
 - **[`notes/`](./notes/)** — 運用・履歴・参考資料（設計計画・バグレポート・ライブラリガイド 等）。
 - **[`test-design/`](./test-design/)** — テスト設計の詳細ケース表。
+- **継続記録** — 仕様書のように「埋めて完成させる」ものではなく、随時追記し続ける記録（[`lessons-learned.md`](./lessons-learned.md)）。
 
 ## 読み進め順（おすすめ）
 
@@ -61,6 +62,14 @@ YouTube My Collection の仕様・設計ドキュメント一覧。プロジェ�
 | [02-unit-hooks](./test-design/02-unit-hooks.md) | カスタムフック（useAuth / useVideos / useVideoForm 他） |
 | [03-unit-modal](./test-design/03-unit-modal.md) | Modal コンポーネント |
 | [04-e2e-admin](./test-design/04-e2e-admin.md) | 管理者フロー E2E（API モック方式） |
+
+## 継続記録
+
+番号付き仕様書と違い、完成形を持たず随時追記していくドキュメント。
+
+| ドキュメント | 概要 |
+|---|---|
+| [教訓ログ](./lessons-learned.md) | 誤り・失敗・ハマりから得た教訓の蓄積（運用ルールは [`../.claude/rules/lessons-learned.md`](../.claude/rules/lessons-learned.md)） |
 
 ## 関連
 
