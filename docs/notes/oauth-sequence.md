@@ -104,7 +104,7 @@ Google OAuth認証 → Supabase Auth → 管理者判定までの全体フロー
 
 - ホーム画面の `useAuth` フック内 `useEffect` がマウント時に発火
 - `initSession()` → `getSession()` で既存セッションを取得
-- `verifyAdminSession(token)` → `GET /api/auth/admin` に Bearer トークンを送信
+- `fetchIsAdmin(token)`（`repositories/auth.ts`）→ `GET /api/auth/admin` に Bearer トークンを送信
 - サーバー側で `supabase.auth.getUser(token)` → メールアドレス取得
 - `ADMIN_EMAIL` 環境変数と照合し `{ isAdmin: boolean }` を返却
 - `isAdmin: true` → 管理者UI有効化（バッジ・FAB表示）
