@@ -42,6 +42,7 @@ pnpm test:e2e      # E2E（Playwright）
 ```
 
 - **E2E は専用ポート `3100`** で Playwright が dev サーバーを起動する（`reuseExistingServer: false`）。既存サーバーを再利用すると「そのポートで応答する何か」を無検証でテスト対象にしてしまい、別アプリが居座っていても**全件失敗という形でしか現れない**（実際に発生・issue #176）。Playwright が起動したサーバーだけを使えば、対象が自分のアプリであることが定義上保証される。
+- **E2E は `http://127.0.0.1:3100` でアクセスするため、`front/next.config.ts` の `allowedDevOrigins` に `127.0.0.1` を登録している。** Next.js 16.3 以降の dev サーバーは、自身（`localhost`）と異なるオリジンからの開発用リソース（`/_next/hmr` 等）を既定で遮断する。未登録だとページの HTML は返るがクライアント側の処理（一覧取得・セッション判定）が動かず、モックを使うテストも含めて**全件タイムアウトで失敗する**（DB やテストコードの不具合に見える・issue #191）。baseURL のホストを変える場合はここも併せて変える。
 - IT/E2E は `docker-compose.test.yml` の PostgreSQL を要求する（既定 `postgresql://postgres:postgres@localhost:5432/ymc_test?schema=public`）。
 - **テストは `DATABASE_URL` を参照しない。** 接続先は `front/src/test/database-url.ts` の `resolveTestDatabaseUrl()` が唯一の入口で、上書きは**テスト専用の `TEST_DATABASE_URL`** で行う。解決結果のホストが localhost / 127.0.0.1 / ::1 以外なら**接続前に throw** する（allowlist 方式）。
   - **理由（過去の事故）**: `@prisma/client` を import した時点で `.env` が `process.env` へ読み込まれるため、`process.env.DATABASE_URL ?? ローカル` というフォールバックは **`.env` の本番 URL を拾う**。E2E の `seedVideos()` は先頭で `deleteMany()` するため、これは本番データの全削除に直結する（2026-07-31 に発生・issue #174）。「未設定なら安全側」に見えて実際は「汚染された値があれば危険側」に倒れる書き方であり、フォールバックではなく allowlist にする。
