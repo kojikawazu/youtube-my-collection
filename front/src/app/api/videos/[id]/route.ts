@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/schemas/video";
 import { requireAdmin } from "@/lib/auth-server";
-import { readJsonBody } from "@/lib/request";
+import { readJsonBody, resolveClientId } from "@/lib/request";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { toVideoItem } from "@/lib/videos";
 
 type RouteParams = {
@@ -35,10 +36,13 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  * 認可 → JSON 解析 → partial バリデーション → 送信されたフィールドのみ更新する。
  * 対象が存在しない場合（Prisma P2025）は 404、その他の失敗は 500。
  * @param request 更新リクエスト（Bearer 認可と部分更新の JSON ボディ）
- * @returns 更新後の動画 JSON。未検出 404 / JSON 解析・検証失敗 400 / その他 500
+ * @returns 更新後の動画 JSON。未検出 404 / JSON 解析・検証失敗 400 / レートリミット超過 429 / その他 500
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
+    const limit = await enforceRateLimit("videos-write", resolveClientId(request));
+    if (!limit.ok) return limit.response;
+
     const { id: routeId } = await params;
     const auth = await requireAdmin(request, "api/videos/[id]");
     if (!auth.ok) return auth.response;
@@ -100,12 +104,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 }
 
 /**
- * 動画を削除する（管理者限定）。認可 → ID 解決 → 削除。失敗時は 500。
+ * 動画を削除する（管理者限定）。レートリミット → 認可 → ID 解決 → 削除。失敗時は 500。
  * @param request 削除リクエスト（Bearer 認可、ID はパス優先でボディを fallback）
- * @returns 削除成功 `{ ok: true }` の JSON。失敗時は 500
+ * @returns 削除成功 `{ ok: true }` の JSON。レートリミット超過は 429、失敗時は 500
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    const limit = await enforceRateLimit("videos-write", resolveClientId(request));
+    if (!limit.ok) return limit.response;
+
     const { id: routeId } = await params;
     const auth = await requireAdmin(request, "api/videos/[id]");
     if (!auth.ok) return auth.response;

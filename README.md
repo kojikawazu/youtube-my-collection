@@ -5,7 +5,7 @@
 
 YouTube で良かった動画を後から見返せる**公開コレクション**。一般公開のリスト/詳細閲覧と、管理者（単一ユーザー）による追加・編集・削除を提供する。
 
-**Tech:** Next.js 16 (App Router) / React 19 / TypeScript / Tailwind CSS / Supabase (Auth + Postgres) / Prisma / Zod ・ Deploy: Vercel
+**Tech:** Next.js 16 (App Router) / React 19 / TypeScript / Tailwind CSS / Supabase (Auth + Postgres) / Prisma / Zod / Upstash Redis（レートリミット） ・ Deploy: Vercel
 
 ## 主な機能
 

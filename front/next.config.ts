@@ -1,4 +1,9 @@
 import type { NextConfig } from "next";
+import { assertRateLimitConfiguredForProduction } from "./src/lib/rate-limit-env";
+
+// 本番ビルドで Upstash（レートリミット）が未設定なら、ここでビルドを失敗させる。
+// 実行時は未設定だと無効化して通す設計のため、ビルドで止めないと本番が静かに無防備になる。
+assertRateLimitConfiguredForProduction(process.env);
 
 const nextConfig: NextConfig = {
   turbopack: {

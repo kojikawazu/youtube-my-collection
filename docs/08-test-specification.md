@@ -21,7 +21,7 @@
 | 結合（IT） | Vitest（node）+ 実 Prisma + PostgreSQL | `api/videos*` の Route Handler を実 DB で実行（認可・ページング・検索・部分更新・DB マッピング） |
 | E2E | Playwright | 公開フロー（`public.spec.ts`）、管理者フロー（`admin.spec.ts`） |
 
-- **モック境界**: UT は外部 I/O（`fetch`/Supabase SDK）でモック。IT / 公開 E2E は Supabase 認証（`getUser` / セッション）のみモックし **Route Handler + Prisma/DB は実物**。公開フロー E2E はブラウザ → 実 route → Prisma → Postgres を通す。
+- **モック境界**: UT は外部 I/O（`fetch`/Supabase SDK/Upstash）でモック。IT / 公開 E2E は Supabase 認証（`getUser` / セッション）のみモックし（IT はレートリミットの外部カウンタである Upstash も併せてモックする） **Route Handler + Prisma/DB は実物**。公開フロー E2E はブラウザ → 実 route → Prisma → Postgres を通す。
 - **テスト DB**: 本番と同じ PostgreSQL を `docker-compose.test.yml` で起動。スキーマは既存 Prisma マイグレーションを `prisma migrate deploy` で適用（IT: `src/test/it-global-setup.ts` / E2E: `tests/e2e/global-setup.ts`）。IT は各テスト前に `VideoEntry` を truncate、公開 E2E は各テストで seed し直す（`tests/e2e/db.ts`）。DB 共有のため E2E は直列実行（`workers: 1`）。
 
 - 公開ユーザーの閲覧体験を優先的に自動化
@@ -81,6 +81,8 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 - カスタムフック: [`test-design/02-unit-hooks.md`](./test-design/02-unit-hooks.md)
 - Modal コンポーネント: [`test-design/03-unit-modal.md`](./test-design/03-unit-modal.md)
 - 主要コンポーネント（atoms/molecules/organisms）: [`test-design/06-unit-organisms.md`](./test-design/06-unit-organisms.md)
+- レートリミット（`lib/rate-limit.ts` / `lib/rate-limit-env.ts` / `lib/request.ts` の `resolveClientId`）: `front/src/lib/__tests__/rate-limit.test.ts` ほか。Upstash クライアントのみモックし、対象ごとのカウンタ分離・429 と `Retry-After`（切り上げ・最低 1 秒）・未設定時の無効化（警告は 1 回）・Upstash 障害時に通すこと・本番ビルドで未設定なら失敗すること・送信元 IP の解決（`x-forwarded-for` 左端 → `x-real-ip` → `unknown`）を検証する。Route Handler の組み込み（429 がトークン検証より前に返ること）は `api/auth/admin`・`api/openapi.json` の UT と `api/videos*` の IT（C-18 / P-11 / D-7）で検証する（仕様は [`06-security-specification.md`](./06-security-specification.md#レートリミット)）
+- 管理者判定の 3 状態（`repositories/auth.ts` の `fetchIsAdmin`・`useDocsPage`）: 429 を `rate-limited` として `denied` と区別し、ドキュメント画面で「権限なし」と表示しないことを検証する
 - 一覧の並び順組み立て（`lib/videos.ts` の `buildVideoOrderBy`）: `front/src/lib/__tests__/videos.test.ts`。sort ごとの ORDER BY・`order` のタイブレーカーへの伝播・`publishDate` の NULL 位置・末尾が必ず主キー `id` になることを検証する（仕様は [`07-api-specification.md`](./07-api-specification.md)）
 
 ## CI（GitHub Actions）

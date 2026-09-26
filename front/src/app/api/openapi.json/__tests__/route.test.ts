@@ -7,7 +7,14 @@ vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({ auth: { getUser: getUserMock } }),
 }));
 
+// レートリミットの外部 I/O（Upstash）もモックする。判定ロジック（lib/rate-limit）は実物を通す。
+// route より先に import して環境変数を入れる必要がある（理由は test/upstash-mock.ts）。
+import { limitMock } from "@/test/upstash-mock";
+vi.mock("@upstash/redis", () => import("@/test/upstash-mock").then((m) => m.redisModule));
+vi.mock("@upstash/ratelimit", () => import("@/test/upstash-mock").then((m) => m.ratelimitModule));
+
 import { GET } from "../route";
+import { RATE_LIMIT_MESSAGE } from "@/constants/auth";
 
 const makeRequest = (headers: Record<string, string> = {}) =>
   new NextRequest("http://localhost/api/openapi.json", { headers });
@@ -15,6 +22,8 @@ const makeRequest = (headers: Record<string, string> = {}) =>
 describe("GET /api/openapi.json", () => {
   beforeEach(() => {
     getUserMock.mockReset();
+    limitMock.mockReset();
+    limitMock.mockResolvedValue({ success: true, reset: 0 });
     process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost";
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
     process.env.ADMIN_EMAIL = "admin@example.com";
@@ -54,6 +63,15 @@ describe("GET /api/openapi.json", () => {
     expect(res.status).toBe(403);
     const body = await res.json();
     expect(body.error).toBe("Forbidden");
+  });
+
+  it("レートリミット超過なら 429 を返し、認可（トークン検証）より前に打ち切る", async () => {
+    limitMock.mockResolvedValue({ success: false, reset: Date.now() + 10_000 });
+    const res = await GET(makeRequest({ authorization: "Bearer valid-token" }));
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBe("10");
+    expect(await res.json()).toEqual({ error: RATE_LIMIT_MESSAGE });
+    expect(getUserMock).not.toHaveBeenCalled();
   });
 
   // --- 異常系（トークン検証そのものが失敗） ---

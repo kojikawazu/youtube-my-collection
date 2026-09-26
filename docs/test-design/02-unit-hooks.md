@@ -184,6 +184,8 @@
 | S-2 | TOKEN_REFRESHED イベント（非管理者）→ rejectNonAdmin が呼ばれる | onAuthStateChange で TOKEN_REFRESHED 発火（admin API → `{isAdmin:false}`） | signOut 呼ばれる, `showToast("このアカウントは権限がありません。")`, `isAdmin===false` | Medium |
 | S-3 | /api/auth/admin が 401 → 非管理者として扱う | admin API → 401 | `isAdmin===false` | High |
 | S-4 | logout() で signOut が例外 → 状態は正常にクリアされる | signOut が throw | `isAdmin===false`, `accessToken===null`（例外を飲む） | Medium |
+| S-5 | /api/auth/admin が 429（初回ロード）→ サインアウトせずレートリミットの文言を出す | admin API → 429 | signOut・`onNonAdminRejected` は呼ばれない, `showToast(RATE_LIMIT_MESSAGE)`, 「権限がありません」は出さない, `isAdmin===false` | High |
+| S-6 | TOKEN_REFRESHED（管理者として利用中）で 429 → 管理者状態だけ解除し、サインアウトしない | 管理者確定後に TOKEN_REFRESHED 発火（admin API → 429） | `isAdmin===false`, `accessToken===null`, signOut 呼ばれない, `showToast(RATE_LIMIT_MESSAGE)` | High |
 
 ### 異常系
 
