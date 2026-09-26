@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { NextRequest } from "next/server";
-import { readJsonBody } from "../request";
+import { readJsonBody, resolveClientId } from "../request";
 
 /**
  * 生の文字列ボディを持つ POST リクエストを組み立てる（壊れた JSON も送れるようにする）。
@@ -56,5 +56,46 @@ describe("readJsonBody", () => {
     expect(body.error).toBe("Invalid JSON body");
     // SyntaxError の詳細（トークン名・位置情報）が漏れていないこと
     expect(body.error).not.toMatch(/token|position|Unexpected/i);
+  });
+});
+
+describe("resolveClientId", () => {
+  const requestWithHeaders = (headers: Record<string, string>) =>
+    new Request("http://localhost/api/auth/admin", { headers });
+
+  // --- 正常系 ---
+
+  it("x-forwarded-for の値を返す", () => {
+    expect(resolveClientId(requestWithHeaders({ "x-forwarded-for": "203.0.113.1" }))).toBe(
+      "203.0.113.1",
+    );
+  });
+
+  it("プロキシを経由して連なっている場合は左端（元のクライアント）を返す", () => {
+    expect(
+      resolveClientId(
+        requestWithHeaders({ "x-forwarded-for": " 203.0.113.1 , 10.0.0.1, 10.0.0.2" }),
+      ),
+    ).toBe("203.0.113.1");
+  });
+
+  // --- 準正常系 ---
+
+  it("x-forwarded-for が無ければ x-real-ip を使う", () => {
+    expect(resolveClientId(requestWithHeaders({ "x-real-ip": "198.51.100.7" }))).toBe(
+      "198.51.100.7",
+    );
+  });
+
+  it("x-forwarded-for が空なら x-real-ip へフォールバックする", () => {
+    expect(
+      resolveClientId(
+        requestWithHeaders({ "x-forwarded-for": " , ", "x-real-ip": "198.51.100.7" }),
+      ),
+    ).toBe("198.51.100.7");
+  });
+
+  it("どちらも無ければ unknown バケットに寄せる（無制限に通さない）", () => {
+    expect(resolveClientId(requestWithHeaders({}))).toBe("unknown");
   });
 });

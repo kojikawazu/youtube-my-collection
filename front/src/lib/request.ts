@@ -31,3 +31,23 @@ export const readJsonBody = async (request: NextRequest): Promise<ReadJsonBodyRe
     };
   }
 };
+
+/** 送信元 IP が判別できないリクエストをまとめるバケット名。 */
+const UNKNOWN_CLIENT_ID = "unknown";
+
+/**
+ * レートリミットのカウンタに使う送信元の識別子（IP アドレス）を取り出す。
+ *
+ * Vercel はプラットフォーム側で `x-forwarded-for` を設定し直すため、クライアントからは詐称できない。
+ * 判別できない場合は `unknown` という単一のバケットに寄せる。**識別できないから制限しない、
+ * にしない**のは、ヘッダーを欠落させるだけで総当たりの抜け道になるのを防ぐため。
+ * @param request 受信リクエスト
+ * @returns カウンタのキーに使う識別子。判別不能なら `unknown`
+ */
+export const resolveClientId = (request: Request): string => {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  // 複数のプロキシを経由すると `client, proxy1, proxy2` と連なる。左端が元のクライアント。
+  const first = forwardedFor?.split(",")[0]?.trim();
+  if (first) return first;
+  return request.headers.get("x-real-ip")?.trim() || UNKNOWN_CLIENT_ID;
+};

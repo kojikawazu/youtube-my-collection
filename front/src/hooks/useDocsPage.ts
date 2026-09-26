@@ -26,6 +26,8 @@ export type DocsStatus =
   | "loading"
   /** 未ログイン、または管理者 allowlist 外（ログイン誘導を出す） */
   | "unauthorized"
+  /** 管理者判定がレートリミットで弾かれた（管理者かどうかは不明。時間をおいて再読み込みを促す） */
+  | "rate-limited"
   /** Swagger UI（CDN）の読み込みに失敗した */
   | "error"
   /** Swagger UI の描画まで完了した */
@@ -115,9 +117,9 @@ export function useDocsPage(): UseDocsPageResult {
         return;
       }
 
-      const isAdmin = await fetchIsAdmin(token);
-      if (!isAdmin) {
-        if (!cancelled) setStatus("unauthorized");
+      const result = await fetchIsAdmin(token);
+      if (result !== "admin") {
+        if (!cancelled) setStatus(result === "rate-limited" ? "rate-limited" : "unauthorized");
         return;
       }
 

@@ -35,3 +35,9 @@ export const resolveAuthErrorMessage = (code: string | null): string | null => {
   }
   return AUTH_ERROR_FALLBACK_MESSAGE;
 };
+
+/**
+ * レートリミット超過（429）時の文言。サーバーの 429 本文とクライアントのトースト表示で共有する。
+ * 利用者に取れる行動は「待つ」ことだけなので、権限不足と誤解させない文言にする。
+ */
+export const RATE_LIMIT_MESSAGE = "リクエストが多すぎます。しばらく待ってから再度お試しください。";

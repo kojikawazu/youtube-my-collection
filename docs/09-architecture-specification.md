@@ -22,9 +22,10 @@
 | 認証 | Supabase Auth (Google OAuth2, PKCE) + `ADMIN_EMAIL` allowlist |
 | データベース | Supabase Postgres / ORM: Prisma |
 | API | Next.js Route Handlers (`app/api/*`) で DB アクセス |
+| レートリミット | Upstash Redis（`@upstash/ratelimit` / `@upstash/redis`）。認証・書き込み系エンドポイントに IP ごとの上限を設ける（[`06-security-specification.md`](./06-security-specification.md#レートリミット)） |
 | バリデーション / API ドキュメント | Zod（`schemas/`）を単一ソースに検証・型・OpenAPI を導出。`@asteasolutions/zod-to-openapi` で OpenAPI 生成、`/docs` に Swagger UI |
 | コード品質 | ESLint（`eslint-config-next` Flat Config）/ Prettier（`prettier-plugin-tailwindcss` で Tailwind クラス整列、`eslint-config-prettier` で競合回避） |
-| server/client 境界 | `server-only`。`lib/db.ts`（Prisma）と `lib/auth-server.ts`（`ADMIN_EMAIL`）に付与し、Client Component から引き込まれるとビルドが失敗する |
+| server/client 境界 | `server-only`。`lib/db.ts`（Prisma）・`lib/auth-server.ts`（`ADMIN_EMAIL`）・`lib/rate-limit.ts`（Upstash のトークン）に付与し、Client Component から引き込まれるとビルドが失敗する |
 | CI | GitHub Actions。発火条件ごとに分割: `ci.yml`（`front/**`: format チェック → Lint → 型 → **ビルド** → ユニット → 結合 → E2E）/ `docs.yml`（Markdown: リンク切れ・見出しアンカー実在・ルールテーブル同期）/ `workflows-lint.yml`（ワークフロー定義: actionlint） |
 | デプロイ | 本番: Vercel（`main` ブランチ、`front/` のみ） |
 
@@ -36,7 +37,7 @@
 
 ## 環境変数
 
-`front/.env.local` に設定する（テンプレートは [`front/.env.example`](../front/.env.example)）。アプリのコードが実際に参照するのは以下の 5 つのみ。
+`front/.env.local` に設定する（テンプレートは [`front/.env.example`](../front/.env.example)）。アプリのコードが実際に参照するのは以下のみ。
 
 | 変数 | 用途 | 参照箇所 |
 |------|------|----------|
@@ -46,6 +47,9 @@
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key（`getUser` の apikey） | 同上 |
 | `ADMIN_EMAIL` | 管理者 allowlist（サーバーのみ） | `lib/auth-server.ts` / `api/auth/admin` |
 | `NEXT_PUBLIC_SITE_URL` | OAuth リダイレクト先のベース URL | `lib/auth.ts` / `auth/callback` |
+| `UPSTASH_REDIS_REST_URL` | レートリミット用 Upstash Redis の REST URL（サーバーのみ）。**ローカル・CI では未設定でよい**（レートリミットが無効になるだけ）。**本番では必須**（未設定なら本番ビルドが失敗する） | `lib/rate-limit.ts` / `next.config.ts` |
+| `UPSTASH_REDIS_REST_TOKEN` | 同上の REST トークン（サーバーのみ・シークレット） | 同上 |
+| `VERCEL_ENV` | Vercel が自動で設定する（手動設定しない）。`production` のときだけ Upstash 未設定をビルドエラーにする | `next.config.ts` |
 
 > Google OAuth の client id / secret は **Supabase ダッシュボード側**で設定するため、アプリの env には不要。`SUPABASE_SERVICE_ROLE_KEY` や `NEXT_PUBLIC_ADMIN_EMAIL` は現在のコードでは未使用（後者は廃止済み。[`notes/admin-email-exposure-mitigation.md`](./notes/admin-email-exposure-mitigation.md) 参照）。
 

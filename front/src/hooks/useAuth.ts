@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { fetchIsAdmin } from "@/repositories/auth";
 import { signInWithGoogle, signOut } from "@/lib/auth";
+import { RATE_LIMIT_MESSAGE } from "@/constants/auth";
 import { supabase } from "@/lib/supabase/client";
 
 type UseAuthOptions = {
@@ -13,6 +14,8 @@ type UseAuthOptions = {
  * 管理者セッションを管理するフック。Supabase の認証状態を購読し、
  * `/api/auth/admin` でサーバー側の allowlist 判定を行う（クライアントにメールを露出しない）。
  * allowlist 外のアカウントでログインした場合はサインアウトさせ、`onNonAdminRejected` を呼ぶ。
+ * 判定がレートリミットで弾かれた場合は、管理者かどうか不明なためサインアウトはせず、
+ * 管理者状態だけを解除して待つよう通知する（再読み込みで再判定される）。
  * @returns 管理者判定 `isAdmin`・API 認可用 `accessToken`・`login` / `logout`
  */
 export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
@@ -62,10 +65,16 @@ export function useAuth({ showToast, onNonAdminRejected }: UseAuthOptions) {
       }
 
       const token = session.access_token;
-      const isAllowed = await fetchIsAdmin(token);
-      if (isAllowed) {
+      const result = await fetchIsAdmin(token);
+      if (result === "admin") {
         setAccessToken(token);
         setIsAdmin(true);
+        return;
+      }
+      if (result === "rate-limited") {
+        // 管理者の可能性があるためサインアウトしない。判定できない間は安全側（非管理者）に倒す。
+        clearSession();
+        showToastRef.current(RATE_LIMIT_MESSAGE);
         return;
       }
 
