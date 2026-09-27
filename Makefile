@@ -80,6 +80,14 @@ format: ## Prettier で整形
 format-check: ## Prettier の整形チェック（変更しない）
 	cd $(FRONT) && pnpm format:check
 
+# actionlint の公式 Docker イメージ。shellcheck / pyflakes が同梱されるため、run: の中身まで検査される。
+# タグで固定し、CI とローカルで actionlint・shellcheck のバージョンを揃える（更新は意図して行う）。
+ACTIONLINT_IMAGE := rhysd/actionlint:1.7.12
+
+.PHONY: actionlint
+actionlint: ## GitHub Actions のワークフロー定義を検査（actionlint + shellcheck。Docker 必須・CI と同じコマンド）
+	docker run --rm -v "$(CURDIR)":/repo -w /repo $(ACTIONLINT_IMAGE) -color
+
 .PHONY: secret-scan
 secret-scan: ## 秘匿ファイル（鍵・.env 系）が Git の追跡対象に無いか検査（判定のテスト込み。CI と同じコマンド）
 	bash scripts/check-secret-files.test.sh
