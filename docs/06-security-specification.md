@@ -93,13 +93,13 @@
 
 全レスポンスに以下のヘッダーを付与する（issue #192）。実装は `front/src/lib/security-headers.ts` の `buildSecurityHeaders`（純粋関数）で、`front/next.config.ts` の `headers()` から呼ぶ。
 
-> **現状: CSP は Report-Only（観測モード）**。違反を報告するだけでブロックしない。本番で違反 0 件を確認したうえで `Content-Security-Policy`（強制）へ切り替える（issue #192 の第 2 段階）。CSP 以外の 4 ヘッダーは最初から強制している（壊しうる機能が無いため）。
+> **CSP は強制モード**（`Content-Security-Policy`）。PR #200 で Report-Only（観測モード）として導入し、本番で違反 0 件を確認してから強制へ切り替えた（issue #192）。CSP 以外の 4 ヘッダーは導入時から強制している（壊しうる機能が無いため）。
 
 ### ヘッダー一覧
 
 | ヘッダー | 値 | 目的 |
 |---|---|---|
-| `Content-Security-Policy-Report-Only` | 下記「CSP のディレクティブ」 | XSS が成立した際に、外部スクリプトの読み込みや外部への送信を止める最後の砦。**Supabase のセッションは `localStorage` にあるため、XSS はそのままアクセストークンの奪取につながる** |
+| `Content-Security-Policy` | 下記「CSP のディレクティブ」 | XSS が成立した際に、外部スクリプトの読み込みや外部への送信を止める最後の砦。**Supabase のセッションは `localStorage` にあるため、XSS はそのままアクセストークンの奪取につながる** |
 | `X-Content-Type-Options` | `nosniff` | MIME スニッフィングで意図しない形式として解釈させない |
 | `X-Frame-Options` | `DENY` | クリックジャッキング対策（古いブラウザ向けに CSP の `frame-ancestors` と多層） |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | 外部遷移時はオリジンだけを送り、URL のパスを漏らさない |
@@ -126,7 +126,7 @@
 
 ### CSP の観測記録
 
-違反の観測は、ブラウザで `securitypolicyviolation` イベント（Report-Only でも発火する）を収集して行う。
+違反の観測は、ブラウザで `securitypolicyviolation` イベント（Report-Only でも強制でも発火する）を収集して行う。**Report-Only で違反が出ないことと、強制して壊れないことは別の観測**のため、強制へ切り替えた後に同じ導線を再度通している。
 
 | 観測対象 | 環境 | 結果 |
 |---|---|---|
@@ -134,7 +134,10 @@
 | 一覧・詳細・ログイン画面・`/docs`（未ログイン表示） | ローカル本番ビルド（`pnpm build && pnpm start`・キャッシュの無い新規ブラウザ） | 違反 0 件（2026-09-27） |
 | Swagger UI の読み込みと描画（`swagger-ui-dist@5.17.14`・CDN・SRI） | 同上（管理者ゲートは通れないため、`useDocsPage` と同じ URL で直接読み込んで描画） | 違反 0 件 |
 | `z.config({ jitless: true })` を外した場合 | 同上 | 一覧で `script-src` の eval 違反 1 件（**原因の特定と、設定が効いていることの確認**） |
-| **本番（`https://www.mytb-collector.com`）での管理者導線**（実ログイン → 一覧 → 詳細 → 追加・編集・削除 → `/docs`） | 本番 | **未観測**（Report-Only の本番反映後に実施し、ここに記録してから強制へ切り替える） |
+| 一覧・詳細（本番の実データ）・ログイン画面・`/docs`（未ログイン表示）・Swagger UI の描画 | 本番（`https://www.mytb-collector.com`・Report-Only・キャッシュの無い新規ブラウザ） | 違反 0 件（2026-09-27） |
+| 管理者導線（実 Google ログイン → 一覧 → 詳細 → 追加・編集・削除 → `/docs`） | 本番（Report-Only・管理者がブラウザのコンソールで確認） | 違反 0 件（2026-09-27） |
+| **強制へ切り替えた後**: 一覧 → 詳細 → 一覧 → ログイン画面、`/docs`、Swagger UI の描画 | ローカル本番ビルド（`Content-Security-Policy`・キャッシュの無い新規ブラウザ） | 違反 0 件。詳細への遷移・Swagger UI の描画（DOM 要素 16 個）とも動作 |
+| **強制へ切り替えた後**: E2E 全 31 件 | E2E（dev サーバー・強制モード） | すべて成功 |
 
 ## レートリミット（不採用）
 

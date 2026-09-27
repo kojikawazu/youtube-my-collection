@@ -81,12 +81,12 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 
 | # | ケース | 分類 |
 |---|---|---|
-| H-1 | トップページの応答に CSP（Report-Only）と 4 つのセキュリティヘッダーが付く | 正常系 |
+| H-1 | トップページの応答に CSP（強制）と 4 つのセキュリティヘッダーが付き、Report-Only のヘッダーは送らない | 正常系 |
 | H-2 | API（`/api/videos`）の応答にもヘッダーが付く | 正常系 |
 | H-3 | 一覧 → 詳細 → 一覧 → ログイン画面で CSP 違反が 0 件 | 準正常系 |
 | H-4 | `/docs`（未ログイン表示）で CSP 違反が 0 件 | 準正常系 |
 
-- 違反は `securitypolicyviolation` イベントで収集する（**Report-Only でも発火する**ため、観測モードのうちから CI で検出できる）。収集の仕組みは、`script-src` から `'unsafe-inline'` を外すと H-3 が `script-src-elem` の違反で失敗することを確認済み。
+- 違反は `securitypolicyviolation` イベントで収集する。強制モードでは違反＝リソースのブロックなので、H-3 / H-4 は「CSP で画面が壊れていない」ことの回帰テストになる（導入時の Report-Only 期間も同じイベントで観測した）。収集の仕組みは、`script-src` から `'unsafe-inline'` を外すと H-3 が `script-src-elem` の違反で失敗することを確認済み。
 - E2E は dev サーバーで動くため、検証するのは **dev 用ポリシー**（`'unsafe-eval'` を含む）。本番ポリシーの観測記録は [`06-security-specification.md`](./06-security-specification.md#csp-の観測記録) を参照。
 
 ## ユニットテスト設計
