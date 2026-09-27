@@ -1,18 +1,16 @@
 name: Workflows Lint
 
-# ワークフロー定義自体の検査。
-# .github/workflows/** を変更したときだけ動く（.claude/rules/github-actions.md）。
+# ワークフロー定義自体の検査（actionlint + 同梱の shellcheck）。
+# 数秒で終わるため、ワークフローレベルの paths を付けず常に実行する。
+# 必須チェックにしたとき、paths で起動しないと pending のまま PR がマージできなくなる罠も避けられる
+# （.claude/rules/github-actions.md「actionlint」）。
 on:
   push:
     branches:
       - main
-    paths:
-      - ".github/workflows/**"
   pull_request:
     branches:
       - main
-    paths:
-      - ".github/workflows/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,9 +27,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # actionlint は YAML 構文だけでなく、式・シェルスクリプト（shellcheck）まで検査する。
-      # バージョンを固定し、上流の更新で CI が突然落ちないようにする。
+      # ローカルと同じコマンドで実行する。イメージとバージョンの定義は Makefile の ACTIONLINT_IMAGE が正本。
       - name: Run actionlint
-        run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
-          ./actionlint -color
+        run: make actionlint
