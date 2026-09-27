@@ -12,6 +12,7 @@
 - [Row Level Security (RLS)](#row-level-security-rls)
 - [公開範囲](#公開範囲)
 - [秘匿ファイルの混入検出](#秘匿ファイルの混入検出)
+- [セキュリティヘッダー](#セキュリティヘッダー)
 - [レートリミット（不採用）](#レートリミット不採用)
 
 ## 認証
@@ -87,6 +88,53 @@
 - **除外**: テンプレート（`*.example` / `*.sample` / `*.template` / `*.dist`）と TypeScript の型定義（`*.env.d.ts`）。値を持たないため、検出すると誤検知になる。
 - **実装**: 判定は `scripts/check-secret-files.sh`、分類のテストは `scripts/check-secret-files.test.sh`。CI とローカルは同じ `make secret-scan` を実行する。
 - **範囲**: 追跡中のファイル名だけを見る（`git ls-files`）。**ファイルの中身（ソースコードに直書きされたトークン等）や過去の履歴は検査しない**。導入前に全履歴のファイル名・内容を走査し、混入が 0 件であることは確認済み（issue #190）。
+
+## セキュリティヘッダー
+
+全レスポンスに以下のヘッダーを付与する（issue #192）。実装は `front/src/lib/security-headers.ts` の `buildSecurityHeaders`（純粋関数）で、`front/next.config.ts` の `headers()` から呼ぶ。
+
+> **現状: CSP は Report-Only（観測モード）**。違反を報告するだけでブロックしない。本番で違反 0 件を確認したうえで `Content-Security-Policy`（強制）へ切り替える（issue #192 の第 2 段階）。CSP 以外の 4 ヘッダーは最初から強制している（壊しうる機能が無いため）。
+
+### ヘッダー一覧
+
+| ヘッダー | 値 | 目的 |
+|---|---|---|
+| `Content-Security-Policy-Report-Only` | 下記「CSP のディレクティブ」 | XSS が成立した際に、外部スクリプトの読み込みや外部への送信を止める最後の砦。**Supabase のセッションは `localStorage` にあるため、XSS はそのままアクセストークンの奪取につながる** |
+| `X-Content-Type-Options` | `nosniff` | MIME スニッフィングで意図しない形式として解釈させない |
+| `X-Frame-Options` | `DENY` | クリックジャッキング対策（古いブラウザ向けに CSP の `frame-ancestors` と多層） |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | 外部遷移時はオリジンだけを送り、URL のパスを漏らさない |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | 使っていないデバイス権限を無効化する |
+
+### CSP のディレクティブ
+
+| ディレクティブ | 値 | 理由 |
+|---|---|---|
+| `default-src` | `'self'` | 明示しないものは自オリジンに限る（iframe・外部フォント・`<form>` の送信先は使っていない） |
+| `base-uri` / `form-action` | `'self'` | `<base>` の差し替え・フォームの外部送信を防ぐ |
+| `object-src` | `'none'` | プラグイン埋め込みを一切許可しない |
+| `frame-ancestors` | `'none'` | 自サイトを iframe に埋め込ませない |
+| `script-src` | `'self' 'unsafe-inline' https://cdn.jsdelivr.net`（dev のみ `'unsafe-eval'` を追加） | `'unsafe-inline'` は Next.js のハイドレーション用インラインスクリプトのため。`cdn.jsdelivr.net` は `/docs` の Swagger UI（SRI 付き） |
+| `style-src` | `'self' 'unsafe-inline' https://cdn.jsdelivr.net` | framer-motion・`style` 属性のインラインスタイルと Swagger UI の CSS |
+| `img-src` | `'self' data: blob: https:` | サムネイル（YouTube・ユーザー入力の URL）と Markdown 内の画像が任意の https を参照しうるため |
+| `font-src` | `'self' data:` | 外部フォントは使っていない |
+| `connect-src` | `'self' <NEXT_PUBLIC_SUPABASE_URL のオリジン>` | Supabase Auth（セッション取得・トークン更新・PKCE 交換）。URL が未設定・不正なら `'self'` のみ |
+
+- **移植元（md-view）との違い**: md-view は Swagger UI を CDN から読み込まないため `cdn.jsdelivr.net` を許可していない。本アプリでそのまま移植すると `/docs` が壊れる。
+- **`'unsafe-eval'` は本番で許可しない**。dev サーバー（React の dev モード）だけに足す。
+  - 本番のバンドルでは **Zod v4 が初回の検証時に `Function("")` で eval の可否を調べる**（JIT コンパイルの判定）。許可しないとページを開くたびに CSP 違反が報告されるため、`front/src/schemas/video.ts` で `z.config({ jitless: true })` を設定し、eval を一切使わせない。強制モードでも Zod は JIT なしへ切り替わるだけで壊れはしないが、**違反ログが本物の違反を埋もれさせる**のを避ける。フォーム規模の検証で JIT の有無の差は無い。
+- **nonce 化は見送る**。`'unsafe-inline'` を外すには、リクエストごとに nonce を発行する middleware の新設が必要になる。まず強制化を先に行い、nonce 化は必要になった時点で別途判断する。
+
+### CSP の観測記録
+
+違反の観測は、ブラウザで `securitypolicyviolation` イベント（Report-Only でも発火する）を収集して行う。
+
+| 観測対象 | 環境 | 結果 |
+|---|---|---|
+| 一覧 → 詳細 → 一覧 → ログイン画面、`/docs`（未ログイン表示） | E2E（dev サーバー・dev 用ポリシー。`tests/e2e/security-headers.spec.ts` で CI 常設） | 違反 0 件 |
+| 一覧・詳細・ログイン画面・`/docs`（未ログイン表示） | ローカル本番ビルド（`pnpm build && pnpm start`・キャッシュの無い新規ブラウザ） | 違反 0 件（2026-09-27） |
+| Swagger UI の読み込みと描画（`swagger-ui-dist@5.17.14`・CDN・SRI） | 同上（管理者ゲートは通れないため、`useDocsPage` と同じ URL で直接読み込んで描画） | 違反 0 件 |
+| `z.config({ jitless: true })` を外した場合 | 同上 | 一覧で `script-src` の eval 違反 1 件（**原因の特定と、設定が効いていることの確認**） |
+| **本番（`https://www.mytb-collector.com`）での管理者導線**（実ログイン → 一覧 → 詳細 → 追加・編集・削除 → `/docs`） | 本番 | **未観測**（Report-Only の本番反映後に実施し、ここに記録してから強制へ切り替える） |
 
 ## レートリミット（不採用）
 

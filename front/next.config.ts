@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { buildSecurityHeaders } from "./src/lib/security-headers";
 
 const nextConfig: NextConfig = {
   turbopack: {
@@ -13,6 +14,21 @@ const nextConfig: NextConfig = {
   // エージェント向けルールの正本はルートの CLAUDE.md と .claude/rules/ に一本化しているため止める。
   // ファイルを消すだけでは dev 起動のたびに再生成されるので、設定で明示的にオプトアウトする。
   agentRules: false,
+  /**
+   * 全レスポンスにセキュリティヘッダーを付与する（issue #192）。CSP は現在 Report-Only（観測モード）。
+   * @returns ヘッダー適用ルールの配列
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: buildSecurityHeaders({
+          isDev: process.env.NODE_ENV === "development",
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        }),
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -6,6 +6,13 @@ import type { ValidationErrors } from "@/types/validation";
 // サーバー専用の OpenAPI 生成（zod-to-openapi）には依存させない。
 // OpenAPI 用のメタデータ付与は `lib/openapi.ts`（サーバーのみ）で行う。
 
+// Zod v4 は初回の検証時に `Function("")` で eval の可否を調べ、使えれば検証コードを JIT 生成する。
+// CSP で 'unsafe-eval' を許可しないため、ブラウザではこの判定自体がページを開くたびに CSP 違反として
+// 報告される（強制モードでも JIT なしへ切り替わるだけで壊れはしないが、違反ログが本物の違反を埋もれさせる）。
+// フォーム規模の検証で JIT の有無の差は無いため、JIT を無効にして eval を一切使わせない（issue #192）。
+// このモジュールは Zod を使う側より先に読み込まれる検証の単一ソースなので、ここでグローバル設定する。
+z.config({ jitless: true });
+
 export const MAX_TAG_LENGTH = 10;
 export const MAX_CATEGORY_LENGTH = 10;
 export const MAX_TEXT_LENGTH = 2000;
