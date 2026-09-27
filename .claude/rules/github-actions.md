@@ -37,7 +37,9 @@ globs: ".github/workflows/**"
 | `.claude/**`（rules / skills） | ❌ | ❌ | markdown lint |
 | `.github/workflows/**` | ✅（自身の検証のため） | ❌ | actionlint |
 | 依存関係（`front/pnpm-lock.yaml`） | ✅ | ✅ | — |
+| **すべての変更**（種別を問わない） | — | — | Secret scan（秘匿ファイルの追跡検出。`secret-scan.yml`・常時実行） |
 
+- **Secret scan はパスフィルタを付けず常時実行する**。秘匿ファイルはどの種類の変更でも混入しうるうえ、`git ls-files` を読むだけで数秒で終わるため、分岐させて削れる時間がない。
 - **ドキュメント変更でも「何も動かさない」にはしない**。markdown lint・リンク切れ・必須ファイル（README.md / CLAUDE.md）の存在検証は軽量なので実行する。
 
 ## パスフィルタの実装（重要な落とし穴）
