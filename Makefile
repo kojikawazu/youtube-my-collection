@@ -80,6 +80,11 @@ format: ## Prettier で整形
 format-check: ## Prettier の整形チェック（変更しない）
 	cd $(FRONT) && pnpm format:check
 
+.PHONY: secret-scan
+secret-scan: ## 秘匿ファイル（鍵・.env 系）が Git の追跡対象に無いか検査（判定のテスト込み。CI と同じコマンド）
+	bash scripts/check-secret-files.test.sh
+	git ls-files | bash scripts/check-secret-files.sh
+
 .PHONY: check
 check: format-check lint typecheck test ## CI 相当のローカルゲート（format-check + lint + typecheck + unit）
 

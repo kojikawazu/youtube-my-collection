@@ -11,6 +11,7 @@
 - [Markdown 安全性](#markdown-安全性)
 - [Row Level Security (RLS)](#row-level-security-rls)
 - [公開範囲](#公開範囲)
+- [秘匿ファイルの混入検出](#秘匿ファイルの混入検出)
 - [レートリミット（不採用）](#レートリミット不採用)
 
 ## 認証
@@ -76,6 +77,16 @@
 - **API ドキュメント（OpenAPI / Swagger UI）は管理者限定**:
   - `GET /api/openapi.json` は `requireAdmin`（`ADMIN_EMAIL` allowlist）で保護し、未認証は 401・非管理者は 403。
   - `/docs`（Swagger UI）はクライアントガードで、管理者セッションが無い場合はログイン誘導を表示する（スキーマ本体はサーバー側ゲートで保護されるため、HTML シェルからの露出はない）。Swagger UI は `requestInterceptor` で Bearer トークンを注入する。
+
+## 秘匿ファイルの混入検出
+
+鍵・証明書・`.env` 系のファイルが Git の追跡対象に入ったら CI を落とす（`.github/workflows/secret-scan.yml`、issue #190）。
+
+- **なぜ `.gitignore` だけでは足りないか**: `.gitignore` は**未追跡のファイルにしか効かない**。`git add -f` や、新しいディレクトリでの書き漏れは止められない。さらに Git の履歴は追記型で、一度 push した秘匿ファイルは追跡を外しても履歴に残る。**混入後の対処は鍵・トークンのローテーションしかない**ため、「混入させない」（`.gitignore`）に加えて「追跡された時点で落とす」検出側を持つ。
+- **検出対象**: `.env` 系（`.env` / `.env.local` / `.env.production` 等）、`*.key` / `*.pem` / `*.p12` / `*.pfx` / `*.jks` / `*.keystore`、`id_rsa` / `id_ed25519` / `id_dsa`、`credentials.json` / `serviceAccountKey.json`。
+- **除外**: テンプレート（`*.example` / `*.sample` / `*.template` / `*.dist`）と TypeScript の型定義（`*.env.d.ts`）。値を持たないため、検出すると誤検知になる。
+- **実装**: 判定は `scripts/check-secret-files.sh`、分類のテストは `scripts/check-secret-files.test.sh`。CI とローカルは同じ `make secret-scan` を実行する。
+- **範囲**: 追跡中のファイル名だけを見る（`git ls-files`）。**ファイルの中身（ソースコードに直書きされたトークン等）や過去の履歴は検査しない**。導入前に全履歴のファイル名・内容を走査し、混入が 0 件であることは確認済み（issue #190）。
 
 ## レートリミット（不採用）
 
