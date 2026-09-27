@@ -75,12 +75,27 @@ pnpm test:e2e      # E2E（Playwright）
 
 API モック + セッション注入方式で実 OAuth なしに管理者 CRUD を検証（N-1〜N-6 / S-1〜S-5 / A-1、計 13 `test()`）。詳細ケースは [`test-design/04-e2e-admin.md`](./test-design/04-e2e-admin.md) を参照。
 
+## セキュリティヘッダー E2E（`security-headers.spec.ts`）
+
+実 route（seed 済みテスト DB）に対し、全レスポンスのセキュリティヘッダーと CSP 違反の有無を検証する（issue #192）。
+
+| # | ケース | 分類 |
+|---|---|---|
+| H-1 | トップページの応答に CSP（Report-Only）と 4 つのセキュリティヘッダーが付く | 正常系 |
+| H-2 | API（`/api/videos`）の応答にもヘッダーが付く | 正常系 |
+| H-3 | 一覧 → 詳細 → 一覧 → ログイン画面で CSP 違反が 0 件 | 準正常系 |
+| H-4 | `/docs`（未ログイン表示）で CSP 違反が 0 件 | 準正常系 |
+
+- 違反は `securitypolicyviolation` イベントで収集する（**Report-Only でも発火する**ため、観測モードのうちから CI で検出できる）。収集の仕組みは、`script-src` から `'unsafe-inline'` を外すと H-3 が `script-src-elem` の違反で失敗することを確認済み。
+- E2E は dev サーバーで動くため、検証するのは **dev 用ポリシー**（`'unsafe-eval'` を含む）。本番ポリシーの観測記録は [`06-security-specification.md`](./06-security-specification.md#csp-の観測記録) を参照。
+
 ## ユニットテスト設計
 
 - バリデーション純粋関数: [`test-design/01-unit-validation.md`](./test-design/01-unit-validation.md)
 - カスタムフック: [`test-design/02-unit-hooks.md`](./test-design/02-unit-hooks.md)
 - Modal コンポーネント: [`test-design/03-unit-modal.md`](./test-design/03-unit-modal.md)
 - 主要コンポーネント（atoms/molecules/organisms）: [`test-design/06-unit-organisms.md`](./test-design/06-unit-organisms.md)
+- セキュリティヘッダーの組み立て（`lib/security-headers.ts` の `buildSecurityHeaders`）: `front/src/lib/__tests__/security-headers.test.ts`。5 ヘッダーの値、Supabase のオリジンが `connect-src` に入ること（パス付き URL はオリジンに正規化・未設定や不正な URL は `'self'` のみ）、本番で `'unsafe-eval'` を許可せず dev だけに足すこと、Swagger UI の CDN の許可を検証する
 - 一覧の並び順組み立て（`lib/videos.ts` の `buildVideoOrderBy`）: `front/src/lib/__tests__/videos.test.ts`。sort ごとの ORDER BY・`order` のタイブレーカーへの伝播・`publishDate` の NULL 位置・末尾が必ず主キー `id` になることを検証する（仕様は [`07-api-specification.md`](./07-api-specification.md)）
 
 ## CI（GitHub Actions）
