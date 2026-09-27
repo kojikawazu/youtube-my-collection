@@ -7,12 +7,6 @@ vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({ auth: { getUser: getUserMock } }),
 }));
 
-// レートリミットの外部 I/O（Upstash）もモックする。判定ロジック（lib/rate-limit）は実物を通す。
-// route より先に import して環境変数を入れる必要がある（理由は test/upstash-mock.ts）。
-import { limitMock } from "@/test/upstash-mock";
-vi.mock("@upstash/redis", () => import("@/test/upstash-mock").then((m) => m.redisModule));
-vi.mock("@upstash/ratelimit", () => import("@/test/upstash-mock").then((m) => m.ratelimitModule));
-
 import { GET, POST } from "../route";
 import { seedVideo } from "@/test/it-seed";
 import { prisma } from "@/lib/db";
@@ -64,8 +58,6 @@ const validBody = {
 
 beforeEach(() => {
   getUserMock.mockReset();
-  limitMock.mockReset();
-  limitMock.mockResolvedValue({ success: true, reset: 0 });
   process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost";
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
   process.env.ADMIN_EMAIL = ADMIN;
@@ -337,15 +329,6 @@ describe("POST /api/videos (管理者・実 DB)", () => {
   });
 
   // --- 準正常系（認可・検証エラー） ---
-
-  it("レートリミット超過なら 429 を返し、認可より前に打ち切って作成しない", async () => {
-    authAsAdmin();
-    limitMock.mockResolvedValue({ success: false, reset: Date.now() + 10_000 });
-    const res = await POST(postReq(validBody, { authorization: "Bearer valid" }));
-    expect(res.status).toBe(429);
-    expect(getUserMock).not.toHaveBeenCalled();
-    expect(await prisma.videoEntry.count()).toBe(0);
-  });
 
   it("壊れた JSON ボディは 500 ではなく JSON 形式の 400 を返す", async () => {
     authAsAdmin();

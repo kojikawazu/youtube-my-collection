@@ -19,7 +19,6 @@ vi.mock("@/lib/auth", () => ({
 import { useAuth } from "../useAuth";
 import { supabase } from "@/lib/supabase/client";
 import { signOut } from "@/lib/auth";
-import { RATE_LIMIT_MESSAGE } from "@/constants/auth";
 
 const mockGetSession = vi.mocked(supabase.auth.getSession);
 const mockOnAuthStateChange = vi.mocked(supabase.auth.onAuthStateChange);
@@ -167,53 +166,6 @@ describe("useAuth", () => {
     });
     expect(result.current.isAdmin).toBe(false);
     expect(result.current.accessToken).toBeNull();
-  });
-
-  it("does not sign out on 429 from /api/auth/admin, but shows the rate-limit message", async () => {
-    mockGetSession.mockResolvedValue(
-      makeSession("token") as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>,
-    );
-    mockAdminApi(false, 429);
-    const showToast = vi.fn();
-    const onNonAdminRejected = vi.fn();
-    const { result } = renderHook(() => useAuth({ showToast, onNonAdminRejected }));
-
-    await waitFor(() => expect(showToast).toHaveBeenCalledWith(RATE_LIMIT_MESSAGE));
-    // 管理者の可能性があるため、非管理者の拒否処理（サインアウト・画面遷移）は走らせない。
-    expect(mockSignOut).not.toHaveBeenCalled();
-    expect(onNonAdminRejected).not.toHaveBeenCalled();
-    expect(showToast).not.toHaveBeenCalledWith("このアカウントは権限がありません。");
-    // 判定できない間は安全側（非管理者）に倒す。
-    expect(result.current.isAdmin).toBe(false);
-    expect(result.current.accessToken).toBeNull();
-  });
-
-  it("drops admin state without signing out when TOKEN_REFRESHED gets 429", async () => {
-    mockGetSession.mockResolvedValue(
-      makeSession("token") as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>,
-    );
-    mockAdminApi(true);
-    let authStateCallback: (event: string, session: unknown) => void = () => {};
-    mockOnAuthStateChange.mockImplementation((cb) => {
-      authStateCallback = cb as typeof authStateCallback;
-      // hook が使う unsubscribe だけを実装した部分モック（上の SIGNED_OUT のテストと同じ理由でキャスト）。
-      return { data: { subscription: { unsubscribe: vi.fn() } } } as unknown as ReturnType<
-        typeof supabase.auth.onAuthStateChange
-      >;
-    });
-    const showToast = vi.fn();
-    const { result } = renderHook(() => useAuth({ showToast, onNonAdminRejected: vi.fn() }));
-    await waitFor(() => expect(result.current.isAdmin).toBe(true));
-
-    mockAdminApi(false, 429);
-    act(() => {
-      authStateCallback("TOKEN_REFRESHED", { access_token: "refreshed-token" });
-    });
-
-    await waitFor(() => expect(result.current.isAdmin).toBe(false));
-    expect(result.current.accessToken).toBeNull();
-    expect(mockSignOut).not.toHaveBeenCalled();
-    expect(showToast).toHaveBeenCalledWith(RATE_LIMIT_MESSAGE);
   });
 
   // --- 異常系 ---

@@ -4,8 +4,7 @@ import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/schemas/video";
 import type { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-server";
-import { readJsonBody, resolveClientId } from "@/lib/request";
-import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJsonBody } from "@/lib/request";
 import { DEFAULT_RATING } from "@/schemas/video";
 import { buildVideoOrderBy, toVideoItem } from "@/lib/videos";
 
@@ -82,14 +81,11 @@ export async function GET(request: NextRequest) {
 
 /**
  * 動画を新規作成する（管理者限定）。
- * レートリミット（超過は 429）→ 認可 → JSON 解析（失敗は 400）→ バリデーション（失敗は 400）→ 作成し、201 で作成済みの動画を返す。
+ * 認可 → JSON 解析（失敗は 400）→ バリデーション（失敗は 400）→ 作成し、201 で作成済みの動画を返す。
  * @param request 作成リクエスト（Bearer 認可と JSON ボディを含む）
- * @returns 作成した動画の JSON（201）。JSON 解析・検証失敗は 400、認可失敗は 401/403、レートリミット超過は 429
+ * @returns 作成した動画の JSON（201）。JSON 解析・検証失敗は 400、認可失敗は 401/403
  */
 export async function POST(request: NextRequest) {
-  const limit = await enforceRateLimit("videos-write", resolveClientId(request));
-  if (!limit.ok) return limit.response;
-
   const auth = await requireAdmin(request, "api/videos");
   if (!auth.ok) return auth.response;
 

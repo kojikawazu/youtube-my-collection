@@ -5,11 +5,10 @@
 
 import { signInWithGoogle } from "@/lib/auth";
 import { useDocsPage } from "@/hooks/useDocsPage";
-import { RATE_LIMIT_MESSAGE } from "@/constants/auth";
 
 /**
  * API ドキュメント画面のクライアントガード。
- * 管理者のみ Swagger UI を表示し、非管理者にはログイン誘導、レートリミット超過・読み込み失敗時はエラーを表示する。
+ * 管理者のみ Swagger UI を表示し、非管理者にはログイン誘導、読み込み失敗時はエラーを表示する。
  */
 export function DocsClient() {
   const { status } = useDocsPage();
@@ -36,12 +35,6 @@ export function DocsClient() {
             Google でログイン
           </button>
         </div>
-      )}
-
-      {status === "rate-limited" && (
-        <p className="p-8 text-sm text-red-600" role="alert">
-          {RATE_LIMIT_MESSAGE}
-        </p>
       )}
 
       {status === "error" && (
