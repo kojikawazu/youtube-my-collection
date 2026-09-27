@@ -27,7 +27,7 @@ describe("buildSecurityHeaders", () => {
   it("CSP と 4 つのセキュリティヘッダーを返す", () => {
     const headers = buildSecurityHeaders({ isDev: false, supabaseUrl: SUPABASE_URL });
     expect(headers.map((h) => h.key)).toEqual([
-      "Content-Security-Policy-Report-Only",
+      "Content-Security-Policy",
       "X-Content-Type-Options",
       "X-Frame-Options",
       "Referrer-Policy",

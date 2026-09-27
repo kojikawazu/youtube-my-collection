@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   // ファイルを消すだけでは dev 起動のたびに再生成されるので、設定で明示的にオプトアウトする。
   agentRules: false,
   /**
-   * 全レスポンスにセキュリティヘッダーを付与する（issue #192）。CSP は現在 Report-Only（観測モード）。
+   * 全レスポンスにセキュリティヘッダーを付与する（issue #192）。CSP は強制モード（値の理由は docs/06「セキュリティヘッダー」）。
    * @returns ヘッダー適用ルールの配列
    */
   async headers() {

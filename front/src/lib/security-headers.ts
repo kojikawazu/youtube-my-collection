@@ -20,11 +20,11 @@ type SecurityHeaderOptions = {
 };
 
 /**
- * CSP を載せるヘッダー名。
- * 現在は観測モード（Report-Only）: 違反を報告するだけでブロックしない。
- * 本番で違反 0 件を確認したら `Content-Security-Policy`（強制）へ切り替える（issue #192 の第 2 段階）。
+ * CSP を載せるヘッダー名（強制モード: 違反するリソースはブロックされる）。
+ * issue #192 で Report-Only（観測モード）として導入し、本番で違反 0 件を確認してから強制へ切り替えた。
+ * 観測の経緯は docs/06-security-specification.md「CSP の観測記録」を参照。
  */
-const CSP_HEADER_KEY = "Content-Security-Policy-Report-Only";
+const CSP_HEADER_KEY = "Content-Security-Policy";
 
 /** Swagger UI（`/docs`）を配信する CDN。`hooks/useDocsPage.ts` が SRI 付きで読み込む。 */
 const SWAGGER_CDN_ORIGIN = "https://cdn.jsdelivr.net";

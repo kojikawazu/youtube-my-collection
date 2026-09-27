@@ -3,8 +3,8 @@ import { baseVideos } from "./helpers";
 import { seedVideos, disconnectDb } from "./db";
 
 // セキュリティヘッダー（issue #192）の E2E。
-// CSP は現在 Report-Only のためブロックはしないが、違反時の `securitypolicyviolation` イベントは発火する。
-// これを集めて 0 件であることを確かめ、観測モードのうちから違反を CI で検出する。
+// CSP（強制モード）の違反時に発火する `securitypolicyviolation` イベントを集め、0 件であることを確かめる。
+// 強制モードでは違反＝リソースのブロックなので、この検査は「CSP で画面が壊れていない」ことの回帰テストになる。
 // 注意: E2E は dev サーバーで動くため、ここで検証するのは dev 用のポリシー（'unsafe-eval' を含む）。
 // 本番ポリシーの観測記録は docs/06-security-specification.md「CSP の観測記録」を参照。
 
@@ -56,13 +56,15 @@ test.describe("security headers", () => {
 
   // --- 正常系 ---
 
-  test("responds with CSP (report-only) and the four security headers", async ({ page }) => {
+  test("responds with an enforced CSP and the four security headers", async ({ page }) => {
     const response = await page.goto("/");
     if (!response) throw new Error("トップページの応答が無い");
     const headers = response.headers();
 
-    expect(headers["content-security-policy-report-only"]).toContain("default-src 'self'");
-    expect(headers["content-security-policy-report-only"]).toContain("frame-ancestors 'none'");
+    expect(headers["content-security-policy"]).toContain("default-src 'self'");
+    expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+    // 観測モードのヘッダーが残っていない（強制と二重に送らない）。
+    expect(headers["content-security-policy-report-only"]).toBeUndefined();
     expect(headers["x-content-type-options"]).toBe("nosniff");
     expect(headers["x-frame-options"]).toBe("DENY");
     expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
@@ -73,7 +75,7 @@ test.describe("security headers", () => {
     const response = await request.get("/api/videos?limit=1");
     expect(response.status()).toBe(200);
     expect(response.headers()["x-content-type-options"]).toBe("nosniff");
-    expect(response.headers()["content-security-policy-report-only"]).toBeDefined();
+    expect(response.headers()["content-security-policy"]).toBeDefined();
   });
 
   // --- 準正常系（CSP 違反の観測） ---
