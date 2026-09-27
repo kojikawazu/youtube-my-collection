@@ -64,9 +64,6 @@
 - 認証/認可エラー（`requireAdmin`）:
   - `Authorization` ヘッダー欠如・空トークン → `401 { error: "Unauthorized" }`
   - トークン無効・`ADMIN_EMAIL` 不一致 → `403 { error: "Forbidden" }`
-- **レートリミット超過 → `429 { error }` + `Retry-After`（秒）**
-  - 作成・更新・削除は共通のカウンタで IP ごとに 30 回 / 60 秒。**認可（トークン検証）より前に判定する**ため、未認証でも 401 ではなく 429 が返る
-  - 保護対象・上限値の根拠・未設定時の挙動は [`06-security-specification.md`](./06-security-specification.md#レートリミット) を正本とする
 - バリデーションエラー → `400 { errors }`
 - **不正な JSON ボディ（壊れた JSON・空ボディ）→ `400 { error: "Invalid JSON body" }`**
   - クライアントが直せる入力エラーであり、サーバー障害（5xx）ではない。4xx / 5xx を混ぜると監視のアラートが誤爆し、API クライアントも「リトライすべき障害」と誤判断する
@@ -113,7 +110,6 @@
     - メールアドレスが `ADMIN_EMAIL` と一致すれば `200 { isAdmin: true }`
     - 有効なトークンだがメール不一致の場合は `200 { isAdmin: false }`（認可の結果であり認証は成功）
     - トークン欠如・無効、または `getUser` 失敗時は `401 { isAdmin: false }`
-    - レートリミット超過（IP ごとに 20 回 / 60 秒）は `429 { error }` + `Retry-After`（秒）。トークン検証より前に判定するため、429 のときは管理者かどうかを判定していない（クライアントは「権限なし」と区別して扱う）
 
 ## レスポンス(共通)
 
@@ -138,7 +134,7 @@
 |------|------|
 | 真実のソース | `front/src/schemas/video.ts`（Zod）。検証・型・OpenAPI を兼ねる |
 | 生成 | `front/src/lib/openapi.ts`（`@asteasolutions/zod-to-openapi`） |
-| OpenAPI JSON | `GET /api/openapi.json`（OpenAPI 3.0）。**管理者限定**: `requireAdmin` で保護し、未認証は 401・非管理者は 403。レートリミット超過（IP ごとに 10 回 / 60 秒）は 429 |
+| OpenAPI JSON | `GET /api/openapi.json`（OpenAPI 3.0）。**管理者限定**: `requireAdmin` で保護し、未認証は 401・非管理者は 403 |
 | Swagger UI | `GET /docs`（CDN の Swagger UI を SRI 付きで読み込む）。**管理者限定**: クライアントガードで管理者セッションが無ければログイン誘導を表示。Swagger UI は `requestInterceptor` で Bearer トークンを注入 |
 
 - バリデーションの単一ソース化により、入力スキーマ（`VideoInput` / `VideoUpdate`）・レスポンス（`VideoItem`）が上記エンドポイント定義と構造的に一致する。

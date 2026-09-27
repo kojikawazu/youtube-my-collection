@@ -7,12 +7,6 @@ vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({ auth: { getUser: getUserMock } }),
 }));
 
-// レートリミットの外部 I/O（Upstash）もモックする。判定ロジック（lib/rate-limit）は実物を通す。
-// route より先に import して環境変数を入れる必要がある（理由は test/upstash-mock.ts）。
-import { limitMock } from "@/test/upstash-mock";
-vi.mock("@upstash/redis", () => import("@/test/upstash-mock").then((m) => m.redisModule));
-vi.mock("@upstash/ratelimit", () => import("@/test/upstash-mock").then((m) => m.ratelimitModule));
-
 import { GET, PATCH, DELETE } from "../route";
 import { seedVideo } from "@/test/it-seed";
 import { prisma } from "@/lib/db";
@@ -41,8 +35,6 @@ const rawReq = (method: string, raw: string, headers: Record<string, string> = {
 
 beforeEach(() => {
   getUserMock.mockReset();
-  limitMock.mockReset();
-  limitMock.mockResolvedValue({ success: true, reset: 0 });
   process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost";
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
   process.env.ADMIN_EMAIL = ADMIN;
@@ -88,19 +80,6 @@ describe("PATCH /api/videos/[id] (管理者・実 DB)", () => {
   });
 
   // --- 準正常系（認可・不存在・検証） ---
-
-  it("レートリミット超過なら 429 を返し、認可より前に打ち切って更新しない", async () => {
-    authAsAdmin();
-    const v = await seedVideo({ title: "変更前" });
-    limitMock.mockResolvedValue({ success: false, reset: Date.now() + 10_000 });
-    const res = await PATCH(
-      req("PATCH", { title: "変更後" }, { authorization: "Bearer ok" }),
-      ctx(v.id),
-    );
-    expect(res.status).toBe(429);
-    expect(getUserMock).not.toHaveBeenCalled();
-    expect((await prisma.videoEntry.findUnique({ where: { id: v.id } }))?.title).toBe("変更前");
-  });
 
   it("壊れた JSON ボディは 500 ではなく JSON 形式の 400 を返し、既存データを変更しない", async () => {
     authAsAdmin();
@@ -206,16 +185,6 @@ describe("DELETE /api/videos/[id] (管理者・実 DB)", () => {
     const res = await DELETE(req("DELETE", {}, { authorization: "Bearer ok" }), ctx(v.id));
     expect(res.status).toBe(200);
     expect(await prisma.videoEntry.count()).toBe(0);
-  });
-
-  it("レートリミット超過なら 429 を返し、認可より前に打ち切って削除しない", async () => {
-    authAsAdmin();
-    const v = await seedVideo({ title: "残す" });
-    limitMock.mockResolvedValue({ success: false, reset: Date.now() + 10_000 });
-    const res = await DELETE(req("DELETE", {}, { authorization: "Bearer ok" }), ctx(v.id));
-    expect(res.status).toBe(429);
-    expect(getUserMock).not.toHaveBeenCalled();
-    expect(await prisma.videoEntry.count()).toBe(1);
   });
 
   it("未認証なら 401 で削除しない", async () => {

@@ -115,13 +115,6 @@ export function buildOpenApiDocument() {
     },
   });
 
-  // レートリミット超過（lib/rate-limit.ts）。管理者系と認証系で共通の応答形のため 1 か所で定義する。
-  const tooManyRequests = {
-    description: "レートリミット超過（`Retry-After` ヘッダーに再試行までの秒数）",
-    headers: { "Retry-After": { schema: { type: "integer" as const } } },
-    ...json(errorSchema),
-  };
-
   // --- 管理者のみ ---
   registry.registerPath({
     method: "post",
@@ -135,7 +128,6 @@ export function buildOpenApiDocument() {
       400: { description: "不正な JSON ボディ / バリデーションエラー", ...json(badRequestSchema) },
       401: { description: "未認証", ...json(errorSchema) },
       403: { description: "権限なし", ...json(errorSchema) },
-      429: tooManyRequests,
     },
   });
 
@@ -154,7 +146,6 @@ export function buildOpenApiDocument() {
       400: { description: "不正な JSON ボディ / バリデーションエラー", ...json(badRequestSchema) },
       401: { description: "未認証", ...json(errorSchema) },
       403: { description: "権限なし", ...json(errorSchema) },
-      429: tooManyRequests,
       404: { description: "未検出", ...json(errorSchema) },
     },
   });
@@ -170,7 +161,6 @@ export function buildOpenApiDocument() {
       200: { description: "削除成功", ...json(okSchema) },
       401: { description: "未認証", ...json(errorSchema) },
       403: { description: "権限なし", ...json(errorSchema) },
-      429: tooManyRequests,
       500: { description: "削除失敗", ...json(errorSchema) },
     },
   });
@@ -185,7 +175,6 @@ export function buildOpenApiDocument() {
     responses: {
       200: { description: "判定結果", ...json(adminSchema) },
       401: { description: "トークン欠如・無効", ...json(adminSchema) },
-      429: tooManyRequests,
     },
   });
 

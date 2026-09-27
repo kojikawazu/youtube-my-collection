@@ -3,7 +3,7 @@
 Route Handler を実 Prisma + PostgreSQL で実行する結合テスト（IT）のケース表。UT/E2E の狭間で実行されていなかった `api/videos*` の認可・ページング・検証配線・DB マッピングを検証する。
 
 - ツール: Vitest（node 環境）+ `docker-compose.test.yml` の PostgreSQL
-- モック境界: **Supabase 認証（`getUser`）と Upstash（レートリミットのカウンタ）のみ**モック。Route Handler・`requireAdmin`・`enforceRateLimit`・Prisma/DB は実物
+- モック境界: **Supabase 認証（`getUser`）のみ**モック。Route Handler・`requireAdmin`・Prisma/DB は実物
 - 前処理: `prisma migrate deploy`（globalSetup）／各テスト前に `VideoEntry` truncate（setup）
 - ファイル: `src/app/api/videos/__tests__/route.it.test.ts`、`src/app/api/videos/[id]/__tests__/route.it.test.ts`
 
@@ -54,7 +54,6 @@ Route Handler を実 Prisma + PostgreSQL で実行する結合テスト（IT）�
 | C-15 | 未認証 + 壊れた JSON → 401（認可を JSON 解析より先に判定する） | 準正常系 |
 | C-16 | `youtubeUrl` + `title` のみ → 201、`rating` は既定値 3 で保存 | 正常系 |
 | C-17 | 評価が 0 → 400、作成しない（境界値） | 準正常系 |
-| C-18 | レートリミット超過 → 429、トークン検証を呼ばず作成しない（認可より前に打ち切る） | 準正常系 |
 
 ## `GET/PATCH/DELETE /api/videos/[id]`
 
@@ -73,14 +72,12 @@ Route Handler を実 Prisma + PostgreSQL で実行する結合テスト（IT）�
 | P-8 | 壊れた JSON ボディ → `400 { error: "Invalid JSON body" }`、既存データを変更しない | 準正常系 |
 | P-9 | ボディ無し（空文字）→ 400 | 準正常系 |
 | P-10 | ボディが `null`（妥当な JSON）→ 500 にせず 200（no-op） | 異常系 |
-| P-11 | レートリミット超過 → 429、トークン検証を呼ばず更新しない | 準正常系 |
 | D-1 | 管理者 → 200 で削除 | 正常系 |
 | D-2 | 未認証 → 401、削除しない | 準正常系 |
 | D-3 | 管理者メール不一致 → 403、削除しない | 準正常系 |
 | D-4 | トークン無効（Supabase 検証エラー）→ 403、削除しない | 異常系 |
 | D-5 | 不存在 ID の削除（Prisma P2025）→ 404 | 異常系 |
 | D-6 | `ADMIN_EMAIL` 未設定 → 403、削除しない（設定ミス時に安全側へ倒す） | 異常系 |
-| D-7 | レートリミット超過 → 429、トークン検証を呼ばず削除しない | 準正常系 |
 
 > **JSON 解析エラーの扱い**: POST/PATCH は壊れた JSON・ボディ無しを `400 { error: "Invalid JSON body" }` で返す（`lib/request.ts` の `readJsonBody`）。**DELETE のみボディが任意**のため対象外で、解析できないボディは「ボディ無し」として扱う。契約は [`../07-api-specification.md`](../07-api-specification.md) を参照。解析ヘルパー自体の UT は `front/src/lib/__tests__/request.test.ts`。
 
