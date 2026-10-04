@@ -26,7 +26,7 @@
 | コード品質 | ESLint（`eslint-config-next` Flat Config）/ Prettier（`prettier-plugin-tailwindcss` で Tailwind クラス整列、`eslint-config-prettier` で競合回避） |
 | セキュリティヘッダー | `next.config.ts` の `headers()` で全レスポンスに CSP（強制）・`X-Content-Type-Options`・`X-Frame-Options`・`Referrer-Policy`・`Permissions-Policy` を付与。値の組み立ては `lib/security-headers.ts`（[`06-security-specification.md`](./06-security-specification.md#セキュリティヘッダー)） |
 | server/client 境界 | `server-only`。`lib/db.ts`（Prisma）と `lib/auth-server.ts`（`ADMIN_EMAIL`）に付与し、Client Component から引き込まれるとビルドが失敗する |
-| CI | GitHub Actions。発火条件ごとに分割: `ci.yml`（`front/**`: format チェック → Lint → 型 → **ビルド** → ユニット → 結合 → E2E）/ `docs.yml`（Markdown: リンク切れ・見出しアンカー実在・ルールテーブル同期）/ `workflows-lint.yml`（常時: ワークフロー定義の actionlint）/ `secret-scan.yml`（常時: 秘匿ファイルの追跡検出）。ワークフローが参照する action のバージョンは Dependabot（`.github/dependabot.yml`、`github-actions`・週次）が更新 PR を作り、手で一括置換しない |
+| CI | GitHub Actions。発火条件ごとに分割: `ci.yml`（ドキュメント類以外の変更: format チェック → Lint → 型 → **ビルド** → ユニット → 結合 → E2E）/ `docs.yml`（常時: Markdown lint・リンク切れ・見出しアンカー実在・ルールテーブル同期）/ `workflows-lint.yml`（常時: ワークフロー定義の actionlint）/ `secret-scan.yml`（常時: 秘匿ファイルの追跡検出）。必須チェックのワークフローにはワークフローレベルの `paths` を付けない（起動しないと pending のままマージ不能になるため。`ci.yml` は `dorny/paths-filter` + ジョブ `if:` でスキップする）。ワークフローが参照する action のバージョンは Dependabot（`.github/dependabot.yml`、`github-actions`・週次）が更新 PR を作り、手で一括置換しない |
 | デプロイ | 本番: Vercel（`main` ブランチ、`front/` のみ） |
 
 ## 構成方針

@@ -2,27 +2,16 @@ name: Docs
 
 # ドキュメント（Markdown）のみを対象とする軽量チェック。
 # テスト・ビルド・デプロイは回さない（.claude/rules/github-actions.md「変更内容と実行対象」）。
+# Docs check は必須チェックのため、ワークフローレベルの paths を付けず常に実行する。
+# 付けると docs を含まない PR でワークフローが起動せず、pending のままマージ不能になる（issue #205）。
+# 十数秒で終わるため、paths-filter で分岐させて削れる時間がない。
 on:
   push:
     branches:
       - main
-    paths:
-      - "docs/**"
-      - "tasks/**"
-      - ".claude/**"
-      - "**/*.md"
-      - "scripts/**"
-      - ".github/workflows/docs.yml"
   pull_request:
     branches:
       - main
-    paths:
-      - "docs/**"
-      - "tasks/**"
-      - ".claude/**"
-      - "**/*.md"
-      - "scripts/**"
-      - ".github/workflows/docs.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

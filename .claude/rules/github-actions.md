@@ -59,16 +59,24 @@ on:
 jobs:
   changes:                      # 変更範囲を判定する
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read       # PR では変更ファイル一覧を REST API で取得するため
     outputs:
       app: ${{ steps.filter.outputs.app }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4   # v4 = node24（v3 は node20）
         id: filter
         with:
+          # 除外リストは every で書く。既定の some では否定パターン（'!…'）が除外として効かない
+          predicate-quantifier: every
           filters: |
             app:
-              - '!(docs/**|**/*.md|.claude/**)'
+              - '**'
+              - '!docs/**'
+              - '!**/*.md'
+              - '!.claude/**'
 
   lint-and-test:                # 必須チェック。常に起動し、中身だけスキップする
     needs: changes
@@ -78,7 +86,7 @@ jobs:
       - run: echo "run tests"
 ```
 
-> **現行 `ci.yml` の注意点**: `pull_request` にワークフローレベルの `paths:`（`front/**` / `ci.yml`）が設定されている。`lint-and-test` を required status check に指定する場合は、上記の形（`paths` を外し、`paths-filter` + ジョブ `if:`）へ移行しないと、ドキュメントのみの PR がマージ不能になる。
+> **現行の構成**（issue #205 で移行済み）: 必須チェックは `lint-and-test`（`ci.yml`）・`Docs check`（`docs.yml`）・`actionlint`・`Secret scan`。`ci.yml` は上記の形（`dorny/paths-filter@v4` + ジョブ `if:`、`predicate-quantifier: every` で除外リストを表現）、`docs.yml` は十数秒で終わるため `paths` を付けず常時実行する。移行前は両者にワークフローレベルの `paths` があり、docs のみの PR で `lint-and-test` が、front のみの PR で `Docs check` が起動せず、マージ不能になっていた。
 
 - 必須チェックにしないワークフロー（デプロイ等）は、ワークフローレベルの `paths-ignore` を使ってよい（起動そのものを止める方が安価）。
 - **判定条件は「除外リスト」で書く**（`docs/**` 以外はアプリ変更とみなす）。「対象リスト」で書くと、**新しいディレクトリが増えたときに黙ってテストが走らなくなる**。安全側に倒す。

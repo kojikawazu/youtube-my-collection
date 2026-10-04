@@ -104,8 +104,8 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 
 | ワークフロー | 発火条件 | 内容 |
 |---|---|---|
-| `ci.yml` | `front/**` 変更時（`main` への push / PR） | 下記のテスト一式 |
-| `docs.yml` | `docs/**` / `tasks/**` / `.claude/**` / `**/*.md` / `scripts/**` 変更時 | Markdown lint・相対リンク切れ・**見出しアンカーの実在**・CLAUDE.md ルールテーブルの同期検査 |
+| `ci.yml` | **常に起動**（`main` への push / 全 PR）。`changes` ジョブ（`dorny/paths-filter`）が `docs/**` / `tasks/**` / `.claude/**` / `**/*.md` **以外**の変更を検出したときだけ `lint-and-test` を実行し、それ以外は skipped（必須チェックとして成功扱い） | 下記のテスト一式 |
+| `docs.yml` | **常時**（`main` への push / 全 PR） | Markdown lint・相対リンク切れ・**見出しアンカーの実在**・CLAUDE.md ルールテーブルの同期検査 |
 | `workflows-lint.yml` | **常時**（`main` への push / 全 PR） | actionlint（同梱の shellcheck で `run:` 内も検査）。公式 Docker イメージをタグ固定で使い、ローカルは `make actionlint` |
 | `secret-scan.yml` | **常時**（`main` への push / 全 PR） | 秘匿ファイル（鍵・`.env` 系）が Git の追跡対象に無いかの検査。判定の正規表現は `scripts/check-secret-files.test.sh` で代表パスの分類を固定している。ローカルは `make secret-scan` |
 
