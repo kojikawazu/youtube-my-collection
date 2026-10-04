@@ -1,0 +1,14 @@
+# Dependabot 設定
+#
+# ワークフローが参照する action のバージョンを追随させる（issue #202）。
+# Node 20 非推奨により旧版（node20 ランタイム）の action は Node 24 で強制実行されている。
+# 手で一括置換せず、更新 PR を Dependabot に作らせてレビュー・マージする。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    # "/" を指定すると .github/workflows/ 配下を走査する。
+    directory: /
+    schedule:
+      interval: weekly
+    # 個人プロジェクトで PR が溢れないよう上限を設ける。
+    open-pull-requests-limit: 5
