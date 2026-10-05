@@ -20,7 +20,7 @@
 |----------|------|
 | フレームワーク | Next.js (App Router) / TypeScript / Tailwind CSS |
 | 認証 | Supabase Auth (Google OAuth2, PKCE) + `ADMIN_EMAIL` allowlist |
-| データベース | Supabase Postgres / ORM: Prisma |
+| データベース | Supabase Postgres / ORM: Prisma 7（driver adapter `@prisma/adapter-pg`） |
 | API | Next.js Route Handlers (`app/api/*`) で DB アクセス |
 | バリデーション / API ドキュメント | Zod（`schemas/`）を単一ソースに検証・型・OpenAPI を導出。`@asteasolutions/zod-to-openapi` で OpenAPI 生成、`/docs` に Swagger UI |
 | コード品質 | ESLint（`eslint-config-next` Flat Config）/ Prettier（`prettier-plugin-tailwindcss` で Tailwind クラス整列、`eslint-config-prettier` で競合回避） |
@@ -41,7 +41,7 @@
 
 | 変数 | 用途 | 参照箇所 |
 |------|------|----------|
-| `DATABASE_URL` | DB 接続（本番: Supabase Postgres）。**テストは参照しない** | Prisma (`schema.prisma`) |
+| `DATABASE_URL` | DB 接続（本番: Supabase Postgres）。**テストは参照しない** | `lib/db.ts`（実行時）/ `prisma.config.ts`（CLI） |
 | `TEST_DATABASE_URL` | IT / E2E のテスト DB 接続（未設定ならローカル既定。localhost 以外は拒否） | `front/src/test/database-url.ts` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL | クライアント SDK / トークン検証 |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key（`getUser` の apikey） | 同上 |
@@ -67,8 +67,8 @@
 5. **依存インストール & Prisma 生成**:
 
    ```bash
-   pnpm install
-   pnpm exec prisma db pull     # 既存スキーマを取り込み
+   pnpm install                 # postinstall で prisma generate も走る
+   pnpm db:pull                 # 既存スキーマを取り込み（.env.local の DATABASE_URL を明示的に読む）
    pnpm exec prisma generate
    ```
 
@@ -88,9 +88,24 @@
 
 ```bash
 cd front
-npx prisma db pull
-npx prisma generate
+pnpm db:pull
+pnpm exec prisma generate
 ```
+
+### Prisma 7 の構成と接続先の渡し方
+
+| 項目 | 内容 |
+|---|---|
+| CLI 設定 | `front/prisma.config.ts`。接続先は `process.env.DATABASE_URL` から取る |
+| 生成先 | `front/src/generated/prisma`（`prisma-client` generator、`moduleFormat = "cjs"`）。**コミットしない**。`pnpm install` の postinstall で生成される |
+| 実行時の接続 | `lib/db.ts` が `PrismaPg`（`@prisma/adapter-pg`）に `DATABASE_URL` を明示的に渡す |
+| import | `@/generated/prisma/client`（`@prisma/client` からは import しない） |
+
+**`.env` / `.env.local` は Prisma が自動で読み込まない。** Prisma 6 までは CLI もクライアントも `.env` を暗黙に読み込んでおり、それが 2026-07-31 の本番データ全削除の原因になった（[`lessons-learned.md`](./lessons-learned.md)）。Prisma 7 で暗黙の読み込みが無くなったため、`prisma.config.ts` で `dotenv/config` を読み込んで戻すことはしない。
+
+- 本番 DB に対して CLI を使うときは、`pnpm db:pull` のように **`.env.local` を明示指定するスクリプト**を通す（`node --env-file=.env.local`）。
+- `pnpm exec prisma migrate status` などをそのまま実行すると、`DATABASE_URL` が未設定のためエラーで止まる。これは意図した挙動で、暗黙に本番へ接続する経路を作らないためのもの。
+- IT / E2E は globalSetup が検証済みのテスト DB URL を `DATABASE_URL` に詰めて `prisma migrate deploy` を実行する。さらに、テストの全削除（`deleteMany()`）の直前に、Prisma に渡した URL がローカルを指しているかを `assertLocalDatabaseUrl` で毎回検証する（[`08-test-specification.md`](./08-test-specification.md)）。
 
 ### Pooler 接続メモ
 

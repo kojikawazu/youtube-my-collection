@@ -24,11 +24,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:it": "vitest run --config vitest.it.config.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "postinstall": "prisma generate",
+    "db:pull": "node --env-file=.env.local node_modules/prisma/build/index.js db pull"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
-    "@prisma/client": "^6.4.1",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
     "@supabase/supabase-js": "^2.117.2",
     "framer-motion": "^11.11.11",
     "lucide-react": "^0.460.0",
@@ -57,7 +60,7 @@
     "jsdom": "^29.0.1",
     "prettier": "^3.9.9",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "prisma": "^6.4.1",
+    "prisma": "^7.10.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^7.3.6",

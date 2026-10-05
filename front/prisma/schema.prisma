@@ -1,10 +1,15 @@
+// Prisma 7 の生成先。ビルド成果物のためコミットしない（.gitignore）。
+// moduleFormat を cjs にするのは、E2E の seed（tests/e2e/db.ts）が Playwright 上で CommonJS として
+// 読み込まれるため。esm（既定）だと生成コードの import.meta で SyntaxError になる。Next.js はどちらでも動く。
 generator client {
-  provider = "prisma-client-js"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
+// 接続先 URL は prisma.config.ts（CLI）と lib/db.ts（実行時）で明示的に与える。
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model VideoEntry {

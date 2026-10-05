@@ -4,6 +4,21 @@
 
 新しいエントリはこの見出しの直下に追記する（新しいものが上）。
 
+## 2026-10-06 Dependabot が @prisma/client だけを major 更新し、CLI と食い違って CI が壊れた
+
+**概要**
+Dependabot PR #215 が `@prisma/client` を 7.10.0 に上げる一方、CLI の `prisma` は 6.19.3 のまま残した。CLI 6 が生成するクライアントを 7 のランタイムが読み込めず、CI が `Cannot find module …/query_engine_bg.postgresql.wasm-base64.js` で失敗した。
+
+**詳細**:
+
+- 何が起きたか: `@prisma/client` の major 更新 PR だけが作られ、`prisma` の PR は別に作られなかった（または揃わなかった）。CI の `lint-and-test` と Vercel のビルドが失敗した。本番への影響はない（マージ前に検出）。
+- なぜ起きたか（根本原因）: `.github/dependabot.yml` は major を「1 依存 1 PR」で出す設定だった。Prisma は CLI とクライアントのバージョンが揃っていることが動作の前提だが、Dependabot はパッケージ間のその関係を知らないため、片方だけを上げる PR を作る。
+- 教訓 / 次からどうする:
+  - **バージョンを揃える必要がある依存の組（`prisma` / `@prisma/*` など）は、Dependabot の `groups` で major も含めて 1 つの PR にまとめる**。依存は最初に一致したグループに入るため、汎用の `minor-and-patch` より前に置く。
+  - 依存更新の PR で「モジュールが見つからない」系のエラーが出たら、lockfile のパス（例: `@prisma+client@7.10.0_prisma@6.19.3`）から、組になるべきパッケージのバージョンの食い違いを先に疑う。
+  - Prisma 7 は `.env` を暗黙に読み込まなくなった。2026-07-31 の本番データ全削除の原因になった経路そのものなので、`prisma.config.ts` に `import "dotenv/config"` を足して元に戻さない。
+- 関連: issue #219、PR #215、`.github/dependabot.yml`、[`09-architecture-specification.md`](./09-architecture-specification.md)「Prisma 7 の構成と接続先の渡し方」
+
 ## 2026-10-04 必須チェックのワークフローに paths を付けていたため、docs のみの PR がマージ不能になった
 
 **概要**
