@@ -7,7 +7,7 @@
 ## 2026-10-06 lockfile を変える PR を 2 本続けてマージし、main の pnpm-lock.yaml が重複キーで壊れた
 
 **概要**
-#220（Prisma 7）のマージ直後に #213（eslint-plugin-jsdoc）をマージしたところ、main の `pnpm-lock.yaml` に同じキーが重複し、`pnpm install` が `ERR_PNPM_BROKEN_LOCKFILE` で失敗するようになった。どちらの PR も単体では CI が緑だった。
+PR #220（Prisma 7）のマージ直後に PR #213（eslint-plugin-jsdoc）をマージしたところ、main の `pnpm-lock.yaml` に同じキーが重複し、`pnpm install` が `ERR_PNPM_BROKEN_LOCKFILE` で失敗するようになった。どちらの PR も単体では CI が緑だった。
 
 **詳細**:
 
