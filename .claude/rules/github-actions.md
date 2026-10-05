@@ -87,6 +87,8 @@ jobs:
 ```
 
 > **現行の構成**（issue #205 で移行済み）: 必須チェックは `lint-and-test`（`ci.yml`）・`Docs check`（`docs.yml`）・`actionlint`・`Secret scan`。`ci.yml` は上記の形（`dorny/paths-filter@v4` + ジョブ `if:`、`predicate-quantifier: every` で除外リストを表現）、`docs.yml` は十数秒で終わるため `paths` を付けず常時実行する。移行前は両者にワークフローレベルの `paths` があり、docs のみの PR で `lint-and-test` が、front のみの PR で `Docs check` が起動せず、マージ不能になっていた。
+>
+> **ブランチの最新化を必須にしている**（issue #222）: ruleset「main」の必須チェックで「Require branches to be up to date before merging」を有効にしている。PR のブランチが main より遅れているとマージできない。単体では緑の 2 つの PR（#220 と #213）を続けてマージした結果、git のテキストマージで `pnpm-lock.yaml` に重複キーが生じ、main が壊れたため。Dependabot の PR は「Update branch」ではなく `@dependabot rebase` で追従させる（マージコミットが入ると Dependabot がその PR の自動更新をやめるため）。
 
 - 必須チェックにしないワークフロー（デプロイ等）は、ワークフローレベルの `paths-ignore` を使ってよい（起動そのものを止める方が安価）。
 - **判定条件は「除外リスト」で書く**（`docs/**` 以外はアプリ変更とみなす）。「対象リスト」で書くと、**新しいディレクトリが増えたときに黙ってテストが走らなくなる**。安全側に倒す。
