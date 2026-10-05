@@ -37,8 +37,8 @@ prisma-generate: ## Prisma Client を生成
 	cd $(FRONT) && pnpm exec prisma generate
 
 .PHONY: prisma-pull
-prisma-pull: ## 既存 DB スキーマを取り込む（schema.prisma は手書きしない方針）
-	cd $(FRONT) && pnpm exec prisma db pull
+prisma-pull: ## 既存 DB スキーマを取り込む（.env.local の DATABASE_URL を明示的に読む。schema.prisma は手書きしない方針）
+	cd $(FRONT) && pnpm db:pull
 
 .PHONY: e2e-install
 e2e-install: ## Playwright のブラウザをインストール（E2E 初回のみ）

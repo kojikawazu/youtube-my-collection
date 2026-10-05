@@ -94,3 +94,5 @@ model VideoEntry {
 > 上記の制約は `front/src/schemas/video.ts` の Zod スキーマを単一ソースとして検証する（同ファイルの `validateVideoInput` がその薄いアダプタ）。OpenAPI もこのスキーマから生成される（[`07-api-specification.md`](./07-api-specification.md#openapi--swagger-ui)）。
 >
 > スキーマ更新は `prisma db pull` のみ使用。手順は [`09-architecture-specification.md`](./09-architecture-specification.md) を参照。
+>
+> Prisma 7 では接続先 URL を `schema.prisma` に書かない（CLI は `front/prisma.config.ts`、実行時は `lib/db.ts` の driver adapter が `DATABASE_URL` を受け取る）。Client は `prisma-client` generator で `front/src/generated/prisma` に生成し、`@/generated/prisma/client` から import する。

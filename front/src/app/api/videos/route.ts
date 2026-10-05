@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { validateVideoInput } from "@/schemas/video";
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
 import { requireAdmin } from "@/lib/auth-server";
 import { readJsonBody } from "@/lib/request";
 import { DEFAULT_RATING } from "@/schemas/video";

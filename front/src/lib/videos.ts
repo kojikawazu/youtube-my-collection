@@ -1,4 +1,4 @@
-import type { Prisma, VideoEntry } from "@prisma/client";
+import type { Prisma, VideoEntry } from "@/generated/prisma/client";
 
 /**
  * `toVideoItem` が読む DB 行のフィールド。

@@ -23,6 +23,13 @@ updates:
     # minor / patch は 1 本の PR にまとめ、レビュー単位を減らす。
     # major は破壊的変更を個別に確認するため、従来どおり 1 依存 1 PR で出させる。
     groups:
+      # Prisma は CLI（prisma）とクライアント（@prisma/*）のバージョンが揃っていないと動かない。
+      # 1 依存 1 PR だと major でクライアントだけ上がり CI が壊れる（#215）ため、major も含めて
+      # 常に同じ PR で上げる。依存は最初に一致したグループに入るので、minor-and-patch より先に置く。
+      prisma:
+        patterns:
+          - prisma
+          - "@prisma/*"
       minor-and-patch:
         update-types:
           - minor

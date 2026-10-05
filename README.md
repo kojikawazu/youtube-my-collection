@@ -26,8 +26,7 @@ YouTube で良かった動画を後から見返せる**公開コレクション*
 cd front
 cp .env.example .env.local   # 値を記入（取得手順は下記セットアップ参照）
 corepack enable              # pnpm@10.7.0 を有効化
-pnpm install
-pnpm exec prisma generate
+pnpm install                 # postinstall で Prisma Client も生成される
 pnpm dev                     # http://localhost:3000
 ```
 
@@ -44,6 +43,7 @@ pnpm dev                     # http://localhost:3000
 | `pnpm test` | ユニット（Vitest・DB 非依存） |
 | `pnpm test:it` | 結合（Vitest node + 実 Prisma + PostgreSQL） |
 | `pnpm test:e2e` | E2E（Playwright） |
+| `pnpm db:pull` | 本番 DB からスキーマを取り込む（`.env.local` の `DATABASE_URL` を明示的に読む。Prisma 7 は `.env` を自動で読まない） |
 
 > リポジトリルートからは `make <target>`（例: `make dev` / `make test` / `make test-it`）でも同等の操作ができる（内部で `front/` に降りて実行）。一覧は `make help`。
 >

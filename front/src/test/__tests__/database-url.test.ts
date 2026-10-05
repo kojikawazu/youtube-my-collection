@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { resolveTestDatabaseUrl } from "../database-url";
+import { assertLocalDatabaseUrl, resolveTestDatabaseUrl } from "../database-url";
 
 const ORIGINAL = process.env.TEST_DATABASE_URL;
 
@@ -44,7 +44,7 @@ describe("resolveTestDatabaseUrl", () => {
   // --- 異常系（本番 DB 破壊の防止） ---
 
   it("DATABASE_URL に本番 URL が入っていても参照しない（.env 汚染への耐性）", () => {
-    // @prisma/client の import で .env が読み込まれ、DATABASE_URL が本番になる状況を再現する。
+    // シェル・CI・（Prisma 6 までの）.env 自動読み込みで DATABASE_URL が本番になっている状況を再現する。
     process.env.DATABASE_URL = "postgresql://u:p@db.pooler.example.com:5432/postgres";
     delete process.env.TEST_DATABASE_URL;
 
@@ -62,5 +62,54 @@ describe("resolveTestDatabaseUrl", () => {
     process.env.TEST_DATABASE_URL = "postgresql://u:p@db.example.com:5432/postgres";
     expect(() => resolveTestDatabaseUrl("IT")).toThrow(/db\.example\.com/);
     expect(() => resolveTestDatabaseUrl("IT")).toThrow(/docker compose/);
+  });
+});
+
+describe("assertLocalDatabaseUrl", () => {
+  // --- 正常系 ---
+
+  it("ローカルの URL はそのまま返す", () => {
+    const url = "postgresql://postgres:postgres@localhost:5432/ymc_test?schema=public";
+    expect(assertLocalDatabaseUrl(url, "IT")).toBe(url);
+  });
+
+  it("IPv6 ループバックも許可する", () => {
+    const url = "postgresql://u:p@[::1]:5432/ymc_test";
+    expect(assertLocalDatabaseUrl(url, "E2E")).toBe(url);
+  });
+
+  // --- 準正常系 ---
+
+  it("未設定なら失敗する（接続先不明のまま全削除させない）", () => {
+    expect(() => assertLocalDatabaseUrl(undefined, "IT")).toThrow(
+      /\[IT\] テスト DB の接続先が未設定です/,
+    );
+  });
+
+  it("空文字なら失敗する", () => {
+    expect(() => assertLocalDatabaseUrl("", "E2E")).toThrow(
+      /\[E2E\] テスト DB の接続先が未設定です/,
+    );
+  });
+
+  it("URL として解釈できなければ失敗する", () => {
+    expect(() => assertLocalDatabaseUrl("not a url", "IT")).toThrow(/URL として解釈できません/);
+  });
+
+  // --- 異常系（本番 DB 破壊の防止） ---
+
+  it("Supabase の本番 URL なら失敗する", () => {
+    expect(() =>
+      assertLocalDatabaseUrl(
+        "postgresql://postgres:pw@db.abcdefgh.supabase.co:5432/postgres",
+        "IT",
+      ),
+    ).toThrow(/接続先ホスト: db\.abcdefgh\.supabase\.co/);
+  });
+
+  it("ホスト名に localhost を含むだけのリモートは許可しない", () => {
+    expect(() =>
+      assertLocalDatabaseUrl("postgresql://u:p@localhost.attacker.example.com:5432/db", "E2E"),
+    ).toThrow(/ローカルの DB にしか接続できません/);
   });
 });

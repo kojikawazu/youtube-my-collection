@@ -46,6 +46,9 @@ pnpm test:e2e      # E2E（Playwright）
 - IT/E2E は `docker-compose.test.yml` の PostgreSQL を要求する（既定 `postgresql://postgres:postgres@localhost:5432/ymc_test?schema=public`）。
 - **テストは `DATABASE_URL` を参照しない。** 接続先は `front/src/test/database-url.ts` の `resolveTestDatabaseUrl()` が唯一の入口で、上書きは**テスト専用の `TEST_DATABASE_URL`** で行う。解決結果のホストが localhost / 127.0.0.1 / ::1 以外なら**接続前に throw** する（allowlist 方式）。
   - **理由（過去の事故）**: `@prisma/client` を import した時点で `.env` が `process.env` へ読み込まれるため、`process.env.DATABASE_URL ?? ローカル` というフォールバックは **`.env` の本番 URL を拾う**。E2E の `seedVideos()` は先頭で `deleteMany()` するため、これは本番データの全削除に直結する（2026-07-31 に発生・issue #174）。「未設定なら安全側」に見えて実際は「汚染された値があれば危険側」に倒れる書き方であり、フォールバックではなく allowlist にする。
+  - Prisma 7（issue #219）で `.env` の暗黙読み込みは無くなったが、シェルや CI が `DATABASE_URL` を本番に設定している可能性は残るため、方針は変えない。
+- **全削除の直前にも接続先を検証する（多層防御）。** IT の `beforeEach`（`src/test/it-setup.ts`）と E2E の `seedVideos()`（`tests/e2e/db.ts`）は、`deleteMany()` の直前に **Prisma に実際に渡した URL** を `assertLocalDatabaseUrl()` に通す。入口の `resolveTestDatabaseUrl()` が正しくても、Prisma へ渡す経路（Prisma 7 の driver adapter 等）の書き換えで別の値が入り込めば入口の検証は効かないため、破壊操作の直前で独立に確かめる。
+  - 確認方法: シェルの `DATABASE_URL` に架空のリモート URL を入れた状態でも、`pnpm test:it` / `pnpm test:e2e` がローカルのテスト DB で通ること（issue #219 で確認済み）。
 - E2E 初回はブラウザをインストールするため `pnpm exec playwright install` を実行。
 - IT ケースの詳細は [`test-design/05-it-api-routes.md`](./test-design/05-it-api-routes.md) を参照。
 
@@ -111,10 +114,10 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 
 `.github/workflows/ci.yml` は以下を実行する。
 
-1. `pnpm install --frozen-lockfile`（Node 20 / pnpm 10.7.0）
+1. `pnpm install --frozen-lockfile`（Node 20 / pnpm 10.7.0。postinstall で `prisma generate`）
 2. `pnpm run format:check` / `pnpm run lint` / `pnpm run typecheck`
 3. `pnpm run test`（ユニット）
-4. `docker compose -f docker-compose.test.yml up -d --wait` → `pnpm exec prisma generate` → `pnpm run test:it`（結合・実 DB）
+4. `docker compose -f docker-compose.test.yml up -d --wait` → `pnpm run test:it`（結合・実 DB。Prisma Client は手順 1 の postinstall で生成済み）
 5. `pnpm exec playwright install --with-deps` → `pnpm run test:e2e`（E2E）
 
 E2E は Supabase へ実接続せず、`NEXT_PUBLIC_SUPABASE_URL` 等にダミー値を渡し、API はルートモックで動作する。ステータスは README の CI バッジで確認できる。
