@@ -3,20 +3,19 @@ name: CI
 # アプリケーションコードの検査のみを担当する。
 # ドキュメントは docs.yml、ワークフロー自体の検査は workflows-lint.yml が担当する
 # （発火条件が違うものを同居させない — .claude/rules/github-actions.md）。
+#
+# lint-and-test は必須チェックのため、ワークフローレベルの paths を付けない。
+# 付けると対象外の PR でワークフロー自体が起動せず、必須チェックが pending のまま
+# マージ不能になる（issue #205）。常に起動し、changes ジョブの判定でジョブ単位にスキップする
+# （ジョブの if: によるスキップは skipped = 必須チェックとして成功扱い）。
 on:
   # push は main のみ。作業ブランチは PR で回れば十分（二重実行を避ける）。
   push:
     branches:
       - main
-    paths:
-      - "front/**"
-      - ".github/workflows/ci.yml"
   pull_request:
     branches:
       - main
-    paths:
-      - "front/**"
-      - ".github/workflows/ci.yml"
 
 # 同一 PR への連続 push で古い実行をキャンセルする。
 concurrency:
@@ -28,7 +27,41 @@ permissions:
   contents: read
 
 jobs:
+  # アプリに関係する変更があるかを判定する。
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # paths-filter は pull_request では変更ファイル一覧を REST API で取得するため pull-requests: read が要る。
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      # push では API ではなく git の差分で判定するため、チェックアウトが必要。
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # 判定は除外リストで書く（ドキュメント類以外はすべてアプリの変更とみなす）。
+      # 対象リストにすると、新しいディレクトリが増えたときに黙ってテストが走らなくなる。
+      # every = 「すべてのパターンに一致したファイルがあれば true」。'**' と否定パターンの AND で除外を表す
+      # （既定の some では否定パターンが効かない）。
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          predicate-quantifier: every
+          filters: |
+            app:
+              - '**'
+              - '!docs/**'
+              - '!tasks/**'
+              - '!.claude/**'
+              - '!**/*.md'
+
   lint-and-test:
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -36,15 +69,15 @@ jobs:
         working-directory: front
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 10.7.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: pnpm
