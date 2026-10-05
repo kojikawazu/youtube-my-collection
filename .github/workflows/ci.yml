@@ -129,3 +129,17 @@ jobs:
           # 公開フローは実テスト DB（IT で起動済み）を読む。auth はモックのまま。
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ymc_test?schema=public
         run: pnpm run test:e2e
+
+      # 失敗時のトレース・動画・error-context.md（Playwright が front/test-results/ に生成）を残す。
+      # 保存しないと flaky の原因を後から追えない（issue #221 で手元再現できず、CI の記録しか手がかりが無かった）。
+      # failure() にしない: CI は retries: 1 のため、1 回目だけ落ちて retry で通る flaky はジョブが成功扱いになり、
+      # 最も記録したいケースを取りこぼす。全件成功時は記録がほぼ空なので、キャンセル時以外は常に保存する。
+      # path は working-directory の影響を受けずリポジトリルート基準になるため front/ から書く。
+      - name: Upload E2E results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-test-results
+          path: front/test-results/
+          retention-days: 7
+          if-no-files-found: ignore

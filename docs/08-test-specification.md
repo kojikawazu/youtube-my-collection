@@ -119,6 +119,9 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 3. `pnpm run test`（ユニット）
 4. `docker compose -f docker-compose.test.yml up -d --wait` → `pnpm run test:it`（結合・実 DB。Prisma Client は手順 1 の postinstall で生成済み）
 5. `pnpm exec playwright install --with-deps` → `pnpm run test:e2e`（E2E）
+6. `front/test-results/`（失敗・retry したテストのトレース・動画・`error-context.md`）を成果物 `e2e-test-results` として保存（保持 7 日。キャンセル時以外は常に実行。retry で通った flaky も記録するため・issue #226）
+
+E2E が CI でだけ落ちる・flaky のときは、該当 run の Artifacts から `e2e-test-results` を取得し、`pnpm exec playwright show-trace <trace.zip>` でトレースを確認する。
 
 E2E は Supabase へ実接続せず、`NEXT_PUBLIC_SUPABASE_URL` 等にダミー値を渡し、API はルートモックで動作する。ステータスは README の CI バッジで確認できる。
 
