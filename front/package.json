@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
-    "@prisma/client": "^6.4.1",
+    "@prisma/client": "^7.10.0",
     "@supabase/supabase-js": "^2.117.2",
     "framer-motion": "^11.11.11",
     "lucide-react": "^0.460.0",
