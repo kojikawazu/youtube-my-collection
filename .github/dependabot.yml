@@ -12,3 +12,18 @@ updates:
       interval: weekly
     # 個人プロジェクトで PR が溢れないよう上限を設ける。
     open-pull-requests-limit: 5
+
+  # フロント（pnpm）の依存を追随させる（issue #210）。
+  # ここに無いと、作られた更新 PR が管理外になり `@dependabot rebase` も効かない（#203）。
+  - package-ecosystem: npm
+    directory: /front
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # minor / patch は 1 本の PR にまとめ、レビュー単位を減らす。
+    # major は破壊的変更を個別に確認するため、従来どおり 1 依存 1 PR で出させる。
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
