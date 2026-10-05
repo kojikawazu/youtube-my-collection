@@ -4,6 +4,23 @@
 
 新しいエントリはこの見出しの直下に追記する（新しいものが上）。
 
+## 2026-10-06 lockfile を変える PR を 2 本続けてマージし、main の pnpm-lock.yaml が重複キーで壊れた
+
+**概要**
+PR #220（Prisma 7）のマージ直後に PR #213（eslint-plugin-jsdoc）をマージしたところ、main の `pnpm-lock.yaml` に同じキーが重複し、`pnpm install` が `ERR_PNPM_BROKEN_LOCKFILE` で失敗するようになった。どちらの PR も単体では CI が緑だった。
+
+**詳細**:
+
+- 何が起きたか: main（be11353）で `'@types/node@26.6.4':` のキーが正常時の 2 回から 4 回に増え、install が失敗した。main の CI と Vercel の本番デプロイが install の段階で落ちる状態になった。マージから約 10 分後、ローカルで `pnpm install` したときに気づいた。
+- なぜ起きたか（根本原因）:
+  - #213 は #220 より前の main を土台に CI が緑になっていた。マージ時、git は lockfile を YAML ではなくテキストとして 3-way マージするため、両者の変更が「衝突なし」として合成され、構造上ありえない重複キーができた。
+  - マージ前にブランチを最新の main に追従させる必須設定がないため、**合成後の lockfile はどこでも検証されないまま main に入った**。
+- 教訓 / 次からどうする:
+  - **lockfile を変更する PR を続けてマージするときは、2 本目を最新の main に rebase（Dependabot なら `@dependabot rebase`）し、CI が通ってからマージする**。「両方とも緑」は「合成後も緑」を意味しない。
+  - 壊れた lockfile は手で直さない。最後に正常だったコミットの lockfile を基準にし、後から載せる変更を `pnpm update <pkg>@<ver>` で載せ直す（PR で検証済みのバージョンに揃える）。
+  - 恒久対策として、ruleset の「Require branches to be up to date before merging」を有効にするかを検討する（Dependabot の PR がマージのたびに rebase 待ちになるコストとのトレードオフ）。
+- 関連: issue #222、PR #213、PR #220
+
 ## 2026-10-06 Dependabot が @prisma/client だけを major 更新し、CLI と食い違って CI が壊れた
 
 **概要**
