@@ -63,6 +63,25 @@ const mockSupabaseLogout = async (page: import("@playwright/test").Page) => {
   });
 };
 
+/**
+ * 次に開くダイアログ（alert）を、クリック操作とは独立に即座に accept する。
+ *
+ * `waitForEvent("dialog")` → `await click()` → `dialog.accept()` の順に書いてはならない。
+ * クリックの完了待ちの最中に alert が開くと、Playwright の click は alert が閉じるまで返らず、
+ * accept は click の後にしか呼ばれないため互いを待ってデッドロックする（30 秒でタイムアウト）。
+ * モックの応答がクリックの後処理より速いときだけ起きるため、CI で flaky になっていた（issue #221）。
+ * ハンドラ内で accept すれば、click の完了を待たずに alert が閉じる。
+ * @param page 対象のページ
+ * @returns alert のメッセージ（accept 済み）
+ */
+const acceptNextDialog = (page: import("@playwright/test").Page): Promise<string> =>
+  new Promise((resolve) => {
+    page.once("dialog", async (dialog) => {
+      resolve(dialog.message());
+      await dialog.accept();
+    });
+  });
+
 // ---------------------------------------------------------------------------
 // Normal flows (N-1 ~ N-6)
 // ---------------------------------------------------------------------------
@@ -283,11 +302,9 @@ test.describe("admin: semi-normal flows", () => {
     await page.getByPlaceholder("印象的なタイトルを...").fill("失敗テスト");
     await page.getByRole("button", { name: "保存して更新" }).click();
 
-    const dialogPromise3a = page.waitForEvent("dialog");
+    const alertMessage3aPromise = acceptNextDialog(page);
     await page.getByRole("button", { name: "保存", exact: true }).click();
-    const dialog3a = await dialogPromise3a;
-    const alertMessage3a = dialog3a.message();
-    await dialog3a.accept();
+    const alertMessage3a = await alertMessage3aPromise;
 
     await expect(page.getByRole("button", { name: "保存", exact: true })).toBeVisible();
     expect(alertMessage3a).toContain("保存に失敗しました。");
@@ -316,11 +333,9 @@ test.describe("admin: semi-normal flows", () => {
     await page.getByPlaceholder("印象的なタイトルを...").fill("更新失敗テスト");
     await page.getByRole("button", { name: "保存して更新" }).click();
 
-    const dialogPromise3b = page.waitForEvent("dialog");
+    const alertMessage3bPromise = acceptNextDialog(page);
     await page.getByRole("button", { name: "保存", exact: true }).click();
-    const dialog3b = await dialogPromise3b;
-    const alertMessage3b = dialog3b.message();
-    await dialog3b.accept();
+    const alertMessage3b = await alertMessage3bPromise;
 
     await expect(page.getByRole("button", { name: "保存", exact: true })).toBeVisible();
     expect(alertMessage3b).toContain("更新に失敗しました。");
@@ -343,11 +358,9 @@ test.describe("admin: semi-normal flows", () => {
 
     await page.getByRole("button", { name: "削除" }).first().click();
 
-    const dialogPromise4 = page.waitForEvent("dialog");
+    const alertMessage4Promise = acceptNextDialog(page);
     await page.getByRole("button", { name: "削除" }).last().click();
-    const dialog4 = await dialogPromise4;
-    const alertMessage4 = dialog4.message();
-    await dialog4.accept();
+    const alertMessage4 = await alertMessage4Promise;
 
     await expect(page.getByRole("button", { name: "削除" }).last()).toBeVisible();
     expect(alertMessage4).toContain("削除に失敗しました。");
