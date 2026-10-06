@@ -4,6 +4,21 @@
 
 新しいエントリはこの見出しの直下に追記する（新しいものが上）。
 
+## 2026-10-06 E2E の alert テストが、click と dialog.accept の待ち合いで CI でだけ flaky になっていた
+
+**概要**
+削除・保存の API 失敗時に alert を出すことを確かめる E2E（S-3a / S-3b / S-4）が、CI でときどき 30 秒タイムアウトしていた。原因はテストの書き方によるデッドロックで、アプリのバグではなかった。手元では 205 回実行しても再現せず、CI にトレースを残す仕組みを入れて初めて原因が分かった。
+
+**詳細**:
+
+- 何が起きたか: PR #213・#227 の CI で、S-4・S-3b が `dialog.accept: Target page, context or browser has been closed`（30 秒のタイムアウト）で失敗した。retry でも落ちることがあり、無関係な PR の CI を止めていた。
+- なぜ起きたか（根本原因）: テストが `waitForEvent("dialog")` → `await click()` → `dialog.accept()` の順で書かれていた。モックの 500 応答が速く、click の後処理が終わる前に alert が開くと、Playwright の click は alert が閉じるまで返らない。一方 accept は click の後でしか呼ばれないので、互いを待って止まる。CI のトレースでは、click 開始の 411ms 後に alert が開き、click が返ったのはテストのタイムアウトでコンテキストが閉じられた後だった。CDP で CPU を 40 倍に絞ると、修正前のコードは 3 件とも確実に同じエラーで落ち、修正後は通った。
+- 教訓 / 次からどうする:
+  - **ダイアログを出す操作は、クリックより先に `page.once("dialog", ...)` を登録し、ハンドラの中で accept する**（`acceptNextDialog`）。click の完了を待ってから accept する書き方をしない。
+  - **CI でだけ落ちるテストは、手元で再現させようとする前に CI の記録（トレース）を取る**。今回は手元の 205 回より、CI の 1 回分のトレースの方が決定的だった。CI は `front/test-results/` を成果物 `e2e-test-results` として保存する（#227）。
+  - タイミング依存が疑われるときは、CDP の `Emulation.setCPUThrottlingRate` で手元のブラウザを遅くすると、確実に再現できることがある。修正の検証は「修正前が落ち、修正後が通る」の両方を確かめる。
+- 関連: issue #221、#226、PR #227、[`08-test-specification.md`](./08-test-specification.md)
+
 ## 2026-10-06 lockfile を変える PR を 2 本続けてマージし、main の pnpm-lock.yaml が重複キーで壊れた
 
 **概要**

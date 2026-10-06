@@ -49,6 +49,7 @@ pnpm test:e2e      # E2E（Playwright）
   - Prisma 7（issue #219）で `.env` の暗黙読み込みは無くなったが、シェルや CI が `DATABASE_URL` を本番に設定している可能性は残るため、方針は変えない。
 - **全削除の直前にも接続先を検証する（多層防御）。** IT の `beforeEach`（`src/test/it-setup.ts`）と E2E の `seedVideos()`（`tests/e2e/db.ts`）は、`deleteMany()` の直前に **Prisma に実際に渡した URL** を `assertLocalDatabaseUrl()` に通す。入口の `resolveTestDatabaseUrl()` が正しくても、Prisma へ渡す経路（Prisma 7 の driver adapter 等）の書き換えで別の値が入り込めば入口の検証は効かないため、破壊操作の直前で独立に確かめる。
   - 確認方法: シェルの `DATABASE_URL` に架空のリモート URL を入れた状態でも、`pnpm test:it` / `pnpm test:e2e` がローカルのテスト DB で通ること（issue #219 で確認済み）。
+- **`alert` / `confirm` を出す操作は、クリックより先にダイアログのハンドラを登録し、ハンドラの中で accept する**（`tests/e2e/admin.spec.ts` の `acceptNextDialog`）。`waitForEvent("dialog")` → `await click()` → `dialog.accept()` の順に書くと、クリックの完了待ちの最中に alert が開いたとき、click は alert が閉じるまで返らず、accept は click の後にしか呼ばれないため**デッドロックする**。モックの応答がクリックの後処理より速いときだけ起きるため、CI でだけ flaky になる（issue #221）。
 - E2E 初回はブラウザをインストールするため `pnpm exec playwright install` を実行。
 - IT ケースの詳細は [`test-design/05-it-api-routes.md`](./test-design/05-it-api-routes.md) を参照。
 
