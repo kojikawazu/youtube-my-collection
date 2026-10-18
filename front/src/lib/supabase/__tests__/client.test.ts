@@ -8,14 +8,16 @@ vi.mock("@supabase/supabase-js", () => ({
 import "../client";
 import { createClient } from "@supabase/supabase-js";
 
-const mockCreateClient = vi.mocked(createClient);
+// createClient はモジュール読み込み時に 1 度だけ呼ばれる。Vitest 5 から clearMocks が
+// 既定で true になり、各テストの前に mock.calls が消えるため、読み込み直後に退避しておく。
+const clientAuthOptions = vi.mocked(createClient).mock.calls[0]?.[2]?.auth;
 
 describe("supabase browser client", () => {
   /**
-   * createClient に渡された auth オプション（モジュール読み込み時に 1 度だけ呼ばれる）。
+   * createClient に渡された auth オプション。
    * @returns 生成時に指定した auth オプション。未指定なら undefined
    */
-  const authOptions = () => mockCreateClient.mock.calls[0]?.[2]?.auth;
+  const authOptions = () => clientAuthOptions;
 
   // --- 正常系 ---
 

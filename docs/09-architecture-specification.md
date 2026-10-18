@@ -54,7 +54,7 @@
 
 新規参画者が手元で動かすまでの一本道。
 
-1. **前提ツール**: Node.js 20 系、pnpm（`corepack enable` で `packageManager` ピン留めの `pnpm@10.7.0` が有効化される）。
+1. **前提ツール**: Node.js 24 系（Vercel の本番ビルドと CI で揃える）、pnpm（`corepack enable` で `packageManager` ピン留めの `pnpm@10.7.0` が有効化される）。
 2. **Supabase プロジェクト作成**: [supabase.com](https://supabase.com) でプロジェクトを作成し、`Project URL` と `anon key`、DB パスワードを控える。
 3. **Google OAuth 設定**（管理者ログインを試す場合）: Supabase の Authentication → Providers で Google を有効化。Google Cloud Console 側のリダイレクト URI に `https://<PROJECT_REF>.supabase.co/auth/v1/callback` を登録。詳細は [`notes/oauth-sequence.md`](./notes/oauth-sequence.md) / [`notes/auth-troubleshooting.md`](./notes/auth-troubleshooting.md)。
 4. **env 設定**:
