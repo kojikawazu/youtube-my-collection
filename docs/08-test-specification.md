@@ -115,7 +115,7 @@ API モック + セッション注入方式で実 OAuth なしに管理者 CRUD 
 
 `.github/workflows/ci.yml` は以下を実行する。
 
-1. `pnpm install --frozen-lockfile`（Node 20 / pnpm 10.7.0。postinstall で `prisma generate`）
+1. `pnpm install --frozen-lockfile`（Node 24 / pnpm 10.7.0。postinstall で `prisma generate`）
 2. `pnpm run format:check` / `pnpm run lint` / `pnpm run typecheck`
 3. `pnpm run test`（ユニット）
 4. `docker compose -f docker-compose.test.yml up -d --wait` → `pnpm run test:it`（結合・実 DB。Prisma Client は手順 1 の postinstall で生成済み）

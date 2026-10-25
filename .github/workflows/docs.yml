@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
 
       # 設定は .markdownlint-cli2.jsonc（無効化ルールの理由もそこに記載）。
       # バージョンを固定し、上流の新ルール追加で CI が突然落ちないようにする。
