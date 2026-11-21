@@ -11,7 +11,10 @@
       "prisma",
       "sharp",
       "unrs-resolver"
-    ]
+    ],
+    "overrides": {
+      "@prisma/config>effect": "^3.22.1"
+    }
   },
   "scripts": {
     "dev": "next dev",
