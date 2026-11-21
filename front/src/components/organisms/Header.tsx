@@ -1,5 +1,6 @@
 import React from "react";
-import { LogIn, LogOut, Youtube, ShieldCheck } from "lucide-react";
+import { LogIn, LogOut, ShieldCheck } from "lucide-react";
+import { YoutubeIcon } from "@/components/atoms/YoutubeIcon";
 
 type HeaderProps = {
   isAdmin: boolean;
@@ -18,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLogin, onLo
         className="group flex cursor-pointer items-center gap-2"
       >
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500 shadow-lg shadow-red-200 transition-transform group-hover:scale-110">
-          <Youtube className="h-5 w-5 text-white" />
+          <YoutubeIcon className="h-5 w-5 text-white" />
         </div>
         <span className="text-xl font-bold tracking-tight text-red-950">MyYouTubeHub</span>
       </button>

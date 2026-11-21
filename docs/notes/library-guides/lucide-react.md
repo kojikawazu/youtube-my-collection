@@ -26,10 +26,10 @@ Feather Icons の後継で、1000 以上のアイコンを React コンポーネ
 ## 基本的な使い方
 
 ```tsx
-import { Youtube, Play, Trash2 } from "lucide-react";
+import { Play, Trash2 } from "lucide-react";
 
 // そのまま JSX で使う
-<Youtube className="w-5 h-5 text-white" />
+<Play className="w-5 h-5 text-white" />
 ```
 
 ### 主な props
@@ -45,10 +45,10 @@ import { Youtube, Play, Trash2 } from "lucide-react";
 
 ```tsx
 // 方法1: size prop（px指定）
-<Youtube size={20} />
+<Play size={20} />
 
 // 方法2: Tailwind クラス（本プロジェクトではこちらを採用）
-<Youtube className="w-5 h-5" />
+<Play className="w-5 h-5" />
 ```
 
 本プロジェクトでは Tailwind のユーティリティクラスでサイズと色を統一的に制御している。
@@ -61,7 +61,7 @@ import { Youtube, Play, Trash2 } from "lucide-react";
 
 | アイコン | 用途 | 使用箇所 |
 |----------|------|----------|
-| `Youtube` | ブランドロゴ / YouTube リンク | ヘッダー、詳細画面のリンクボタン、フッター |
+| ~~`Youtube`~~ | ブランドロゴ / YouTube リンク | lucide-react 1.0 で削除されたため、`components/atoms/YoutubeIcon.tsx`（同じ線画の自前アイコン）に置き換えた（issue #256） |
 | `Play` | 再生ボタン | 詳細画面のサムネイル上オーバーレイ |
 | `Plus` | 追加アクション | リスト画面の FAB（右下の丸ボタン） |
 | `Trash2` | 削除アクション | カード上の削除ボタン、詳細画面の削除ボタン |
@@ -113,11 +113,11 @@ import { Youtube, Play, Trash2 } from "lucide-react";
 ```tsx
 // ヘッダーロゴ（page.tsx:418）
 <div className="w-9 h-9 bg-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-red-200">
-  <Youtube className="w-5 h-5 text-white" />
+  <YoutubeIcon className="w-5 h-5 text-white" />
 </div>
 ```
 
-背景色付きの `div` の中にアイコンを配置して、ロゴ風のデザインを作成。
+背景色付きの `div` の中にアイコンを配置して、ロゴ風のデザインを作成。ロゴのアイコンは lucide-react ではなく自前の `YoutubeIcon`（atoms）を使う。
 
 ### パターン4: 入力欄の先頭アイコン
 
@@ -158,4 +158,6 @@ import { Youtube, Play, Trash2 } from "lucide-react";
 
 - アイコン名は PascalCase（`ChevronLeft`, `ShieldCheck` など）
 - `Trash` と `Trash2` のように複数バリエーションがあるアイコンがある（本プロジェクトでは `Trash2` を使用）
+- **1.0 でブランドアイコン（`Youtube` / `Github` など）が削除された。** 商標上の理由による上流の方針で、以降の版でも戻らない。ブランドを表すアイコンが必要な場合は lucide-react に頼らず `components/atoms/` に自前の SVG を置く（`YoutubeIcon.tsx` が実例・issue #256）
+- メジャーアップデートで既存アイコンのデザインが細かく変わることがある（1.x への更新では `Play` / `Edit3` / `Calendar` の形が変わった）。上げるときは Vercel Preview で見た目を確認する
 - `fill-current` を使うと塗りつぶしアイコンになる（`Play` で使用: `page.tsx:658`）
