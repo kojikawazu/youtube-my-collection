@@ -257,6 +257,7 @@ OAuth コールバック（`/auth/callback`）のブラウザ側処理。認可�
   - `window.location` → `Object.defineProperty` で search / replace を差し替え（jsdom の location は読み取り専用）
   - 環境変数 → `vi.stubEnv()`（`NEXT_PUBLIC_SUPABASE_*` の欠落再現）
 - タイマー: `vi.useFakeTimers()` で useToast / useVideos のデバウンス制御
+  - **境界の時刻（299ms では発火しない / 300ms で発火する）を確かめるテストでは `shouldAdvanceTime: true` を付けない。** 付けると偽タイマーが実時間でも進み、遅い CI ランナーでは境界の確認より先に発火して flaky になる（issue #255）。useVideos の N-4 は実時間の待ち（`waitRealTime`）を挟み、実時間に引きずられないことを回帰防止として確かめている
 - 完了順の制御: `controlledFetch()` が「呼ばれるたびに未解決の Promise を返す」fetch を差し替える。テストから任意の順で resolve / reject し、レスポンスの到着順逆転を再現する
 
 ## モック方針

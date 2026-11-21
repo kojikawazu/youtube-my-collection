@@ -68,6 +68,22 @@ const controlledFetch = (): PendingRequest[] => {
   return pending;
 };
 
+/**
+ * 遅い CI ランナーを模すために挟む実時間の待ち（ミリ秒）。
+ * `shouldAdvanceTime` の偽タイマーは実時間 20ms ごとに進むため、それより十分長くして確実に差を出す。
+ */
+const SLOW_RUNNER_DELAY_MS = 50;
+
+// 偽タイマーに差し替えられる前の本物の setTimeout。実時間を待つためだけに使う
+const realSetTimeout = globalThis.setTimeout;
+
+/**
+ * 偽タイマーの有無に関係なく、実時間で指定ミリ秒待つ。
+ * @param ms 待つ時間（ミリ秒）
+ * @returns 指定時間の経過後に解決する Promise
+ */
+const waitRealTime = (ms: number) => new Promise<void>((resolve) => realSetTimeout(resolve, ms));
+
 /** 保留中の Promise チェーンを進め、state 更新を React に反映させる。 */
 const flush = async () => {
   await act(async () => {
@@ -124,7 +140,9 @@ describe("useVideos", () => {
   });
 
   it("should debounce searchQuery by 300ms", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+    // shouldAdvanceTime を付けない。付けると偽タイマーが実時間でも進み、遅いランナーでは
+    // 299ms の確認より先に 300ms を超えてデバウンスが発火する（issue #255）
+    vi.useFakeTimers();
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       headers: { get: () => "0" },
@@ -140,6 +158,8 @@ describe("useVideos", () => {
     act(() => {
       result.current.setSearchQuery("React");
     });
+    // 遅いランナーを模して実時間を進める。偽タイマーが実時間に引きずられないことの回帰防止
+    await waitRealTime(SLOW_RUNNER_DELAY_MS);
     // 299ms では fetch されない
     await act(async () => {
       vi.advanceTimersByTime(299);
