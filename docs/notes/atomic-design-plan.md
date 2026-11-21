@@ -72,7 +72,8 @@ front/src/
 ├── components/
 │   ├── atoms/
 │   │   ├── Rating.tsx            ← 既存を移動
-│   │   └── Markdown.tsx          ← 既存を移動
+│   │   ├── Markdown.tsx          ← 既存を移動
+│   │   └── YoutubeIcon.tsx       ← YouTube の線画アイコン（lucide-react 1.0 でブランドアイコンが削除されたため自前化・issue #256）
 │   ├── molecules/
 │   │   ├── SearchBar.tsx         ← 検索アイコン + input
 │   │   ├── SortSelect.tsx        ← 並び替えセレクト

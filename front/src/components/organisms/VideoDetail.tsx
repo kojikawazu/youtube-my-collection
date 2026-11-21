@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
-import { Play, Trash2, Edit3, ChevronLeft, Youtube, Calendar } from "lucide-react";
+import { Play, Trash2, Edit3, ChevronLeft, Calendar } from "lucide-react";
+import { YoutubeIcon } from "@/components/atoms/YoutubeIcon";
 import type { VideoItem } from "@/schemas/video";
 import { Rating } from "@/components/atoms/Rating";
 import { MarkdownRenderer } from "@/components/atoms/Markdown";
@@ -122,7 +123,7 @@ export const VideoDetail: React.FC<VideoDetailProps> = ({
               rel="noreferrer"
               className="group flex items-center gap-4 rounded-[2rem] bg-red-500 px-12 py-5 font-bold text-white shadow-2xl shadow-red-500/30 transition-all hover:-translate-y-1 hover:bg-red-600"
             >
-              <Youtube className="h-6 w-6" />
+              <YoutubeIcon className="h-6 w-6" />
               <span className="text-lg">YouTube を開く</span>
             </a>
           </div>
